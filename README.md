@@ -1,110 +1,103 @@
+# EverCamps
 
-
-
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
-<p align="center">
-<img width="60" height="68" alt="EverShop Logo" src="https://raw.githubusercontent.com/evershopcommerce/evershop/dev/.github/images/logo-green.png"/>
-</p>
-<p align="center">
-  <h1 align="center">EverShop</h1>
-</p>
-<h4 align="center">
-    <a href="https://evershop.io/docs/development/getting-started/introduction">Documentation</a> |
-    <a href="https://demo.evershop.io/">Demo</a>
-</h4>
-
-<p align="center">
-  <!-- <img src="https://github.com/evershopcommerce/evershop/actions/workflows/build_test.yml/badge.svg" alt="Github Action">
-  <a href="https://twitter.com/evershopjs">
-    <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/evershopjs?style=social">
-  </a>
-  <a href="https://discord.gg/GSzt7dt7RM">
-    <img src="https://img.shields.io/discord/757179260417867879?label=discord" alt="Discord">
-  </a> -->
+<p>
   <a href="https://opensource.org/licenses/GPL-3.0">
     <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License">
   </a>
 </p>
 
-<p align="center">
-<img alt="EverShop" width="950" src="https://raw.githubusercontent.com/evershopcommerce/evershop/dev/.github/images/banner.png"/>
-</p>
-
 ## Introduction
 
-EverShop is a modern, TypeScript-first eCommerce platform built with GraphQL and React. Designed for developers, it offers essential commerce features in a modular, fully customizable architecture—perfect for building tailored shopping experiences with confidence and speed.
+EverCamps is an open-source project that aims to provide an easy-to-use and customizable platform for sports camp registrations. Built upon the robust e-commerce solution of [EverShop](https://evershop.io), EverCamps will empower sports organizations, schools, and camps to manage sign-ups, payments, and participant data, all while leveraging the flexibility of an open-source community-driven development approach.
 
-## Installation Using Docker
+## Why EverCamps?
 
+The primary goal of EverCamps is to fill a gap in the sports registration space by creating a solution that is:
 
-You can get started with EverShop in minutes by using the Docker image. The Docker image is a great way to get started with EverShop without having to worry about installing dependencies or configuring your environment.
-
-```bash
-curl -sSL https://raw.githubusercontent.com/evershopcommerce/evershop/main/docker-compose.yml > docker-compose.yml
-docker-compose up -d
-```
-
-For the full installation guide, please refer to our [Installation guide](https://evershop.io/docs/development/getting-started/installation-guide).
-
-## Documentation
-
-- [Installation guide](https://evershop.io/docs/development/getting-started/installation-guide).
-
-- [Extension development](https://evershop.io/docs/development/module/create-your-first-extension).
-
-- [Theme development](https://evershop.io/docs/development/theme/theme-overview).
+* **Flexible**: Easily customizable to meet the needs of different types of sports camps.
+* **User-friendly**: Providing a seamless experience for camp organizers and participants alike.
+* **Scalable**: Whether you're running a local camp or managing multiple locations, EverCamps scales to fit your needs.
+* **Open-Source**: Freely available to use, modify, and distribute, EverCamps fosters collaboration and innovation within the open-source community.
 
 
-## Demo
+## Goals for EverCamps
 
-Explore our demo store.
+1. **Simplify Registration**
+   Provide an intuitive interface for parents and participants to easily sign up for camps, select sessions, and complete payments.
 
-<p align="left">
-  <a href="https://demo.evershop.io/admin" target="_blank">
-    <img alt="evershop-backend-demo" height="35" alt="EverShop Admin Demo" src="https://raw.githubusercontent.com/evershopcommerce/evershop/dev/.github/images/evershop-demo-back.png"/>
-  </a>
-  <a href="https://demo.evershop.io/" target="_blank">
-    <img alt="evershop-store-demo" height="35" alt="EverShop Store Demo" src="https://raw.githubusercontent.com/evershopcommerce/evershop/dev/.github/images/evershop-demo-front.png"/>
-  </a>
-</p>
-<b>Demo user:</b>
+2. **Payment Integration**
+   Implement secure payment gateways that support multiple payment methods, including credit cards and PayPal.
 
-Email: demo@evershop.io<br/>
-Password: 123456
+3. **Admin Panel**
+   A powerful, user-friendly admin dashboard that allows camp organizers to track registrations, manage schedules, and generate reports.
 
-## Support
+4. **Participant & Registration Management**
+   Enable camp organizers to easily view, modify, and contact registered participants.
 
-If you like my work, feel free to:
+5. **Customizability**
+   Allow customization of camp-specific settings (dates, locations, prices, etc.) with minimal technical know-how. Be able to add plugin to be able to adapt to regional specifications and needs. 
 
-- ⭐ this repository. It helps.
-- [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)][tweet] about EverShop. Thank you!
+## Target Audience
 
-[tweet]: https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Fevershopcommerce%2Fevershop&text=Awesome%20React%20Ecommerce%20Project&hashtags=react,ecommerce,expressjs,graphql
+* **Sports Camp Organizers**: Schools, independent coaches, and sports facilities who need a reliable way to manage camp sign-ups and payments.
+* **Digital Agencies**: Agencies looking for an easy solution to registration to offer for their customers.
+* **Sport Federations or umbrella organisations**: Be able to export data to those organisations.
+* **Open-Source Contributors**: Developers who are interested in contributing to the project, whether through code, bug fixes, or documentation.
 
-## Contributing
+## Core Features - TBC
 
-EverShop is an open-source project. We are committed to a fully transparent development process and appreciate highly any contributions. Whether you are helping us fix bugs, proposing new features, improving our documentation or spreading the word - we would love to have you as part of the EverShop community.
+* **Registration Forms**: Customize fields based on camp-specific needs (e.g., skill level, preferences).
+* **Automated Confirmation Emails**: After registration, participants automatically receive confirmation with relevant details.
+* **Session Management**: Allow multiple camp sessions, enabling participants to sign up for different time slots or activities.
+* **Reports & Analytics**: Real-time reports on registrations, payments, and participant information.
+* **Multi-Language Support**: Future enhancements will allow the platform to support multiple languages to cater to diverse audiences.
 
-### Ask a question about EverShop
+## Contributing to EverCamps**
 
-You can ask questions, and participate in discussions about EverShop-related topics in the EverShop Discord channel.
+Being an open-source project, **EverCamps** thrives on collaboration and community contributions. Whether you're a developer, designer, or user, you can contribute by:
 
-<a href="https://discord.gg/GSzt7dt7RM"><img src="https://raw.githubusercontent.com/evershopcommerce/evershop/dev/.github/images/discord_banner_github.svg" /></a>
-
-### Create a bug report
-
-If you see an error message or run into an issue, please [create bug report](https://github.com/evershopcommerce/evershop/issues/new). This effort is valued and it will help all EverShop users.
-
-
-### Submit a feature request
-
-If you have an idea, or you're missing a capability that would make development easier and more robust, please [Submit feature request](https://github.com/evershopcommerce/evershop/issues/new).
-
-If a similar feature request already exists, don't forget to leave a "+1".
-If you add some more information such as your thoughts and vision about the feature, your comments will be embraced warmly :)
-
+* **Submitting bug reports** and feature requests
+* **Contributing code** to enhance the platform
+* **Improving documentation** to make it easier for others to get started
+* **Testing** the platform and providing valuable feedback
 
 Please refer to our [Contribution Guidelines](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+## Roadmap
+
+1. **Open Source it** (September 2025)
+
+   * Code of conduct
+   * Licensing
+   * Issue templates
+
+2. **Beta Version** (November 2025)
+
+   * Test with first user
+   * Basic registration form setup
+   * Payment gateway integration
+   * Reporting & analytics
+   * Multi-language support
+
+3. **1.0 Release** (januari 2026)
+
+   * Fully tested and first life release
+   
+4. **2.x Releases** (june 2026)
+   * Extended management of registrations and participants
+   * Extended communication possibilities
+   * Report to external contributors (umbrella organisations)
+
+## Getting Started
+
+To get involved or start using EverCamps, visit our GitHub repository:
+[GitHub - EverCamps](https://github.com/evercamps/evercamps)
+
+For detailed setup instructions and documentation, check out our website:
+[EverCamps Documentation](https://evercamps.com/docs)
+
+**Join Us!**
+By contributing to EverCamps, you help create a community-driven, adaptable solution that meets the unique needs of sports camps worldwide. Together, we can make sports camp registration easier, more efficient, and accessible for all.
 
 ## License
 
