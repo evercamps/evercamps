@@ -70,6 +70,7 @@ Please refer to our [Contribution Guidelines](./CONTRIBUTING.md) and [Code of Co
    * Code of conduct
    * Licensing
    * Issue templates
+   * Basic Extention: Participant, Registration Entities
 
 2. **Beta Version** (November 2025)
 
