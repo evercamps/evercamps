@@ -1,4 +1,5 @@
-import { execute, insert } from '@evershop/postgres-query-builder';
+import { execute, insert, select, update } from '@evershop/postgres-query-builder';
+import { debug, error } from '../../../lib/log/logger.js';
 
 export default async (connection) => {
   // Create a function to add event to the event table after a order is created
@@ -35,13 +36,12 @@ export default async (connection) => {
   // Create a default collection called "Featured Products"
   const featuredProducts = await insert('collection')
     .given({
-      name: 'Featured Camps',
+      name: 'Featured camps',
       code: 'homepage'
     })
     .execute(connection);
 
   // Create 4 default products and assign them to the "Featured Products" collection
-
   const product1 = await insert('product')
     .given({
       type: 'simple',
@@ -194,5 +194,30 @@ export default async (connection) => {
       collection_id: featuredProducts.insertId,
       product_id: product4.insertId
     })
+    .execute(connection);
+
+  // assign products to category
+  const query = select('category_id').from('category');
+  const result = await query.execute(connection);
+  const ids = result.map(r => r.category_id);
+
+  await update("product")
+    .given({ category_id: ids[Math.floor(Math.random() * ids.length)] })
+    .where("product_id", "=", product1.insertId)
+    .execute(connection);
+
+  await update("product")
+    .given({ category_id: ids[Math.floor(Math.random() * ids.length)] })
+    .where("product_id", "=", product2.insertId)
+    .execute(connection);
+
+  await update("product")
+    .given({ category_id: ids[Math.floor(Math.random() * ids.length)] })
+    .where("product_id", "=", product3.insertId)
+    .execute(connection);
+
+  await update("product")
+    .given({ category_id: ids[Math.floor(Math.random() * ids.length)] })
+    .where("product_id", "=", product4.insertId)
     .execute(connection);
 };
