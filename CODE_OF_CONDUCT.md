@@ -129,4 +129,4 @@ https://www.contributor-covenant.org/translations.
 
 # License
 
-EverShop is licensed under the GNU General Public License v3.0
+EverCamps is licensed under the GNU General Public License v3.0
