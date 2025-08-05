@@ -2,7 +2,6 @@ type Participant {
   id: Int!
   firstName: String!
   lastName: String!
-  dateOfBirth: Date!
   createdAt: Date!
 }
 

@@ -22,7 +22,6 @@ export const query = `
         id
         firstName
         lastName
-        dateOfBirth
         }
       total
       currentFilters {
@@ -130,21 +129,35 @@ export default function ParticipantGrid({
             />
           </Form>
         }
-        actions={[
-          {
-            variant: 'interactive',
-            name: 'Clear filter',
-            onAction: () => {
-              const url = new URL(document.location);
-              url.search = '';
-              window.location.href = url.href;
-            }
-          }
-        ]}
+        
       />
       <table className="listing sticky">
         <thead>
-          
+          <tr>
+            <th>
+              <Checkbox
+                onChange={(e) =>
+                  setSelectedRows(
+                    e.target.checked ? participants.map((p) => p.id) : []
+                  )
+                }
+              />
+            </th>
+            
+              <SortableHeader
+                title="First Name"
+                name="firstName"
+                currentFilters={currentFilters}
+              />
+            
+            
+              <SortableHeader
+                title="Last Name"
+                name="lastName"
+                currentFilters={currentFilters}
+              />
+                       
+          </tr>
         </thead>
         <tbody>
           {selectedRows.length > 0 && (
@@ -186,7 +199,6 @@ export default function ParticipantGrid({
               </td>
               <td>{p.firstName}</td>
               <td>{p.lastName}</td>
-              <td>{p.dateOfBirth}</td>
             </tr>
           ))}
         </tbody>
