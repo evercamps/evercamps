@@ -35,7 +35,7 @@ export default async (connection) => {
   // Create a default collection called "Featured Products"
   const featuredProducts = await insert('collection')
     .given({
-      name: 'Featured Products',
+      name: 'Featured Camps',
       code: 'homepage'
     })
     .execute(connection);
@@ -64,18 +64,15 @@ export default async (connection) => {
     })
     .execute(connection);
 
-  await insert('product_description')
-    .given({
-      product_description_product_id: product1.insertId,
-      name: 'Floral Maxi Dress',
-      url_key: 'floral-maxi-dress',
-      meta_title: 'Floral Maxi Dress',
-      meta_description: 'Floral Maxi Dress',
-      meta_keywords: 'Floral Maxi Dress',
-      description:
-        'Embrace the beauty of nature with our Floral Maxi Dress. This flowing dress features a stunning floral pattern that captures the essence of a blossoming garden. The lightweight fabric ensures comfort and breathability, making it perfect for both casual outings and special occasions. The dress is designed with a cinched waist and a v-neckline for a flattering silhouette. Elevate your style with this elegant and vibrant piece.'
-    })
-    .execute(connection);
+  await insert('product_description').given({
+    product_description_product_id: product1.insertId,
+    name: 'Soccer Camp',
+    url_key: 'soccer-camp',
+    meta_title: 'Soccer camp - Have fun',
+    meta_description: 'Soccer Camp',
+    meta_keywords: 'Soccer Camp',
+    description: 'Sharpen your footwork, boost your teamwork, and score unforgettable goals in our dynamic Soccer Camp. Participants will learn essential techniques, enjoy fun drills, and experience thrilling scrimmages designed for every skill level. Whether you\'re a beginner or a rising star, this camp promises nonstop action and camaraderie.'
+  }).execute(connection);
 
   const product2 = await insert('product')
     .given({
@@ -99,18 +96,15 @@ export default async (connection) => {
     })
     .execute(connection);
 
-  await insert('product_description')
-    .given({
-      product_description_product_id: product2.insertId,
-      name: 'Classic Leather Loafers',
-      url_key: 'classic-leather-loafers',
-      meta_title: 'Classic Leather Loafers',
-      meta_description: 'Classic Leather Loafers',
-      meta_keywords: 'Classic Leather Loafers',
-      description:
-        'Step into timeless elegance with our Classic Leather Loafers. Crafted from premium genuine leather, these loafers offer both style and comfort. The traditional design features a sleek and simple silhouette that pairs effortlessly with both formal and casual attire. The cushioned insole provides all-day support, making these loafers a versatile addition to your footwear collection.'
-    })
-    .execute(connection);
+  await insert('product_description').given({
+    product_description_product_id: product2.insertId,
+    name: 'Surf Camp',
+    url_key: 'surf-camp',
+    meta_title: 'Surf camp - Ride the waves',
+    meta_description: 'Surf Camp',
+    meta_keywords: 'Surf Camp',
+    description: 'Dive into adventure at our Surf Camp! From first-time paddlers to budding pros, campers learn to ride waves while absorbing essential water safety and ocean awareness. Enjoy sun-soaked days, expert coaching, and the pure joy of catching that perfect break.'
+  }).execute(connection);
 
   const product3 = await insert('product')
     .given({
@@ -134,18 +128,15 @@ export default async (connection) => {
     })
     .execute(connection);
 
-  await insert('product_description')
-    .given({
-      product_description_product_id: product3.insertId,
-      name: 'Denim Skinny Jeans',
-      url_key: 'denim-skinny-jeans',
-      meta_title: 'Denim Skinny Jeans',
-      meta_description: 'Denim Skinny Jeans',
-      meta_keywords: 'Denim Skinny Jeans',
-      description:
-        'Experience the perfect blend of style and comfort with our Denim Skinny Jeans. These jeans are designed to hug your curves while allowing for ease of movement. The high-quality denim fabric offers durability and a flattering fit. The classic five-pocket design adds a touch of versatility, making these jeans a wardrobe staple for various occasions.'
-    })
-    .execute(connection);
+  await insert('product_description').given({
+    product_description_product_id: product3.insertId,
+    name: 'Dance Camp',
+    url_key: 'dance-camp',
+    meta_title: 'Dance camp - Move with style',
+    meta_description: 'Dance Camp',
+    meta_keywords: 'Dance Camp',
+    description: 'Express yourself through movement at our vibrant Dance Camp. Explore styles from hip-hop to ballet, enhance your rhythm and coordination, and build confidence through energetic workshops and performances. It’s a celebration of music, movement, and self-expression.'
+  }).execute(connection);
 
   const product4 = await insert('product')
     .given({
@@ -169,20 +160,17 @@ export default async (connection) => {
     })
     .execute(connection);
 
-  await insert('product_description')
-    .given({
-      product_description_product_id: product4.insertId,
-      name: 'Striped Cotton Sweater',
-      url_key: 'striped-cotton-sweater',
-      meta_title: 'Striped Cotton Sweater',
-      meta_description: 'Striped Cotton Sweater',
-      meta_keywords: 'Striped Cotton Sweater',
-      description:
-        "Stay cozy and chic with our Striped Cotton Sweater. This lightweight sweater features a timeless striped pattern that adds a pop of style to your outfit. The breathable cotton fabric makes it an excellent choice for layering during transitional seasons. The relaxed fit and ribbed cuffs ensure a comfortable and flattering look, whether you're lounging at home or going out for a casual day."
-    })
-    .execute(connection);
+  await insert('product_description').given({
+    product_description_product_id: product4.insertId,
+    name: 'Triathlon Camp',
+    url_key: 'triathlon-camp',
+    meta_title: 'Triathlon camp - Push your limits',
+    meta_description: 'Triathlon Camp',
+    meta_keywords: 'Triathlon Camp',
+    description: 'Challenge your body and mind at our Triathlon Camp. Designed for aspiring athletes, this camp provides expert training in swimming, cycling, and running. Gain endurance, master transitions, and discover the thrill of pushing your limits in a supportive and motivational setting.'
+  }).execute(connection);
 
-  // Assign products to the "Featured Products" collection
+  // Assign products to the "Featured Camps" collection
   await insert('product_collection')
     .given({
       collection_id: featuredProducts.insertId,

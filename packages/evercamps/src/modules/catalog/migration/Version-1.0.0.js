@@ -18,20 +18,20 @@ export default async (connection) => {
 )`
   );
 
-  const color = await insert('attribute')
+  const period = await insert('attribute')
     .given({
-      attribute_code: 'color',
-      attribute_name: 'Color',
+      attribute_code: 'period',
+      attribute_name: 'Period',
       type: 'select',
       is_required: 0,
       display_on_frontend: 1,
       is_filterable: 1
     })
     .execute(connection);
-  const size = await insert('attribute')
+  const age = await insert('attribute')
     .given({
-      attribute_code: 'size',
-      attribute_name: 'Size',
+      attribute_code: 'age',
+      attribute_name: 'Age',
       type: 'select',
       is_required: 0,
       display_on_frontend: 1,
@@ -58,49 +58,65 @@ export default async (connection) => {
 
   await insert('attribute_option')
     .given({
-      attribute_id: color.insertId,
-      attribute_code: 'color',
-      option_text: 'White'
+      attribute_id: period.insertId,
+      attribute_code: 'period',
+      option_text: 'Week 1'
     })
     .execute(connection);
 
   await insert('attribute_option')
     .given({
-      attribute_id: color.insertId,
-      attribute_code: 'color',
-      option_text: 'Black'
+      attribute_id: period.insertId,
+      attribute_code: 'period',
+      option_text: 'Week 2'
     })
     .execute(connection);
 
   await insert('attribute_option')
     .given({
-      attribute_id: color.insertId,
-      attribute_code: 'color',
-      option_text: 'Yellow'
+      attribute_id: period.insertId,
+      attribute_code: 'period',
+      option_text: 'Week 3'
+    })
+    .execute(connection);
+
+    await insert('attribute_option')
+    .given({
+      attribute_id: period.insertId,
+      attribute_code: 'period',
+      option_text: 'Week 4'
     })
     .execute(connection);
 
   await insert('attribute_option')
     .given({
-      attribute_id: size.insertId,
-      attribute_code: 'size',
-      option_text: 'XXL'
+      attribute_id: age.insertId,
+      attribute_code: 'age',
+      option_text: 'Toddlers'
     })
     .execute(connection);
 
   await insert('attribute_option')
     .given({
-      attribute_id: size.insertId,
-      attribute_code: 'size',
-      option_text: 'XL'
+      attribute_id: age.insertId,
+      attribute_code: 'age',
+      option_text: '6 to 9 years old'
     })
     .execute(connection);
 
   await insert('attribute_option')
     .given({
-      attribute_id: size.insertId,
-      attribute_code: 'size',
-      option_text: 'SM'
+      attribute_id: age.insertId,
+      attribute_code: 'age',
+      option_text: '10 to 12 years old'
+    })
+    .execute(connection);
+  
+    await insert('attribute_option')
+    .given({
+      attribute_id: age.insertId,
+      attribute_code: 'age',
+      option_text: '12+'
     })
     .execute(connection);
 
@@ -144,13 +160,13 @@ export default async (connection) => {
   await insert('attribute_group_link')
     .given({
       group_id: defaultGroup.insertId,
-      attribute_id: color.insertId
+      attribute_id: period.insertId
     })
     .execute(connection);
   await insert('attribute_group_link')
     .given({
       group_id: defaultGroup.insertId,
-      attribute_id: size.insertId
+      attribute_id: age.insertId
     })
     .execute(connection);
 
