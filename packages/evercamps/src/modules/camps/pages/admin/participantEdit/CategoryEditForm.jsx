@@ -5,11 +5,11 @@ import React from 'react';
 import { toast } from 'react-toastify';
 import { get } from '../../../../../lib/util/get.js';
 
-export default function ParticipantNewForm({ action }) {
+export default function ParticipantEditForm({ action }) {
   const id = 'participantForm';
   return (
     <Form
-      method="POST"
+      method="PATCH"
       action={action}
       onError={() => {
         toast.error('Something wrong. Please reload the page!');
@@ -25,25 +25,17 @@ export default function ParticipantNewForm({ action }) {
           );
         } else {
           toast.success('Participant saved successfully!');
-          // Wait for 2 seconds to show the success message
-          setTimeout(() => {
-            // Redirect to the edit page
-            const editUrl = response.data.links.find(
-              (link) => link.rel === 'edit'
-            ).href;
-            window.location.href = editUrl;
-          }, 1500);
         }
       }}
       submitBtn={false}
       id={id}
     >
-      <Area id={id} noOuter />
+      <Area id="participantForm" noOuter />
     </Form>
   );
 }
 
-ParticipantNewForm.propTypes = {
+ParticipantEditForm.propTypes = {
   action: PropTypes.string.isRequired
 };
 
@@ -54,7 +46,7 @@ export const layout = {
 
 export const query = `
   query Query {
-    action: url(routeId: "createParticipant")
+    action: url(routeId: "updateParticipant", params: [{key: "id", value: getContextValue("id")}]),
     gridUrl: url(routeId: "participantGrid")
   }
 `;
