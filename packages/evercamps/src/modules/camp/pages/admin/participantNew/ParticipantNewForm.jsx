@@ -27,11 +27,11 @@ export default function ParticipantNewForm({ action }) {
           toast.success('Participant saved successfully!');
           // Wait for 2 seconds to show the success message
           setTimeout(() => {
-            // Redirect to the grid page
-            const gridUrl = response.data.links.find(
-              (link) => link.rel === 'participantGrid'
+            // Redirect to the edit page
+            const editUrl = response.data.links.find(
+              (link) => link.rel === 'edit'
             ).href;
-            window.location.href = gridUrl;
+            window.location.href = editUrl;
           }, 1500);
         }
       }}
