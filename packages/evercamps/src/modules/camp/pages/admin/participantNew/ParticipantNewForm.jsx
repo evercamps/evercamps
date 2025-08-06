@@ -55,6 +55,6 @@ export const layout = {
 export const query = `
   query Query {
     action: url(routeId: "createParticipant")
-    gridUrl: url(routeId: "participantrid")
+    gridUrl: url(routeId: "participantGrid")
   }
 `;

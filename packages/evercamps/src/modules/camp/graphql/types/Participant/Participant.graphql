@@ -3,6 +3,9 @@ type Participant {
   firstName: String!
   lastName: String!
   createdAt: Date!
+  editUrl: String
+  updateApi: String!
+  deleteApi: String!
 }
 
 type Filter {
@@ -39,5 +42,5 @@ type ParticipantCollection {
 
 extend type Query {
   participants(filters: [FilterInput]): ParticipantCollection
-  participant(id: Int!): Participant
+  participant(id: Int): Participant
 }

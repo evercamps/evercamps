@@ -17,5 +17,10 @@ export default {
           await root.init(filters, !!user);
           return root;
     }
+  },
+  Participant: {
+    editUrl: (participant) => buildUrl('participantEdit', { id: participant.id }),
+    updateApi: (participant) => buildUrl('updateParticipant', { id: participant.id }),
+    deleteApi: (participant) => buildUrl('deleteParticipant', { id: participant.id })
   }
 };

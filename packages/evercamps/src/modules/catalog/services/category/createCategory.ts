@@ -74,7 +74,7 @@ async function createCategory(data: CategoryData, context: Record<string, any>) 
   const connection = await getConnection();
   await startTransaction(connection);
   try {
-    const categoryData = await getValue('categoryDataBeforeCreate', data);
+    const categoryData = await getValue('categoryDataBeforeCreate', data, context);
     // Validate category data
     validateCategoryDataBeforeInsert(categoryData);
 
