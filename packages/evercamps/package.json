@@ -97,6 +97,10 @@
       "import": "./dist/modules/oms/services/index.js",
       "types": "./dist/modules/oms/services/index.d.ts"
     },
+    "./camp/services": {
+      "import": "./dist/modules/camp/services/index.js",
+      "types": "./dist/modules/camp/services/index.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

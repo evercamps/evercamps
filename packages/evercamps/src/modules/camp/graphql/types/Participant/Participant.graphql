@@ -1,0 +1,43 @@
+type Participant {
+  id: Int!
+  firstName: String!
+  lastName: String!
+  createdAt: Date!
+}
+
+type Filter {
+  key: String!
+  operation: String!
+  value: String!
+}
+
+enum FilterOperation {
+  eq
+  neq
+  gt
+  gteq
+  lt
+  lteq
+  like
+  nlike
+  in
+  nin
+}
+
+input FilterInput {
+  key: String!
+  operation: FilterOperation!
+  value: ID
+}
+
+type ParticipantCollection {
+  items: [Participant]
+  currentPage: Int!
+  total: Int!
+  currentFilters: [Filter]
+}
+
+extend type Query {
+  participants(filters: [FilterInput]): ParticipantCollection
+  participant(id: Int!): Participant
+}
