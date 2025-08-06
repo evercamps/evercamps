@@ -42,9 +42,9 @@ const coreModules = [
     path: path.resolve(__dirname, '../../modules/customer')
   },
   {
-    name: 'camps',
-    resolve: path.resolve(__dirname, '../../modules/camps'),
-    path: path.resolve(__dirname, '../../modules/camps')
+    name: 'camp',
+    resolve: path.resolve(__dirname, '../../modules/camp'),
+    path: path.resolve(__dirname, '../../modules/camp')
   },
   {
     name: 'graphql',

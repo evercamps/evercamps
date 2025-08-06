@@ -46,6 +46,15 @@ export default function ParticipantGrid({
 }) {
   console.log(participants);
   console.log(currentFilters);
+  const page = currentFilters.find((filter) => filter.key === 'page')
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
+    : 1;
+  const limit = currentFilters.find((filter) => filter.key === 'limit')
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
+    : 20;
   const [selectedRows, setSelectedRows] = useState([]);
   const { openAlert, closeAlert } = useAlertContext();
 
@@ -129,7 +138,18 @@ export default function ParticipantGrid({
             />
           </Form>
         }
-        
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              // Just get the url and remove all query params
+              const url = new URL(document.location);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
       />
       <table className="listing sticky">
         <thead>
@@ -208,7 +228,7 @@ export default function ParticipantGrid({
           No participants to display.
         </div>
       )}
-      {/* <Pagination total={total} limit={limit} page={page} /> */}
+      <Pagination total={total} limit={limit} page={page} />
     </Card>
   );
 }
