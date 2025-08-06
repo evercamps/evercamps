@@ -1,7 +1,7 @@
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { getParticipantsBaseQuery } from '../../../services/getParticipantsBaseQuery.js';
-import { ParticipantCollection } from '../../../../../modules/camps/services/ParticipantCollection.js';
+import { ParticipantCollection } from '../../../services/ParticipantCollection.js';
 
 export default {
   Query: {

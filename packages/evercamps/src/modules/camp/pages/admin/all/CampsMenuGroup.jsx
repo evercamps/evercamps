@@ -4,11 +4,11 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import participantGrid from 'src/modules/customer/pages/admin/participantGrid/index.js';
 
-export default function CampsMenuGroup({ participantGrid }) {
+export default function CampMenuGroup({ participantGrid }) {
   return (
     <NavigationItemGroup
-      id="campsMenuGroup"
-      name="Camps"
+      id="campMenuGroup"
+      name="Camp"
       items={[        
         {
           Icon: UsersIcon,
@@ -20,7 +20,7 @@ export default function CampsMenuGroup({ participantGrid }) {
   );
 }
 
-CampsMenuGroup.propTypes = {
+CampMenuGroup.propTypes = {
   participantGrid: PropTypes.string.isRequired
 };
 
