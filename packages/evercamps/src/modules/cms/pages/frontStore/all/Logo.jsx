@@ -34,6 +34,7 @@ export default function Logo({
             <line x1="170" y1="100" x2="200" y2="100" stroke="#3a3a3a" stroke-width="20" stroke-linecap="round" />
             <line x1="170" y1="145" x2="200" y2="145" stroke="#3a3a3a" stroke-width="20" stroke-linecap="round" />
             <line x1="170" y1="190" x2="200" y2="190" stroke="#3a3a3a" stroke-width="20" stroke-linecap="round" />
+            <line x1="130" y1="100" x2="130" y2="190" stroke="#3a3a3a" stroke-width="20" stroke-linecap="round" />
           </svg>
         </a>
       )}

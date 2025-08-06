@@ -41,6 +41,7 @@ export default function Logo({
             <line x1="170" y1="100" x2="200" y2="100" stroke="#27BEA3" stroke-width="20" stroke-linecap="round" />
             <line x1="170" y1="145" x2="200" y2="145" stroke="#27BEA3" stroke-width="20" stroke-linecap="round" />
             <line x1="170" y1="190" x2="200" y2="190" stroke="#00546B" stroke-width="20" stroke-linecap="round" />
+            <line x1="130" y1="100" x2="130" y2="190" stroke="#27BEA3" stroke-width="20" stroke-linecap="round" />
           </svg>
           <span className="font-bold">EVERCAMPS</span>
         </a>
