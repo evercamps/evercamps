@@ -15,18 +15,12 @@ export default async (request, response, next) => {
           action: 'GET',
           types: ['text/xml']
         },
-        {
-          rel: 'view',
-          href: buildUrl('participantView', { id: participant.id }),
-          action: 'GET',
-          types: ['text/xml']
-        },
-        {
-          rel: 'edit',
-          href: buildUrl('participantEdit', { id: participant.id }),
-          action: 'GET',
-          types: ['text/xml']
-        }
+        // {
+        //   rel: 'view',
+        //   href: buildUrl('participantView', { id: participant.id }),
+        //   action: 'GET',
+        //   types: ['text/xml']
+        // }
       ]
     }
   });

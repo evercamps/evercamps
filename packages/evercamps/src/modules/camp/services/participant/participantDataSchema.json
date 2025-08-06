@@ -1,16 +1,16 @@
 {
   "type": "object",
   "properties": {    
-    "firstname": {
+    "first_name": {
       "type": "string"
     },
-    "lastname": {
+    "last_name": {
       "type": "string"
     }
   },
   "required": [
-    "firstname",
-    "lastname"
+    "first_name",
+    "last_name"
   ],
   "additionalProperties": true
 }

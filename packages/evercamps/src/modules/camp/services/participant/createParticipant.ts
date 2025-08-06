@@ -21,14 +21,14 @@ import { getAjv } from '../../../base/services/getAjv.js';
 import participantDataSchema from './participantDataSchema.json' with { type: 'json' };
 
 export type ParticipantData = {  
-  firstname?: string,
-  lastname?: string,
-  [key: string]: unknown
+  firstName?: string,
+  lastName?: string,
+  [key: string]: any
 };
 
 function validateParticipantDataBeforeInsert(data: ParticipantData) {
   const ajv = getAjv();
-  (participantDataSchema as JSONSchemaType<any>).required = ['firstname', 'lastname'];
+  (participantDataSchema as JSONSchemaType<any>).required = ['first_name', 'last_name'];
   const jsonSchema = getValueSync(
     'createParticipantDataJsonSchema',
     participantDataSchema,
@@ -53,7 +53,7 @@ async function insertParticipantData(data: ParticipantData, connection: PoolClie
  * @param {Object} data
  * @param {Object} context
  */
-async function createParticipant(data: ParticipantData, context: Record<string, unknown> = {}) {
+async function createParticipant(data: ParticipantData, context: Record<string, any> = {}) {
   const connection = await getConnection();
   await startTransaction(connection);
   try {
@@ -64,22 +64,19 @@ async function createParticipant(data: ParticipantData, context: Record<string, 
     );
     // Validate participant data
     validateParticipantDataBeforeInsert(participantData);
-    const { firstname, lastname } = participantData;    
+    const { first_name, last_name } = participantData;    
     // Check if participant already exists
     const existingParticipant = await select()
       .from('participant')
-      .where('firstname', '=', firstname)
-      .andWhere('lastname', '=', lastname)
+      .where('first_name', '=', first_name)
+      .andWhere('last_name', '=', last_name)
       .load(pool);
 
     if (existingParticipant) {
       throw new Error('Participant already exists');
     }    
     // Insert participant data
-    const participant = await hookable(insertParticipantData, {
-      ...context,
-      connection
-    })(participantData, connection);   
+    const participant = await hookable(insertParticipantData, context)(participantData, connection); 
 
     await commit(connection);
     return participant;
@@ -90,7 +87,7 @@ async function createParticipant(data: ParticipantData, context: Record<string, 
 }
 
 /**
- * Create customer service. This service will create a customer with all related data
+ * Create participant service. This service will create a participant with all related data
  * @param {Object} data
  * @param {Object} context
  */

@@ -1,5 +1,5 @@
 import { getParticipantsBaseQuery } from './getParticipantsBaseQuery.js';
-import createParticipant from './participants/createParticipant.js';
+import createParticipant from './participant/createParticipant.js';
 
 export {
   getParticipantsBaseQuery,
