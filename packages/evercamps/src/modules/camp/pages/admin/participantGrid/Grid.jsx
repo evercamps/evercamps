@@ -24,6 +24,7 @@ export const query = `
         firstName
         lastName
         editUrl
+        deleteApi
         }
       total
       currentFilters {
@@ -43,6 +44,84 @@ export const variables = `
 
 export const layout = { areaId: "content", sortOrder: 20 };
 
+function Actions({ participants = [], selectedIds = [] }) {
+  const { openAlert, closeAlert } = useAlertContext();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const deleteParticipants = async () => {
+    setIsLoading(true);
+    const promises = participants
+      .filter((participant) => selectedIds.includes(participant.uuid))
+      .map((participant) => axios.delete(participant.deleteApi));
+    await Promise.all(promises);
+    setIsLoading(false);
+    // Refresh the page
+    window.location.reload();
+  };
+
+  const actions = [
+    {
+      name: 'Delete',
+      onAction: () => {
+        openAlert({
+          heading: `Delete ${selectedIds.length} participants`,
+          content: <div>Can&apos;t be undone</div>,
+          primaryAction: {
+            title: 'Cancel',
+            onAction: closeAlert,
+            variant: 'primary'
+          },
+          secondaryAction: {
+            title: 'Delete',
+            onAction: async () => {
+              await deleteParticipants();
+            },
+            variant: 'critical',
+            isLoading
+          }
+        });
+      }
+    }
+  ];
+
+  return (
+    <tr>
+      {selectedIds.length === 0 && null}
+      {selectedIds.length > 0 && (
+        <td style={{ borderTop: 0 }} colSpan="100">
+          <div className="inline-flex border border-divider rounded justify-items-start">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
+              {selectedIds.length} selected
+            </a>
+            {actions.map((action, index) => (
+              <a
+                key={index}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  action.onAction();
+                }}
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
+              >
+                <span>{action.name}</span>
+              </a>
+            ))}
+          </div>
+        </td>
+      )}
+    </tr>
+  );
+}
+
+Actions.propTypes = {
+  selectedIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+  participants: PropTypes.arrayOf(
+    PropTypes.shape({
+      uuid: PropTypes.string.isRequired
+    })
+  ).isRequired
+};
+
 export default function ParticipantGrid({
   participants: { items: participants, total, currentFilters = [] },
 }) {
@@ -58,60 +137,7 @@ export default function ParticipantGrid({
       )
     : 20;
   const [selectedRows, setSelectedRows] = useState([]);
-  const { openAlert, closeAlert } = useAlertContext();
-
-  const patchSelected = async (status) => {
-    const promises = items
-      .filter((p) => selectedRows.includes(p.uuid))
-      .map((p) =>
-        axios.patch(p.updateApi, {
-          status,
-        })
-      );
-    await Promise.all(promises);
-    window.location.reload();
-  };
-
-  const actions = [
-    {
-      name: "Deactivate",
-      onAction: () =>
-        openAlert({
-          heading: `Deactivate ${selectedRows.length} participants`,
-          content: "Are you sure?",
-          primaryAction: {
-            title: "Cancel",
-            onAction: closeAlert,
-            variant: "primary",
-          },
-          secondaryAction: {
-            title: "Deactivate",
-            onAction: async () => await patchSelected(0),
-            variant: "critical",
-            isLoading: false,
-          },
-        }),
-    },
-    {
-      name: "Activate",
-      onAction: () =>
-        openAlert({
-          heading: `Activate ${selectedRows.length} participants`,
-          content: "Are you sure?",
-          primaryAction: {
-            title: "Cancel",
-            onAction: closeAlert,
-            variant: "primary",
-          },
-          secondaryAction: {
-            title: "Activate",
-            onAction: async () => await patchSelected(1),
-            variant: "critical",
-            isLoading: false,
-          },
-        }),
-    },
-  ];
+  const { openAlert, closeAlert } = useAlertContext();  
 
   return (
     <Card>
@@ -180,44 +206,25 @@ export default function ParticipantGrid({
               />
                        
           </tr>
-        </thead>
+        </thead>        
         <tbody>
-          {selectedRows.length > 0 && (
-            <tr>
-              <td colSpan="100" style={{ borderTop: 0 }}>
-                <div className="inline-flex border border-divider rounded justify-items-start">
-                  <span className="font-semibold pt-3 pb-3 pl-6 pr-6">
-                    {selectedRows.length} selected
-                  </span>
-                  {actions.map((action, index) => (
-                    <a
-                      href="#"
-                      key={index}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        action.onAction();
-                      }}
-                      className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
-                    >
-                      {action.name}
-                    </a>
-                  ))}
-                </div>
-              </td>
-            </tr>
-          )}
+          <Actions
+            participants={participants}
+            selectedIds={selectedRows}
+            setSelectedRows={setSelectedRows}
+          />
           {participants.map((p) => (
-    <tr key={p.uuid}>
-      <td style={{ width: '2rem' }}>
-        <Checkbox
-          isChecked={selectedRows.includes(p.uuid)}
-          onChange={(e) => {
-            if (e.target.checked)
-              setSelectedRows((prev) => [...prev, p.uuid]);
-            else
-              setSelectedRows((prev) => prev.filter((uuid) => uuid !== p.uuid));
-          }}
-        />
+            <tr key={p.participantId}>
+              <td style={{ width: '2rem' }}>
+                <Checkbox
+                  isChecked={selectedRows.includes(p.uuid)}
+                  onChange={(e) => {
+                    if (e.target.checked)
+                      setSelectedRows(selectedRows.concat([p.uuid]));
+                    else
+                      setSelectedRows(selectedRows.filter((r) => r !== p.uuid));
+                  }}
+                />
       </td>
       <Area
         className=""
