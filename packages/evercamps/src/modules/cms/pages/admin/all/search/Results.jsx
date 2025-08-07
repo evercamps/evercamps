@@ -50,7 +50,7 @@ export function Results({ keyword, results = {} }) {
           <div className="item-category flex flex-col space-x-4">
             <div className="result-category">Participants</div>
             {participants.items.map((participant, index) => (
-              <a href={participant.editUrl} key={index}>
+              <a href={participant.url} key={index}>
                 <div className="font-bold">{participant.firstName} {participant.lastName}</div>
                 <div>#{participant.participantId}</div>
               </a>
