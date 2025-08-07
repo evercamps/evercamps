@@ -85,7 +85,6 @@ export default function SearchBox({ resourceLinks }) {
     pause: true
   });
   const { data, fetching } = result;
-  console.log(data);
 
   React.useEffect(() => {
     setLoading(true);

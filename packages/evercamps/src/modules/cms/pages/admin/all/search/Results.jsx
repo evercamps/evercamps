@@ -64,7 +64,7 @@ export function Results({ keyword, results = {} }) {
 
 Results.propTypes = {
   keyword: PropTypes.string,
-  results: PropTypes.arrayOf(
+  results: PropTypes.objectOf(
     PropTypes.shape({
       items: PropTypes.arrayOf(
         PropTypes.shape({
