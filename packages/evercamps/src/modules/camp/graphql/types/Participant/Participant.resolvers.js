@@ -7,7 +7,7 @@ export default {
   Query: {
     participant: async (root, { id }, { pool }) => {
       const row = await getParticipantsBaseQuery(pool)
-        .where("id", "=", id)
+        .where("participant_id", "=", id)
         .load(pool);
       return row ? camelCase(row) : null;
     },
@@ -19,8 +19,8 @@ export default {
     }
   },
   Participant: {
-    editUrl: (participant) => buildUrl('participantEdit', { id: participant.id }),
-    updateApi: (participant) => buildUrl('updateParticipant', { id: participant.id }),
-    deleteApi: (participant) => buildUrl('deleteParticipant', { id: participant.id })
+    editUrl: (participant) => buildUrl('participantEdit', { id: participant.uuid }),
+    updateApi: (participant) => buildUrl('updateParticipant', { id: participant.uuid }),
+    deleteApi: (participant) => buildUrl('deleteParticipant', { id: participant.uuid })
   }
 };

@@ -7,7 +7,7 @@ export default function Heading({ backUrl, participant }) {
     <PageHeading
       backUrl={backUrl}
       heading={
-        participant ? `Editing ${participant.firstname}` : 'Create A New Participant'
+        participant ? `Editing ${participant.firstName} ${participant.lastName}` : 'Create A New Participant'
       }
     />
   );
@@ -16,7 +16,7 @@ export default function Heading({ backUrl, participant }) {
 Heading.propTypes = {
   backUrl: PropTypes.string.isRequired,
   participant: PropTypes.shape({
-    firstname: PropTypes.string.isRequired
+    firstName: PropTypes.string.isRequired
   })
 };
 
@@ -31,8 +31,9 @@ export const layout = {
 
 export const query = `
   query Query {
-    participant(id: getContextValue("id", null)) {
+    participant(id: getContextValue("participantId", null)) {
       firstName
+      lastName
     }
     backUrl: url(routeId: "participantGrid")
   }

@@ -1,6 +1,4 @@
 import { Card } from '@components/admin/cms/Card';
-import CreateAt from '@components/admin/customer/customerGrid/rows/CreateAt';
-import CustomerNameRow from '@components/admin/customer/customerGrid/rows/CustomerName';
 import Area from '@components/common/Area';
 import { Field } from '@components/common/form/Field';
 import { Checkbox } from '@components/common/form/fields/Checkbox';
@@ -9,6 +7,8 @@ import SortableHeader from '@components/common/grid/headers/Sortable';
 import Pagination from '@components/common/grid/Pagination';
 import BasicRow from '@components/common/grid/rows/BasicRow';
 import StatusRow from '@components/common/grid/rows/StatusRow';
+import ParticipantFirstNameRow from '@components/admin/camp/participantGrid/rows/ParticipantFirstName.jsx';
+import ParticipantLastNameRow from '@components/admin/camp/participantGrid/rows/ParticipantLastName.jsx';
 import Filter from '@components/common/list/Filter';
 import { useAlertContext } from '@components/common/modal/Alert';
 import axios from 'axios';
@@ -19,9 +19,11 @@ export const query = `
   query Query($filters: [FilterInput]) {
     participants (filters: $filters) {
       items {
-        id
+        participantId
+        uuid
         firstName
         lastName
+        editUrl
         }
       total
       currentFilters {
@@ -60,7 +62,7 @@ export default function ParticipantGrid({
 
   const patchSelected = async (status) => {
     const promises = items
-      .filter((p) => selectedRows.includes(p.id))
+      .filter((p) => selectedRows.includes(p.uuid))
       .map((p) =>
         axios.patch(p.updateApi, {
           status,
@@ -158,7 +160,7 @@ export default function ParticipantGrid({
               <Checkbox
                 onChange={(e) =>
                   setSelectedRows(
-                    e.target.checked ? participants.map((p) => p.id) : []
+                    e.target.checked ? participants.map((p) => p.uuid) : []
                   )
                 }
               />
@@ -205,22 +207,40 @@ export default function ParticipantGrid({
             </tr>
           )}
           {participants.map((p) => (
-            <tr key={p.id}>
-              <td style={{ width: '2rem' }}>
-                <Checkbox
-                  isChecked={selectedRows.includes(p.id)}
-                  onChange={(e) => {
-                    if (e.target.checked)
-                      setSelectedRows((prev) => [...prev, p.id]);
-                    else
-                      setSelectedRows((prev) => prev.filter((id) => id !== p.id));
-                  }}
-                />
-              </td>
-              <td>{p.firstName}</td>
-              <td>{p.lastName}</td>
-            </tr>
-          ))}
+    <tr key={p.uuid}>
+      <td style={{ width: '2rem' }}>
+        <Checkbox
+          isChecked={selectedRows.includes(p.uuid)}
+          onChange={(e) => {
+            if (e.target.checked)
+              setSelectedRows((prev) => [...prev, p.uuid]);
+            else
+              setSelectedRows((prev) => prev.filter((uuid) => uuid !== p.uuid));
+          }}
+        />
+      </td>
+      <Area
+        className=""
+        id="participantGridRow"
+        row={p}
+        noOuter
+        coreComponents={[
+          {
+            component: {
+              default: () => <ParticipantFirstNameRow id="firstName" participant={p} />
+            },
+            sortOrder: 10
+          },
+          {
+            component: {
+              default: () => <ParticipantLastNameRow id="lastName" participant={p} />
+            },
+            sortOrder: 25
+          }
+        ]}
+      />    
+    </tr>
+  ))}
         </tbody>
       </table>
       {participants.length === 0 && (
