@@ -1,0 +1,5 @@
+{
+  "methods": ["DELETE"],
+  "path": "/participants/:id",
+  "access": "private"
+}
