@@ -10,26 +10,26 @@ export default function General({ participant }) {
       {
         component: { default: Field },
         props: {
-          id: 'first_name',
+          id: 'firstName',
           name: 'first_name',
           label: 'First Name',
           validationRules: ['notEmpty'],
           type: 'text'
         },
         sortOrder: 10,
-        id: 'first_name'
+        id: 'firstName'
       },
       {
         component: { default: Field },
         props: {
-          id: 'last_name',
+          id: 'lastName',
           name: 'last_name',
           label: 'Last Name',
           validationRules: ['notEmpty'],
           type: 'text'
         },
         sortOrder: 10,
-        id: 'last_name'
+        id: 'lastName'
       }
   ].map((f) => {
       if (get(participant, `${f.props.id}`) !== undefined) {
@@ -60,8 +60,8 @@ export const layout = {
 
 export const query = `
   query Query {
-    participant(id: getContextValue("id", null)) {
-      id
+    participant(id: getContextValue("participantId", null)) {
+      participantId
       firstName
       lastName
     }

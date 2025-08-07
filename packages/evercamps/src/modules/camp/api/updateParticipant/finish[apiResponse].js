@@ -3,7 +3,7 @@ import { buildUrl } from '../../../../lib/router/buildUrl.js';
 import { OK } from '../../../../lib/util/httpStatus.js';
 
 export default async (request, response, next) => {
-  const participant = await getDelegate('createParticipant', request);
+  const participant = await getDelegate('updateParticipant', request);
   response.status(OK);
   response.json({
     data: {

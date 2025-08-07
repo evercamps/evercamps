@@ -1,5 +1,6 @@
 type Participant {
-  id: Int!
+  participantId: Int!
+  uuid: String!
   firstName: String!
   lastName: String!
   createdAt: Date!

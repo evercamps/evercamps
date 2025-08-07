@@ -5,7 +5,7 @@ import { getValue } from '../../../lib/util/registry.js';
 export class ParticipantCollection {
   constructor(baseQuery) {
     this.baseQuery = baseQuery;
-    this.baseQuery.orderBy('participant.id', 'DESC');
+    this.baseQuery.orderBy('participant.participant_id', 'DESC');
   }
 
   async init(filters = [], isAdmin = false) {
@@ -39,7 +39,7 @@ export class ParticipantCollection {
 
     // Clone the main query for getting total right before doing the paging
     const totalQuery = this.baseQuery.clone();
-    totalQuery.select('COUNT(participant.id)', 'total');
+    totalQuery.select('COUNT(participant.participant_id)', 'total');
     totalQuery.removeOrderBy();
     totalQuery.removeLimit();
 
