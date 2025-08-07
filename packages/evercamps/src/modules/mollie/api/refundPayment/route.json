@@ -1,0 +1,5 @@
+{
+  "methods": ["POST"],
+  "path": "/mollie/payments/refund",
+  "access": "private"
+}
