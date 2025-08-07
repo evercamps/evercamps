@@ -9,31 +9,6 @@ type Participant {
   deleteApi: String!
 }
 
-type Filter {
-  key: String!
-  operation: String!
-  value: String!
-}
-
-enum FilterOperation {
-  eq
-  neq
-  gt
-  gteq
-  lt
-  lteq
-  like
-  nlike
-  in
-  nin
-}
-
-input FilterInput {
-  key: String!
-  operation: FilterOperation!
-  value: ID
-}
-
 type ParticipantCollection {
   items: [Participant]
   currentPage: Int!
@@ -43,5 +18,5 @@ type ParticipantCollection {
 
 extend type Query {
   participants(filters: [FilterInput]): ParticipantCollection
-  participant(id: Int): Participant
+  participant(id: String): Participant
 }

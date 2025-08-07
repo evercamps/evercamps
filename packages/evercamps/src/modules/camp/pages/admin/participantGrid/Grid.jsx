@@ -24,13 +24,13 @@ export const query = `
         firstName
         lastName
         editUrl
-        }
+      }
       total
       currentFilters {
-          key
-          operation
-          value
-        }
+        key
+        operation
+        value
+      }
     }
   }
 `;

@@ -8,7 +8,7 @@ export class ParticipantCollection {
     this.baseQuery.orderBy('participant.participant_id', 'DESC');
   }
 
-  async init(filters = [], isAdmin = false) {
+  async init(filters = []) {
     // if (!isAdmin) {
     //   this.baseQuery.andWhere('category.status', '=', 1);
     // }
@@ -17,10 +17,7 @@ export class ParticipantCollection {
     // Apply the filters
     const participantCollectionFilters = await getValue(
       'participantCollectionFilters',
-      [],
-      {
-        isAdmin
-      }
+      []
     );
 
     participantCollectionFilters.forEach((filter) => {

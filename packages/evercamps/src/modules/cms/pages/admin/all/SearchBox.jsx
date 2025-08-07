@@ -31,6 +31,11 @@ const SearchQuery = `
         email
         url: editUrl
       }
+      currentFilters {
+        key
+        operation
+        value
+      }
     }
     products(filters: $filters) {
       items {
@@ -56,6 +61,11 @@ const SearchQuery = `
         firstName
         lastName
         url: editUrl
+      }
+      currentFilters {
+        key
+        operation
+        value
       }
     }
   }
