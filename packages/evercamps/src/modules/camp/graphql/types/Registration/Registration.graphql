@@ -1,0 +1,23 @@
+type Registration {
+  registrationId: Int!
+  uuid: String!
+  participantId: Int!
+  productId: Int!
+  createdAt: Date!
+  product: Product!
+  name: String
+  sku: String
+  image: String
+}
+
+type RegistrationCollection {
+  items: [Registration]
+  currentPage: Int!
+  total: Int!
+  currentFilters: [Filter]
+}
+
+extend type Query {
+  registrations(filters: [FilterInput]): RegistrationCollection
+  registration(id: Int): Registration
+}

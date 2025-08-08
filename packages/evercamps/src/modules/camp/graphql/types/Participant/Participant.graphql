@@ -7,6 +7,7 @@ type Participant {
   editUrl: String
   updateApi: String!
   deleteApi: String!
+  registrations(filters: [FilterInput]): RegistrationCollection
 }
 
 type Filter {
