@@ -3,36 +3,35 @@ import { getConfig } from '../../../../../lib/util/getConfig.js';
 export default {
   Setting: {
     mollieLiveApiKey: (setting) => {
-      const stripeConfig = getConfig('system.mollie', {});
-      if (stripeConfig.publishableKey) {
-        return stripeConfig.publishableKey;
-      }
-      const stripePublishableKey = setting.find(
-        (s) => s.name === 'stripePublishableKey'
-      );
-      if (stripePublishableKey) {
-        return stripePublishableKey.value;
-      } else {
-        return null;
-      }
-    },
-    mollieTestApiKey: (setting, _, { user }) => {
-      const stripeConfig = getConfig('system.stripe', {});
-      if (stripeConfig.secretKey) {
-        return `${stripeConfig.secretKey.substr(
+      const mollieConfig = getConfig('system.mollie', {});
+      if (mollieConfig.mollieLiveApiKey) {
+           return `${mollieConfig.mollieLiveApiKey.substr(
           0,
           5
         )}*******************************`;
       }
-      if (user) {
-        const stripeSecretKey = setting.find(
-          (s) => s.name === 'stripeSecretKey'
-        );
-        if (stripeSecretKey) {
-          return stripeSecretKey.value;
-        } else {
-          return null;
-        }
+      const mollieLiveApiKey = setting.find(
+        (s) => s.name === 'mollieLiveApiKey'
+      );
+      if (mollieLiveApiKey) {
+        return mollieLiveApiKey.value;
+      } else {
+        return null;
+      }
+    },
+    mollieTestApiKey: (setting) => {
+      const mollieConfig = getConfig('system.mollie', {});
+      if (mollieConfig.mollieTestApiKey) {
+           return `${mollieConfig.mollieTestApiKey.substr(
+          0,
+          5
+        )}*******************************`;
+      }
+      const mollieTestApiKey = setting.find(
+        (s) => s.name === 'mollieTestApiKey'
+      );
+      if (mollieTestApiKey) {
+        return mollieTestApiKey.value;
       } else {
         return null;
       }

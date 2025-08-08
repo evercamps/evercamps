@@ -2,52 +2,42 @@ import { getConfig } from '../../../../../lib/util/getConfig.js';
 
 export default {
   Setting: {
-    stripePaymentStatus: (setting) => {
-      const stripeConfig = getConfig('system.stripe', {});
-      if (stripeConfig.status) {
-        return stripeConfig.status;
+    molliePaymentStatus: (setting) => {
+      const mollieConfig = getConfig('system.mollie', {});
+      if (mollieConfig.molliePaymentStatus) {
+        return mollieConfig.molliePaymentStatus;
       }
-      const stripePaymentStatus = setting.find(
-        (s) => s.name === 'stripePaymentStatus'
+      const molliePaymentStatus = setting.find(
+        (s) => s.name === 'molliePaymentStatus'
       );
-      if (stripePaymentStatus) {
-        return parseInt(stripePaymentStatus.value, 10);
+      if (molliePaymentStatus) {
+        return parseInt(molliePaymentStatus.value, 10);
       } else {
         return 0;
       }
     },
-    stripeDisplayName: (setting) => {
-      const stripeDisplayName = setting.find(
-        (s) => s.name === 'stripeDisplayName'
+    mollieDisplayName: (setting) => {
+      const mollieDisplayName = setting.find(
+        (s) => s.name === 'mollieDisplayName'
       );
-      if (stripeDisplayName) {
-        return stripeDisplayName.value;
+      if (mollieDisplayName) {
+        return mollieDisplayName.value;
       } else {
-        return 'Credit Card';
+        return 'Mollie';
       }
     },
-    stripePublishableKey: (setting) => {
-      const stripeConfig = getConfig('system.stripe', {});
-      if (stripeConfig.publishableKey) {
-        return stripeConfig.publishableKey;
+     molliePaymentMode: (setting) => {
+      const mollieConfig = getConfig('system.mollie', {});
+      if (mollieConfig.molliePaymentMode) {
+        return mollieConfig.molliePaymentMode;
       }
-      const stripePublishableKey = setting.find(
-        (s) => s.name === 'stripePublishableKey'
+      const molliePaymentMode = setting.find(
+        (s) => s.name === 'molliePaymentMode'
       );
-      if (stripePublishableKey) {
-        return stripePublishableKey.value;
+      if (molliePaymentMode) {
+        return parseInt(molliePaymentMode.value, 10);
       } else {
-        return null;
-      }
-    },
-    stripePaymentMode: (setting) => {
-      const stripePaymentMode = setting.find(
-        (s) => s.name === 'stripePaymentMode'
-      );
-      if (stripePaymentMode) {
-        return stripePaymentMode.value;
-      } else {
-        return 'capture';
+        return 0;
       }
     }
   }
