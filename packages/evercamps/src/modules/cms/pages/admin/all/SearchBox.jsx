@@ -62,11 +62,6 @@ const SearchQuery = `
         lastName
         url: editUrl
       }
-      currentFilters {
-        key
-        operation
-        value
-      }
     }
   }
 `;
