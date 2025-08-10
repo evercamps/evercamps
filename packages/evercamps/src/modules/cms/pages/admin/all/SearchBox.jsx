@@ -31,6 +31,11 @@ const SearchQuery = `
         email
         url: editUrl
       }
+      currentFilters {
+        key
+        operation
+        value
+      }
     }
     products(filters: $filters) {
       items {
@@ -46,6 +51,15 @@ const SearchQuery = `
         orderId
         uuid
         orderNumber
+        url: editUrl
+      }
+    }
+    participants(filters: $filters) {
+      items {
+        participantId
+        uuid
+        firstName
+        lastName
         url: editUrl
       }
     }
@@ -132,6 +146,7 @@ export default function SearchBox({ resourceLinks }) {
           {data?.products.items.length === 0 &&
             data?.customers.items.length === 0 &&
             data?.orders.items.length === 0 &&
+            data?.participants.items.length === 0 &&
             keyword &&
             !loading && (
               <NoResult keyword={keyword} resourseLinks={resourceLinks} />
@@ -141,6 +156,7 @@ export default function SearchBox({ resourceLinks }) {
             !fetching &&
             (data?.products.items.length > 0 ||
               data?.customers.items.length > 0 ||
+              data?.participants.items.length > 0 ||
               data?.orders.items.length > 0) && (
               <Results keyword={keyword} results={data} />
             )}

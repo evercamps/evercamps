@@ -3,7 +3,7 @@ import React from 'react';
 
 
 export function Results({ keyword, results = {} }) {
-  const { customers = [], products = [], orders = [] } = results;
+  const { customers = [], products = [], orders = [], participants = [] } = results;
 
   return (
     <div className="results">
@@ -46,6 +46,17 @@ export function Results({ keyword, results = {} }) {
             ))}
           </div>
         )}
+        {participants.items.length > 0 && (
+          <div className="item-category flex flex-col space-x-4">
+            <div className="result-category">Participants</div>
+            {participants.items.map((participant, index) => (
+              <a href={participant.url} key={index}>
+                <div className="font-bold">{participant.firstName} {participant.lastName}</div>
+                <div>#{participant.participantId}</div>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -53,7 +64,7 @@ export function Results({ keyword, results = {} }) {
 
 Results.propTypes = {
   keyword: PropTypes.string,
-  results: PropTypes.arrayOf(
+  results: PropTypes.objectOf(
     PropTypes.shape({
       items: PropTypes.arrayOf(
         PropTypes.shape({

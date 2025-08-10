@@ -7,14 +7,14 @@ export default {
   Query: {
     participant: async (root, { id }, { pool }) => {
       const row = await getParticipantsBaseQuery(pool)
-        .where("participant_id", "=", id)
+        .where("uuid", "=", id)
         .load(pool);
       return row ? camelCase(row) : null;
     },
-    participants: async (_, { filters = [] }, { user }) => {
+    participants: async (_, { filters = [] }) => {
           const query = getParticipantsBaseQuery();
           const root = new ParticipantCollection(query);
-          await root.init(filters, !!user);
+          await root.init(filters);
           return root;
     }
   },
