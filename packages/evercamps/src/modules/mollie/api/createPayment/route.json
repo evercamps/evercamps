@@ -1,5 +1,5 @@
 {
   "methods": ["POST"],
-  "path": "/stripe/paymentIntents",
+  "path": "/mollie/payments",
   "access": "public"
 }

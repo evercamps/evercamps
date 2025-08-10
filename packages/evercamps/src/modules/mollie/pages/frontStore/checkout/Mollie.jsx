@@ -1,24 +1,23 @@
 import { useCheckout } from '@components/common/context/checkout';
-import CheckoutForm from '@components/frontStore/stripe/checkout/CheckoutForm';
-import StripeLogo from '@components/frontStore/stripe/StripeLogo';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import MollieLogo from '@components/frontStore/mollie/MollieLogo.jsx';
+import CheckoutForm from '@components/frontStore/mollie/checkout/CheckoutForm';
 import PropTypes from 'prop-types';
 import React from 'react';
 import smallUnit from 'zero-decimal-currencies';
+import createMollieClient from '@mollie/api-client';
 
-// Make sure to call loadStripe outside of a component’s render to avoid
-// recreating the Stripe object on every render.
-// loadStripe is initialized with your real test publishable API key.
-let stripe;
-const stripeLoader = (publishKey) => {
-  if (!stripe) {
-    stripe = loadStripe(publishKey);
+// Make sure to call loadMollie outside of a component’s render to avoid
+// recreating the MollieClient on every render.
+// loadMollie is initialized with your real test publishable API key.
+let mollie;
+const mollieLoader = (mode, testApiKey, liveApiKey) => {
+  if (!mollie) {
+    mollie = createMollieClient({ apiKey: mode ? liveApiKey : testApiKey });(liveApiKey);
   }
-  return stripe;
+  return mollie;
 };
 
-function StripeApp({
+function MollieApp({
   total,
   currency,
   stripePublishableKey,
@@ -35,7 +34,7 @@ function StripeApp({
   };
   return (
     <div className="stripe__app">
-      <Elements stripe={stripeLoader(stripePublishableKey)} options={options}>
+      <Elements mollie={mollieLoader(molliePaymentMode, mollieTestApiKey, mollieLiveApiKey)} options={options}>
         <CheckoutForm
           stripePublishableKey={stripePublishableKey}
           returnUrl={returnUrl}
@@ -46,20 +45,21 @@ function StripeApp({
   );
 }
 
-StripeApp.propTypes = {
-  stripePublishableKey: PropTypes.string.isRequired,
+MollieApp.propTypes = {
+  mollieLiveApiKey: PropTypes.string.isRequired,
+  mollieTestApiKey: PropTypes.string.isRequired,
   returnUrl: PropTypes.string.isRequired,
-  createPaymentIntentApi: PropTypes.string.isRequired,
-  stripePaymentMode: PropTypes.string.isRequired,
+  createPaymentApi: PropTypes.string.isRequired,
+  molliePaymentMode: PropTypes.string.isRequired,
   total: PropTypes.number.isRequired,
   currency: PropTypes.string.isRequired
 };
 
-export default function StripeMethod({
+export default function MollieMethod({
   setting,
   cart: { grandTotal, currency },
   returnUrl,
-  createPaymentIntentApi
+  createPaymentApi
 }) {
   const checkout = useCheckout();
   const { paymentMethods, setPaymentMethods } = checkout;
@@ -72,7 +72,7 @@ export default function StripeMethod({
     <div>
       <div className="flex justify-start items-center gap-4">
         {(!selectedPaymentMethod ||
-          selectedPaymentMethod.code !== 'stripe') && (
+          selectedPaymentMethod.code !== 'mollie') && (
           <a
             href="#"
             onClick={(e) => {
@@ -110,7 +110,7 @@ export default function StripeMethod({
             </svg>
           </a>
         )}
-        {selectedPaymentMethod && selectedPaymentMethod.code === 'stripe' && (
+        {selectedPaymentMethod && selectedPaymentMethod.code === 'mollie' && (
           <div>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -130,13 +130,13 @@ export default function StripeMethod({
           </div>
         )}
         <div>
-          <StripeLogo width={100} />
+          <MollieLogo width={100} />
         </div>
       </div>
       <div>
-        {selectedPaymentMethod && selectedPaymentMethod.code === 'stripe' && (
+        {selectedPaymentMethod && selectedPaymentMethod.code === 'mollie' && (
           <div className="mt-5">
-            <StripeApp
+            <MollieApp
               total={grandTotal.value}
               currency={currency}
               stripePublishableKey={setting.stripePublishableKey}
@@ -151,11 +151,12 @@ export default function StripeMethod({
   );
 }
 
-StripeMethod.propTypes = {
+MollieMethod.propTypes = {
   setting: PropTypes.shape({
-    stripeDisplayName: PropTypes.string.isRequired,
-    stripePublishableKey: PropTypes.string.isRequired,
-    stripePaymentMode: PropTypes.string.isRequired
+    mollieDisplayName: PropTypes.string.isRequired,
+    mollieLiveApiKey: PropTypes.string.isRequired,
+    mollieTestApiKey: PropTypes.string.isRequired,
+    molliePaymentMode: PropTypes.string.isRequired
   }).isRequired,
   cart: PropTypes.shape({
     grandTotal: PropTypes.shape({
@@ -164,20 +165,21 @@ StripeMethod.propTypes = {
     currency: PropTypes.string
   }).isRequired,
   returnUrl: PropTypes.string.isRequired,
-  createPaymentIntentApi: PropTypes.string.isRequired
+  createPayment: PropTypes.string.isRequired
 };
 
 export const layout = {
-  areaId: 'checkoutPaymentMethodstripe',
+  areaId: 'checkoutPaymentMethodmollie',
   sortOrder: 10
 };
 
 export const query = `
   query Query {
     setting {
-      stripeDisplayName
-      stripePublishableKey
-      stripePaymentMode
+      mollieDisplayName
+      mollieLiveApiKey
+      mollieTestApiKey
+      molliePaymentMode
     }
     cart {
       grandTotal {
@@ -186,6 +188,6 @@ export const query = `
       currency
     }
     returnUrl: url(routeId: "stripeReturn")
-    createPaymentIntentApi: url(routeId: "createPaymentIntent")
+    createPaymentApi: url(routeId: "createPayment")
   }
 `;

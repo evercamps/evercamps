@@ -58,10 +58,10 @@ export default async () => {
       methodName: await getSetting('mollieDisplayName', 'Mollie')
     }),
     validator: async () => {
-      const stripeConfig = getConfig('system.mollie', {});
+      const mollieConfig = getConfig('system.mollie', {});
       let mollieStatus;
-      if (stripeConfig.status) {
-        mollieStatus = stripeConfig.status;
+      if (mollieConfig.molliePaymentStatus) {
+        mollieStatus = mollieConfig.molliePaymentStatus;
       } else {
         mollieStatus = await getSetting('molliePaymentStatus', 0);
       }
