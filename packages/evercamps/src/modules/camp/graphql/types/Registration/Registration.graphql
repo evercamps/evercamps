@@ -2,6 +2,9 @@ type Registration {
   registrationId: Int!
   uuid: String!
   participantId: Int!
+  participant: Participant!
+  firstName: String
+  lastName: String
   productId: Int!
   createdAt: Date!
   product: Product!

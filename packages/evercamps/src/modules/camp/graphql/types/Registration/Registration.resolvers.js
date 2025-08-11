@@ -9,7 +9,6 @@ export default {
       const row = await getRegistrationsBaseQuery(pool)
         .where("registration_id", "=", id)
         .load(pool);
-      console.log(row);
       return row ? camelCase(row) : null;
     },
     registrations: async (_, { filters = [] }, { user }) => {
@@ -27,6 +26,12 @@ export default {
           !user
         ).load(pool);
         return row ? camelCase(row) : null;
+      },
+      participant: async (registration, _, { pool }) => {
+      const row = await getRegistrationsBaseQuery()
+        .where('participant_id', '=', registration.participantId)
+        .load(pool);
+      return row ? camelCase(row) : null;
       }
   }
 };

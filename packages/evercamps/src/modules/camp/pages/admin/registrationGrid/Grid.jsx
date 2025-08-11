@@ -7,8 +7,6 @@ import SortableHeader from '@components/common/grid/headers/Sortable';
 import Pagination from '@components/common/grid/Pagination';
 import BasicRow from '@components/common/grid/rows/BasicRow';
 import StatusRow from '@components/common/grid/rows/StatusRow';
-import ParticipantFirstNameRow from '@components/admin/camp/participantGrid/rows/ParticipantFirstName.jsx';
-import ParticipantLastNameRow from '@components/admin/camp/participantGrid/rows/ParticipantLastName.jsx';
 import Filter from '@components/common/list/Filter';
 import { useAlertContext } from '@components/common/modal/Alert';
 import axios from 'axios';
@@ -17,16 +15,18 @@ import React, { useState } from 'react';
 
 export const query = `
   query Query($filters: [FilterInput]) {
-    participants (filters: $filters) {
-      items {
-        participantId
-        uuid
-        firstName
-        lastName
-        editUrl
-        deleteApi
-      }
+    registrations(filters: $filters) {
       total
+      items {
+        uuid
+        productId
+        name
+        registrationId
+        participant {
+          firstName
+          lastName
+        }
+      }    
       currentFilters {
         key
         operation
@@ -44,27 +44,27 @@ export const variables = `
 
 export const layout = { areaId: "content", sortOrder: 20 };
 
-function Actions({ participants = [], selectedIds = [] }) {
+function Actions({ registrations = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  const deleteParticipants = async () => {
-    setIsLoading(true);
-    const promises = participants
-      .filter((participant) => selectedIds.includes(participant.uuid))
-      .map((participant) => axios.delete(participant.deleteApi));
-    await Promise.all(promises);
-    setIsLoading(false);
-    // Refresh the page
-    window.location.reload();
-  };
+  // const deleteRegistrations = async () => {
+  //   setIsLoading(true);
+  //   const promises = registrations
+  //     .filter((registration) => selectedIds.includes(registration.uuid))
+  //     .map((registration) => axios.delete(registration.deleteApi));
+  //   await Promise.all(promises);
+  //   setIsLoading(false);
+  //   // Refresh the page
+  //   window.location.reload();
+  // };
 
   const actions = [
     {
       name: 'Delete',
       onAction: () => {
         openAlert({
-          heading: `Delete ${selectedIds.length} participants`,
+          heading: `Delete ${selectedIds.length} registrations`,
           content: <div>Can&apos;t be undone</div>,
           primaryAction: {
             title: 'Cancel',
@@ -74,7 +74,7 @@ function Actions({ participants = [], selectedIds = [] }) {
           secondaryAction: {
             title: 'Delete',
             onAction: async () => {
-              await deleteParticipants();
+              await deleteRegistrations();
             },
             variant: 'critical',
             isLoading
@@ -115,15 +115,15 @@ function Actions({ participants = [], selectedIds = [] }) {
 
 Actions.propTypes = {
   selectedIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-  participants: PropTypes.arrayOf(
+  registrations: PropTypes.arrayOf(
     PropTypes.shape({
       uuid: PropTypes.string.isRequired
     })
   ).isRequired
 };
 
-export default function ParticipantGrid({
-  participants: { items: participants, total, currentFilters = [] },
+export default function RegistrationGrid({
+  registrations: { items: registrations, total, currentFilters = [] },
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
     ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
@@ -141,7 +141,7 @@ export default function ParticipantGrid({
     <Card>
       <Card.Session
         title={
-          <Form submitBtn={false} id="participantGridFilter">
+          <Form submitBtn={false} id="registrationGridFilter">
             <Field
               type="text"
               id="name"
@@ -185,7 +185,7 @@ export default function ParticipantGrid({
               <Checkbox
                 onChange={(e) =>
                   setSelectedRows(
-                    e.target.checked ? participants.map((p) => p.uuid) : []
+                    e.target.checked ? registrations.map((r) => r.uuid) : []
                   )
                 }
               />
@@ -203,53 +203,42 @@ export default function ParticipantGrid({
                 name="lastName"
                 currentFilters={currentFilters}
               />
+
+              <SortableHeader
+                title="Product"
+                name="product"
+                currentFilters={currentFilters}
+              />
                        
           </tr>
         </thead>        
         <tbody>
           <Actions
-            participants={participants}
+            registrations={registrations}
             selectedIds={selectedRows}
             setSelectedRows={setSelectedRows}
           />
-          {participants.map((p) => (
-            <tr key={p.participantId}>
+          {registrations.map((r) => (
+            <tr key={r.uuid}>
               <td style={{ width: '2rem' }}>
                 <Checkbox
-                  isChecked={selectedRows.includes(p.uuid)}
+                  isChecked={selectedRows.includes(r.uuid)}
                   onChange={(e) => {
                     if (e.target.checked)
-                      setSelectedRows(selectedRows.concat([p.uuid]));
+                      setSelectedRows(selectedRows.concat([r.uuid]));
                     else
-                      setSelectedRows(selectedRows.filter((r) => r !== p.uuid));
+                      setSelectedRows(selectedRows.filter((r) => r !== r.uuid));
                   }}
                 />
       </td>
-      <Area
-        className=""
-        id="participantGridRow"
-        row={p}
-        noOuter
-        coreComponents={[
-          {
-            component: {
-              default: () => <ParticipantFirstNameRow id="firstName" participant={p} />
-            },
-            sortOrder: 10
-          },
-          {
-            component: {
-              default: () => <ParticipantLastNameRow id="lastName" participant={p} />
-            },
-            sortOrder: 25
-          }
-        ]}
-      />    
+      <td>{r.participant.firstName}</td>
+      <td>{r.participant.lastName}</td>  
+      <td>{r.name}</td>      
     </tr>
   ))}
         </tbody>
       </table>
-      {participants.length === 0 && (
+      {registrations.length === 0 && (
         <div className="flex w-full justify-center">
           No registrations to display.
         </div>

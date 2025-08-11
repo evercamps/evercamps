@@ -13,5 +13,5 @@ export {
   deleteParticipant,
   getRegistrationsBaseQuery,
   createRegistration,
-  getRegistrationsByParticipantBaseQuery 
+  getRegistrationsByParticipantBaseQuery
 };
