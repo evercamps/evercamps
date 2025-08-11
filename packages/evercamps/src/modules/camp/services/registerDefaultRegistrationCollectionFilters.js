@@ -23,7 +23,7 @@ export default async function registerDefaultRegistrationCollectionFilters() {
       operation: ['like'],
       callback: (query, operation, value, currentFilters) => {
         query.andWhere(
-          'registration.first_name',
+          'participant.first_name',
           OPERATION_MAP[operation],
           `%${value}%`
         );

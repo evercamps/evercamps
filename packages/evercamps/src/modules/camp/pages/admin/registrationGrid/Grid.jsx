@@ -18,7 +18,6 @@ export const query = `
     registrations(filters: $filters) {
       total
       items {
-        uuid
         productId
         name
         registrationId
@@ -51,7 +50,7 @@ function Actions({ registrations = [], selectedIds = [] }) {
   // const deleteRegistrations = async () => {
   //   setIsLoading(true);
   //   const promises = registrations
-  //     .filter((registration) => selectedIds.includes(registration.uuid))
+  //     .filter((registration) => selectedIds.includes(registration.registrationId))
   //     .map((registration) => axios.delete(registration.deleteApi));
   //   await Promise.all(promises);
   //   setIsLoading(false);
@@ -114,10 +113,10 @@ function Actions({ registrations = [], selectedIds = [] }) {
 }
 
 Actions.propTypes = {
-  selectedIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selectedIds: PropTypes.arrayOf(PropTypes.number).isRequired,
   registrations: PropTypes.arrayOf(
     PropTypes.shape({
-      uuid: PropTypes.string.isRequired
+      registrationId: PropTypes.number.isRequired
     })
   ).isRequired
 };
@@ -185,7 +184,7 @@ export default function RegistrationGrid({
               <Checkbox
                 onChange={(e) =>
                   setSelectedRows(
-                    e.target.checked ? registrations.map((r) => r.uuid) : []
+                    e.target.checked ? registrations.map((r) => r.registrationId) : []
                   )
                 }
               />
@@ -219,15 +218,15 @@ export default function RegistrationGrid({
             setSelectedRows={setSelectedRows}
           />
           {registrations.map((r) => (
-            <tr key={r.uuid}>
+            <tr key={r.registrationId}>
               <td style={{ width: '2rem' }}>
                 <Checkbox
-                  isChecked={selectedRows.includes(r.uuid)}
+                  isChecked={selectedRows.includes(r.registrationId)}
                   onChange={(e) => {
                     if (e.target.checked)
-                      setSelectedRows(selectedRows.concat([r.uuid]));
+                      setSelectedRows(selectedRows.concat([r.registrationId]));
                     else
-                      setSelectedRows(selectedRows.filter((r) => r !== r.uuid));
+                      setSelectedRows(selectedRows.filter((id) => id !== r.registrationId));
                   }}
                 />
       </td>

@@ -2,6 +2,7 @@ import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { getRegistrationsBaseQuery } from '../../../services/getRegistrationsBaseQuery.js';
 import { RegistrationCollection } from '../../../services/RegistrationCollection.js';
+import { getParticipantsBaseQuery } from '../../../services/getParticipantsBaseQuery.js';
 
 export default {
   Query: {
@@ -28,9 +29,9 @@ export default {
         return row ? camelCase(row) : null;
       },
       participant: async (registration, _, { pool }) => {
-      const row = await getRegistrationsBaseQuery()
-        .where('participant_id', '=', registration.participantId)
-        .load(pool);
+      const row = await getParticipantsBaseQuery()
+      .where("participant_id", "=", registration.participantId)
+      .load(pool);
       return row ? camelCase(row) : null;
       }
   }
