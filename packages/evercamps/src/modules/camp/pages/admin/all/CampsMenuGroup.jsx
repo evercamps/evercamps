@@ -3,8 +3,9 @@ import UsersIcon from '@heroicons/react/solid/esm/UsersIcon';
 import PropTypes from 'prop-types';
 import React from 'react';
 import participantGrid from 'src/modules/customer/pages/admin/participantGrid/index.js';
+import registrationGrid from '../registrationGrid/index.js';
 
-export default function CampMenuGroup({ participantGrid }) {
+export default function CampMenuGroup({ participantGrid, registrationGrid }) {
   return (
     <NavigationItemGroup
       id="campMenuGroup"
@@ -14,6 +15,11 @@ export default function CampMenuGroup({ participantGrid }) {
           Icon: UsersIcon,
           url: participantGrid,
           title: 'Participants'
+        },
+        {
+          Icon: UsersIcon,
+          url: registrationGrid,
+          title: 'Registrations'
         }
       ]}
     />
@@ -32,5 +38,6 @@ export const layout = {
 export const query = `
   query Query {
     participantGrid: url(routeId:"participantGrid")
+    registrationGrid: url(routeId:"registrationGrid")
   }
 `;

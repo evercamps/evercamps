@@ -23,7 +23,7 @@ export default async function registerDefaultRegistrationCollectionFilters() {
       operation: ['like'],
       callback: (query, operation, value, currentFilters) => {
         query.andWhere(
-          'registration.first_name',
+          'participant.first_name',
           OPERATION_MAP[operation],
           `%${value}%`
         );
@@ -32,6 +32,14 @@ export default async function registerDefaultRegistrationCollectionFilters() {
           operation,
           value
         });
+      }
+    },
+    {
+      key: 'product_uuid',
+      operation: ['eq'],
+      callback: (query, operation, value, currentFilters) => {
+        query.andWhere('product.uuid', '=', value);
+        currentFilters.push({ key: 'product_uuid', operation, value });
       }
     }
   ];
