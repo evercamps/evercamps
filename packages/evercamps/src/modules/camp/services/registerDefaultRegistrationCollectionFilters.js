@@ -33,6 +33,14 @@ export default async function registerDefaultRegistrationCollectionFilters() {
           value
         });
       }
+    },
+    {
+      key: 'product_uuid',
+      operation: ['eq'],
+      callback: (query, operation, value, currentFilters) => {
+        query.andWhere('product.uuid', '=', value);
+        currentFilters.push({ key: 'product_uuid', operation, value });
+      }
     }
   ];
 

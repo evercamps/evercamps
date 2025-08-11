@@ -15,23 +15,29 @@ import React, { useState } from 'react';
 
 export const query = `
   query Query($filters: [FilterInput]) {
-    registrations(filters: $filters) {
-      total
-      items {
-        name
-        registrationId
-        participant {
-          firstName
-          lastName
-        }
-      }    
-      currentFilters {
-        key
-        operation
-        value
+  registrations(filters: $filters) {
+    total
+    items {
+      name
+      registrationId
+      participant {
+        firstName
+        lastName
       }
+    }    
+    currentFilters {
+      key
+      operation
+      value
     }
   }
+  products {
+    items {
+      uuid
+      name
+    }
+  }
+}
 `;
 
 export const variables = `
@@ -122,6 +128,7 @@ Actions.propTypes = {
 
 export default function RegistrationGrid({
   registrations: { items: registrations, total, currentFilters = [] },
+  products: { items: products },
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
     ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
@@ -132,35 +139,74 @@ export default function RegistrationGrid({
         10
       )
     : 20;
+  const selectedValue = currentFilters.find(f => f.key === 'product_uuid')?.value;
+  const selectedOption = products.find(p => p.uuid === selectedValue);
   const [selectedRows, setSelectedRows] = useState([]);
-  const { openAlert, closeAlert } = useAlertContext();  
+  const { openAlert, closeAlert } = useAlertContext();    
 
   return (
     <Card>
       <Card.Session
         title={
           <Form submitBtn={false} id="registrationGridFilter">
-            <Field
-              type="text"
-              id="name"
-              name="name"
-              placeholder="Search"
-              value={currentFilters.find((f) => f.key === 'name')?.value}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  const url = new URL(document.location);
-                  const name = document.getElementById('name')?.value;
-                  if (name) {
-                    url.searchParams.set('name[operation]', 'like');
-                    url.searchParams.set('name[value]', name);
-                  } else {
-                    url.searchParams.delete('name[operation]');
-                    url.searchParams.delete('name[value]');
-                  }
-                  window.location.href = url.href;
+            <div className="flex gap-8 justify-center items-center">
+              
+              <Area
+                id="orderGridFilter"
+                noOuter
+                coreComponents={[
+                  {
+                    component: {
+                      default: () => (
+                      <Field
+                      type="text"
+                      id="name"
+                      name="name"
+                      placeholder="Search"
+                      value={currentFilters.find((f) => f.key === 'name')?.value}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          const url = new URL(document.location);
+                          const name = document.getElementById('name')?.value;
+                          if (name) {
+                            url.searchParams.set('name[operation]', 'like');
+                            url.searchParams.set('name[value]', name);
+                          } else {
+                            url.searchParams.delete('name[operation]');
+                            url.searchParams.delete('name[value]');
+                          }
+                          window.location.href = url.href;
+                        }
+                      }}
+                    />
+                    )                    
+                  },
+                  sortOrder: 5
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                        options={products.map(product => ({
+                          label: product.name,
+                          value: product.uuid,
+                          onSelect: () => {
+                            const url = new URL(document.location);
+                            url.searchParams.set('product_uuid', product.uuid);
+                            window.location.href = url.href;
+                          }
+                        }))}
+                        selectedOption={selectedOption?.name}
+                        title="Product"
+                        />
+                      )
+                  },
+                  sortOrder: 10
                 }
-              }}
-            />
+                ]}
+                currentFilters={currentFilters}
+              />  
+              </div>
           </Form>
         }
         actions={[
