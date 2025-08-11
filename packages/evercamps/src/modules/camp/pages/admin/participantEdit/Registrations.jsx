@@ -34,7 +34,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
   const [keyword, setKeyword] = React.useState('');
   const [page, setPage] = React.useState(1);
   const modal = useModal();
-  console.log(participant);
+
   // UseQuery with filters and pagination
   const [result, reexecuteQuery] = useQuery({
     query: RegistrationsQuery,
@@ -79,7 +79,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
   }, [page]);
 
   const { data, fetching, error } = result;
-  console.log(data);
+
   if (error) {
     return (
       <p>
