@@ -2,7 +2,6 @@ import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { getRegistrationsBaseQuery } from '../../../services/getRegistrationsBaseQuery.js';
 import { RegistrationCollection } from '../../../services/RegistrationCollection.js';
-import { getParticipantsBaseQuery } from '../../../services/getParticipantsBaseQuery.js';
 
 export default {
   Query: {
