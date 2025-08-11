@@ -1,4 +1,4 @@
 {
   "methods": ["GET"],
-  "path": "/stripe/return"
+  "path": "/mollie/return"
 }

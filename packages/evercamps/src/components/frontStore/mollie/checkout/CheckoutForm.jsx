@@ -57,15 +57,13 @@ const cartQuery = `
 `;
 
 export default function CheckoutForm({
-  mollieTestApiKey,
-  mollieLiveApiKey,
-  mollieMode,
+  mollieApiKey,
   createPaymentApi,
   returnUrl
 }) {
   const [clientSecret, setClientSecret] = React.useState(null);
   const [showTestCard, setShowTestCard] = useState('success');
-  const mollie = createMollieClient({ apiKey: mollieMode? mollieLiveApiKey : mollieTestApiKey});
+  const mollie = createMollieClient({ apiKey: mollieApiKey});
   const elements = useElements();
   const { steps, cartId, orderId, orderPlaced, paymentMethods } = useCheckout();
   const { placeOrder, setError } = useCheckoutDispatch();
@@ -81,6 +79,7 @@ export default function CheckoutForm({
   useEffect(() => {
     const pay = async () => {
       const submit = await elements.submit();
+      console.log(submit);
       if (submit.error) {
         setError(submit.error.message);
         return;
@@ -96,6 +95,7 @@ export default function CheckoutForm({
 
   useEffect(() => {
     if (orderId && orderPlaced) {
+      console.log(orderId, orderPlaced);
       window
         .fetch(createPaymentApi, {
           method: 'POST',
@@ -106,10 +106,10 @@ export default function CheckoutForm({
         })
         .then((res) => res.json())
         .then((data) => {
+          console.log(data);
           if (data.error) {
             toast.error(_('Some error occurred. Please try again later.'));
           } else {
-            console.log(data);
             setClientSecret(data.data.clientSecret);
           }
         });
@@ -120,7 +120,7 @@ export default function CheckoutForm({
     const confirmPayment = async () => {
       const billingAddress =
         result.data.cart.billingAddress || result.data.cart.shippingAddress;
-      const payload = await stripe.confirmPayment({
+      const payload = await mollie.payments.create({
         clientSecret,
         elements,
         confirmParams: {
@@ -168,31 +168,31 @@ export default function CheckoutForm({
       </div>
     );
   }
-  // Check if the selected payment method is Stripe
-  const stripePaymentMethod = paymentMethods.find(
-    (method) => method.code === 'stripe' && method.selected === true
+  // Check if the selected payment method is Mollie
+  const molliePaymentMethod = paymentMethods.find(
+    (method) => method.code === 'mollie' && method.selected === true
   );
-  if (!stripePaymentMethod) {
+  if (!molliePaymentMethod) {
     return null;
   }
   return (
     <>
-      <RenderIfTrue condition={!!(stripe && elements)}>
+      <RenderIfTrue condition={!!(mollie && elements)}>
         <div>
-          <div className="stripe-form">
-            {stripePublishableKey &&
-              stripePublishableKey.startsWith('pk_test') && (
+          <div className="mollie-form">
+            {mollieApiKey && (
                 <TestCards
                   showTestCard={showTestCard}
                   testSuccess={testSuccess}
                   testFailure={testFailure}
                 />
               )}
+              <p>Blablabla</p>
             <PaymentElement id="payment-element" />
           </div>
         </div>
       </RenderIfTrue>
-      <RenderIfTrue condition={!!(!stripe || !elements)}>
+      <RenderIfTrue condition={!!(!mollie || !elements)}>
         <div className="flex justify-center p-5">
           <Spinner width={20} height={20} />
         </div>
@@ -202,7 +202,7 @@ export default function CheckoutForm({
 }
 
 CheckoutForm.propTypes = {
-  stripePublishableKey: PropTypes.string.isRequired,
+  mollieApiKey: PropTypes.string.isRequired,
   returnUrl: PropTypes.string.isRequired,
-  createPaymentIntentApi: PropTypes.string.isRequired
+  createPaymentApi: PropTypes.string.isRequired
 };

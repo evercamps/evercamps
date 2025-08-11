@@ -13,7 +13,7 @@ export async function cancelPaymentIntent(orderID) {
     if (!transaction) {
       return;
     }
-    const stripeConfig = getConfig('system.stripe', {});
+    const stripeConfig = getConfig('system.mollie', {});
     let stripeSecretKey;
 
     if (stripeConfig.secretKey) {

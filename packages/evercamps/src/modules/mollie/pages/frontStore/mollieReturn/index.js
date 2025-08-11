@@ -23,7 +23,7 @@ export default async (request, response, next) => {
       return;
     }
 
-    const stripeConfig = getConfig('system.stripe', {});
+    const stripeConfig = getConfig('system.mollie', {});
     let stripeSecretKey;
     if (stripeConfig.secretKey) {
       stripeSecretKey = stripeConfig.secretKey;

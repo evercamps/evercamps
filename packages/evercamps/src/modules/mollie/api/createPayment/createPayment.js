@@ -25,7 +25,7 @@ export default async (request, response, next) => {
   } else {
     const mollieConfig = getConfig('system.mollie', {});
     let apiKey;
-
+    console.log(mollieConfig);
     if (mollieConfig.apiKey) {
       apiKey = mollieConfig.apiKey;
     } else {
