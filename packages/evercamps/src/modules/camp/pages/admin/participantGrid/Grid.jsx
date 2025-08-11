@@ -25,13 +25,13 @@ export const query = `
         lastName
         editUrl
         deleteApi
-        }
+      }
       total
       currentFilters {
-          key
-          operation
-          value
-        }
+        key
+        operation
+        value
+      }
     }
   }
 `;
@@ -125,8 +125,6 @@ Actions.propTypes = {
 export default function ParticipantGrid({
   participants: { items: participants, total, currentFilters = [] },
 }) {
-  console.log(participants);
-  console.log(currentFilters);
   const page = currentFilters.find((filter) => filter.key === 'page')
     ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
@@ -149,6 +147,7 @@ export default function ParticipantGrid({
               id="name"
               name="name"
               placeholder="Search"
+              value={currentFilters.find((f) => f.key === 'name')?.value}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   const url = new URL(document.location);

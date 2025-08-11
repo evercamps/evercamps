@@ -15,13 +15,13 @@ function ProductNoThumbnail({ width, height }) {
         d="M200,50 C120,0 40,60 40,146 C40,228 120,290 200,240"
         fill="none"
         stroke="#BBBBBB"
-        stroke-width="48"
-        stroke-linecap="round"
+        strokeWidth="48"
+        strokeLinecap="round"
       />
-      <line x1="170" y1="100" x2="200" y2="100" stroke="#BBBBBB" stroke-width="20" stroke-linecap="round" />
-      <line x1="170" y1="145" x2="200" y2="145" stroke="#BBBBBB" stroke-width="20" stroke-linecap="round" />
-      <line x1="170" y1="190" x2="200" y2="190" stroke="#BBBBBB" stroke-width="20" stroke-linecap="round" />
-      <line x1="130" y1="100" x2="130" y2="190" stroke="#BBBBBB" stroke-width="20" stroke-linecap="round" />
+      <line x1="170" y1="100" x2="200" y2="100" stroke="#BBBBBB" strokeWidth="20" strokeLinecap="round" />
+      <line x1="170" y1="145" x2="200" y2="145" stroke="#BBBBBB" strokeWidth="20" strokeLinecap="round" />
+      <line x1="170" y1="190" x2="200" y2="190" stroke="#BBBBBB" strokeWidth="20" strokeLinecap="round" />
+      <line x1="130" y1="100" x2="130" y2="190" stroke="#BBBBBB" strokeWidth="20" strokeLinecap="round" />
     </svg>
   );
 }

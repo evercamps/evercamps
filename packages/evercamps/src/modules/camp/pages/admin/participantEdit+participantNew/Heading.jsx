@@ -31,7 +31,7 @@ export const layout = {
 
 export const query = `
   query Query {
-    participant(id: getContextValue("participantId", null)) {
+    participant(id: getContextValue("participantUuid", null)) {
       firstName
       lastName
     }

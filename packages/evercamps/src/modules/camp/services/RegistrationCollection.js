@@ -2,25 +2,28 @@ import { pool } from '../../../lib/postgres/connection.js';
 import { camelCase } from '../../../lib/util/camelCase.js';
 import { getValue } from '../../../lib/util/registry.js';
 
-export class ParticipantCollection {
+export class RegistrationCollection {
   constructor(baseQuery) {
     this.baseQuery = baseQuery;
-    this.baseQuery.orderBy('participant.participant_id', 'DESC');
+    this.baseQuery.orderBy('registration.registration_id', 'DESC');
   }
 
-  async init(filters = []) {
+  async init(filters = [], isAdmin = false) {
     // if (!isAdmin) {
     //   this.baseQuery.andWhere('category.status', '=', 1);
     // }
     const currentFilters = [];
 
     // Apply the filters
-    const participantCollectionFilters = await getValue(
-      'participantCollectionFilters',
-      []
+    const registrationCollectionFilters = await getValue(
+      'registrationCollectionFilters',
+      [],
+      {
+        isAdmin
+      }
     );
 
-    participantCollectionFilters.forEach((filter) => {
+    registrationCollectionFilters.forEach((filter) => {
       const check = filters.find(
         (f) => f.key === filter.key && filter.operation.includes(f.operation)
       );
@@ -36,7 +39,7 @@ export class ParticipantCollection {
 
     // Clone the main query for getting total right before doing the paging
     const totalQuery = this.baseQuery.clone();
-    totalQuery.select('COUNT(participant.participant_id)', 'total');
+    totalQuery.select('COUNT(registration.registration_id)', 'total');
     totalQuery.removeOrderBy();
     totalQuery.removeLimit();
 

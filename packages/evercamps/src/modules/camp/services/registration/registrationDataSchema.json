@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {    
+    "participant_id": {
+      "type": "integer"
+    },
+    "product_id": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "participant_id",
+    "product_id"
+  ],
+  "additionalProperties": true
+}

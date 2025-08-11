@@ -1,7 +1,8 @@
 import { OPERATION_MAP } from '../../../lib/util/filterOperationMap.js';
 import { getValueSync } from '../../../lib/util/registry.js';
 
-export default async function registerDefaultParticipantCollectionFilters() {
+export default async function registerDefaultRegistrationCollectionFilters() {
+  const { isAdmin } = this;
   // List of default supported filters
   const defaultFilters = [
     {
@@ -9,8 +10,7 @@ export default async function registerDefaultParticipantCollectionFilters() {
       operation: ['eq'],
       callback: (query, operation, value, currentFilters) => {
         query
-          .andWhere('participant.first_name', 'ILIKE', `%${value}%`)
-          .or('participant.last_name', 'ILIKE', `%${value}%`);
+          .andWhere('product_description.name', 'ILIKE', `%${value}%`);
         currentFilters.push({
           key: 'keyword',
           operation,
@@ -23,7 +23,7 @@ export default async function registerDefaultParticipantCollectionFilters() {
       operation: ['like'],
       callback: (query, operation, value, currentFilters) => {
         query.andWhere(
-          'participant.first_name',
+          'registration.first_name',
           OPERATION_MAP[operation],
           `%${value}%`
         );
