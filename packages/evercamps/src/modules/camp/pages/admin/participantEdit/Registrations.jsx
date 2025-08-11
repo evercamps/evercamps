@@ -9,9 +9,10 @@ import AddRegistrations from '@components/admin/camp/participantEdit/AddRegistra
 import Spinner from '@components/common/Spinner';
 
 const RegistrationsQuery = `
-  query Query($participantId: Int!, $filters: [FilterInput!]) {
-  participant(id: $participantId) {
+  query Query($participantUuid: String!, $filters: [FilterInput!]) {
+  participant(id: $participantUuid) {
     participantId
+    uuid
     registrations(filters: $filters) {
       total
       items {
@@ -33,6 +34,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
   const [keyword, setKeyword] = React.useState('');
   const [page, setPage] = React.useState(1);
   const modal = useModal();
+  console.log(participant);
   // UseQuery with filters and pagination
   const [result, reexecuteQuery] = useQuery({
     query: RegistrationsQuery,
@@ -47,7 +49,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
             { key: 'limit', operation: 'eq', value: '10' },
             { key: 'keyword', operation: 'eq', value: keyword }
           ],
-      participantId: participant.participantId
+      participantUuid: participant.uuid
     },
     pause: true
   });
@@ -77,7 +79,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
   }, [page]);
 
   const { data, fetching, error } = result;
-
+  console.log(data);
   if (error) {
     return (
       <p>
@@ -133,7 +135,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
             </div>
             {data && (
               <>
-                {data.participant.registrations.length === 0 && (
+                {data.participant.registrations?.length === 0 && (
                   <div>No product to display.</div>
                 )}
                 <div className="flex justify-between">
@@ -241,8 +243,9 @@ export const layout = {
 
 export const query = `
   query Query {
-    participant(id: getContextValue("participantId", null)) {
+    participant(id: getContextValue("participantUuid", null)) {
       participantId
+      uuid
     }
     addRegistrationUrl: url(routeId: "createRegistration")
   }
