@@ -32,6 +32,7 @@ export default {
         .where("registration_id", "=", registration.registrationId)
         .load(pool);
       return row ? camelCase(row) : null;
-      }
+      },
+      deleteApi: (registration) => buildUrl('deleteRegistration', { id: registration.uuid }),
   }
 };

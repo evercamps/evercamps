@@ -1,0 +1,5 @@
+{
+  "methods": ["DELETE"],
+  "path": "/registrations/:id",
+  "access": "private"
+}
