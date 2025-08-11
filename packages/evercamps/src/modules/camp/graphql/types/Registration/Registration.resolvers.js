@@ -29,9 +29,9 @@ export default {
         return row ? camelCase(row) : null;
       },
       participant: async (registration, _, { pool }) => {
-      const row = await getParticipantsBaseQuery()
-      .where("participant_id", "=", registration.participantId)
-      .load(pool);
+      const row = await await getRegistrationsBaseQuery(pool)
+        .where("registration_id", "=", registration.registrationId)
+        .load(pool);
       return row ? camelCase(row) : null;
       }
   }
