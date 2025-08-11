@@ -2,11 +2,6 @@ import {
   useCheckout,
   useCheckoutDispatch
 } from '@components/common/context/checkout';
-import {
-  PaymentElement,
-  useElements,
-  useStripe
-} from '@stripe/react-stripe-js';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -17,6 +12,7 @@ import RenderIfTrue from '@components/common/RenderIfTrue';
 import Spinner from '@components/common/Spinner';
 import { _ } from '../../../../lib/locale/translate/_.js';
 import TestCards from './TestCards';
+import createMollieClient from '@mollie/api-client';
 
 const cartQuery = `
   query Query($cartId: String) {
@@ -61,13 +57,15 @@ const cartQuery = `
 `;
 
 export default function CheckoutForm({
-  stripePublishableKey,
-  createPaymentIntentApi,
+  mollieTestApiKey,
+  mollieLiveApiKey,
+  mollieMode,
+  createPaymentApi,
   returnUrl
 }) {
   const [clientSecret, setClientSecret] = React.useState(null);
   const [showTestCard, setShowTestCard] = useState('success');
-  const stripe = useStripe();
+  const mollie = createMollieClient({ apiKey: mollieMode? mollieLiveApiKey : mollieTestApiKey});
   const elements = useElements();
   const { steps, cartId, orderId, orderPlaced, paymentMethods } = useCheckout();
   const { placeOrder, setError } = useCheckoutDispatch();
@@ -99,7 +97,7 @@ export default function CheckoutForm({
   useEffect(() => {
     if (orderId && orderPlaced) {
       window
-        .fetch(createPaymentIntentApi, {
+        .fetch(createPaymentApi, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -111,6 +109,7 @@ export default function CheckoutForm({
           if (data.error) {
             toast.error(_('Some error occurred. Please try again later.'));
           } else {
+            console.log(data);
             setClientSecret(data.data.clientSecret);
           }
         });
