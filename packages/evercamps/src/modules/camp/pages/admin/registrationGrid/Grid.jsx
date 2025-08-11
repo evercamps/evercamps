@@ -18,7 +18,6 @@ export const query = `
     registrations(filters: $filters) {
       total
       items {
-        productId
         name
         registrationId
         participant {
