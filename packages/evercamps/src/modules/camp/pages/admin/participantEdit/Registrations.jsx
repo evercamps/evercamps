@@ -18,10 +18,8 @@ const RegistrationsQuery = `
       items {
         productId
         name
-        productSku
         sku
         registrationId    
-        description    
         editUrl
         image
       }
