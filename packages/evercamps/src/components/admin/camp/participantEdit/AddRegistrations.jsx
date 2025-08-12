@@ -1,4 +1,4 @@
-import ProductSkuSelector from '@components/admin/promotion/couponEdit/ProductSkuSelector';
+import RegistrationSkuSelector from '@components/admin/promotion/couponEdit/RegistrationSkuSelector';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
@@ -27,7 +27,7 @@ function AddRegistrations({ addRegistrationApi, participantId, addedProductIDs, 
   };
 
   return (
-    <ProductSkuSelector
+    <RegistrationSkuSelector
       onSelect={addRegistration}
       closeModal={closeModal}
       selectedChecker={(product) =>
