@@ -11,17 +11,18 @@ import Spinner from '@components/common/Spinner';
 const RegistrationsQuery = `
   query Query($participantUuid: String!, $filters: [FilterInput!]) {
   participant(id: $participantUuid) {
-    participantId
-    uuid
+    participantId    
     registrations(filters: $filters) {
       total
       items {
+        uuid
         productId
         name
         sku
         registrationId    
         editUrl
         image
+        deleteApi
       }
     }
   }
@@ -31,6 +32,7 @@ const RegistrationsQuery = `
 export default function Registrations({ participant, addRegistrationUrl }) {
   const [keyword, setKeyword] = React.useState('');
   const [page, setPage] = React.useState(1);
+  const [removing, setRemoving] = React.useState([]);
   const modal = useModal();
 
   // UseQuery with filters and pagination
@@ -75,6 +77,19 @@ export default function Registrations({ participant, addRegistrationUrl }) {
     }
     reexecuteQuery({ requestPolicy: 'network-only' });
   }, [page]);
+
+  const removeRegistration = async (api, uuid) => {
+    setRemoving([...removing, uuid]);
+    await fetch(api, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
+    setPage(1);
+    reexecuteQuery({ requestPolicy: 'network-only' });
+  };
 
   const { data, fetching, error } = result;
 
@@ -207,6 +222,21 @@ export default function Registrations({ participant, addRegistrationUrl }) {
                       <div>{p?.sku}</div>
                       <div>{p?.price?.regular?.text}</div>
                     </div>
+                    <div className="col-span-2 text-right">
+                        <a
+                          href="#"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            await removeRegistration(
+                              r.deleteApi,
+                              r.registrationId
+                            );
+                          }}
+                          className="text-critical hover:first-letter:"
+                        >
+                          Remove
+                        </a>
+                      </div>
                   </div>
                 );
               })}

@@ -9,8 +9,8 @@ import type { PoolClient } from '@evershop/postgres-query-builder';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import { hookable } from '../../../../lib/util/hookable.js';
 
-async function deleteRegistrationData(uuid: string, connection: PoolClient) {
-  await del('registration').where('uuid', '=', uuid).execute(connection);
+async function deleteRegistrationData(id: string, connection: PoolClient) {
+  await del('registration').where('registration_id', '=', id).execute(connection);
 }
 /**
  * Delete registration service. This service will delete a registration with all related data
@@ -22,7 +22,7 @@ async function deleteRegistration(uuid: string, context: Record<string, any>) {
   await startTransaction(connection);
   try {
     const query = select().from('registration');
-    const category = await query.where('uuid', '=', uuid).load(connection);
+    const category = await query.where('registration_id', '=', uuid).load(connection);
 
     if (!category) {
       throw new Error('Invalid registration id');

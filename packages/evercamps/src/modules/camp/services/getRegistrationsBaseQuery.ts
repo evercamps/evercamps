@@ -22,5 +22,6 @@ export const getRegistrationsBaseQuery = (): SelectQuery => {
     query
   .leftJoin('participant')
   .on('registration.registration_participant_id', '=', 'participant.participant_id');
+  
   return query;
 };

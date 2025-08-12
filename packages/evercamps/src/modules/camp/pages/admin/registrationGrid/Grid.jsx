@@ -24,6 +24,7 @@ export const query = `
         firstName
         lastName
       }
+      deleteApi
     }    
     currentFilters {
       key
@@ -52,16 +53,16 @@ function Actions({ registrations = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  // const deleteRegistrations = async () => {
-  //   setIsLoading(true);
-  //   const promises = registrations
-  //     .filter((registration) => selectedIds.includes(registration.registrationId))
-  //     .map((registration) => axios.delete(registration.deleteApi));
-  //   await Promise.all(promises);
-  //   setIsLoading(false);
-  //   // Refresh the page
-  //   window.location.reload();
-  // };
+  const deleteRegistrations = async () => {
+    setIsLoading(true);
+    const promises = registrations
+      .filter((registration) => selectedIds.includes(registration.registrationId))
+      .map((registration) => axios.delete(registration.deleteApi));
+    await Promise.all(promises);
+    setIsLoading(false);
+    // Refresh the page
+    window.location.reload();
+  };
 
   const actions = [
     {

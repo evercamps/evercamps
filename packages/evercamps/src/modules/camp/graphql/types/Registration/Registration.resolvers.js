@@ -33,6 +33,6 @@ export default {
         .load(pool);
       return row ? camelCase(row) : null;
       },
-      deleteApi: (registration) => buildUrl('deleteRegistration', { id: registration.uuid }),
+      deleteApi: (registration) => buildUrl('deleteRegistration', { id: registration.registrationId }),
   }
 };
