@@ -18,12 +18,14 @@ export const query = `
   registrations(filters: $filters) {
     total
     items {
+      uuid
       name
       registrationId
       participant {
         firstName
         lastName
       }
+      deleteApi
     }    
     currentFilters {
       key
@@ -52,16 +54,16 @@ function Actions({ registrations = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  // const deleteRegistrations = async () => {
-  //   setIsLoading(true);
-  //   const promises = registrations
-  //     .filter((registration) => selectedIds.includes(registration.registrationId))
-  //     .map((registration) => axios.delete(registration.deleteApi));
-  //   await Promise.all(promises);
-  //   setIsLoading(false);
-  //   // Refresh the page
-  //   window.location.reload();
-  // };
+  const deleteRegistrations = async () => {
+    setIsLoading(true);
+    const promises = registrations
+      .filter((registration) => selectedIds.includes(registration.uuid))
+      .map((registration) => axios.delete(registration.deleteApi));
+    await Promise.all(promises);
+    setIsLoading(false);
+    // Refresh the page
+    window.location.reload();
+  };
 
   const actions = [
     {
@@ -118,10 +120,10 @@ function Actions({ registrations = [], selectedIds = [] }) {
 }
 
 Actions.propTypes = {
-  selectedIds: PropTypes.arrayOf(PropTypes.number).isRequired,
+  selectedIds: PropTypes.arrayOf(PropTypes.string).isRequired,
   registrations: PropTypes.arrayOf(
     PropTypes.shape({
-      registrationId: PropTypes.number.isRequired
+      uuid: PropTypes.string.isRequired
     })
   ).isRequired
 };
@@ -229,7 +231,7 @@ export default function RegistrationGrid({
               <Checkbox
                 onChange={(e) =>
                   setSelectedRows(
-                    e.target.checked ? registrations.map((r) => r.registrationId) : []
+                    e.target.checked ? registrations.map((r) => r.uuid) : []
                   )
                 }
               />
@@ -263,15 +265,15 @@ export default function RegistrationGrid({
             setSelectedRows={setSelectedRows}
           />
           {registrations.map((r) => (
-            <tr key={r.registrationId}>
+            <tr key={r.uuid}>
               <td style={{ width: '2rem' }}>
                 <Checkbox
                   isChecked={selectedRows.includes(r.registrationId)}
                   onChange={(e) => {
                     if (e.target.checked)
-                      setSelectedRows(selectedRows.concat([r.registrationId]));
+                      setSelectedRows(selectedRows.concat([r.uuid]));
                     else
-                      setSelectedRows(selectedRows.filter((id) => id !== r.registrationId));
+                      setSelectedRows(selectedRows.filter((uuid) => uuid !== r.uuid));
                   }}
                 />
       </td>

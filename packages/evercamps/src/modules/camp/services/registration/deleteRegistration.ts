@@ -9,31 +9,31 @@ import type { PoolClient } from '@evershop/postgres-query-builder';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import { hookable } from '../../../../lib/util/hookable.js';
 
-async function deleteParticipantData(uuid: string, connection: PoolClient) {
-  await del('participant').where('uuid', '=', uuid).execute(connection);
+async function deleteRegistrationData(uuid: string, connection: PoolClient) {
+  await del('registration').where('uuid', '=', uuid).execute(connection);
 }
 /**
- * Delete participant service. This service will delete a participant with all related data
+ * Delete registration service. This service will delete a registration with all related data
  * @param {String} uuid
  * @param {Object} context
  */
-async function deleteParticipant(uuid: string, context: Record<string, any>) {
+async function deleteRegistration(uuid: string, context: Record<string, any>) {
   const connection = await getConnection();
   await startTransaction(connection);
   try {
-    const query = select().from('participant');
-    const participant = await query.where('uuid', '=', uuid).load(connection);
+    const query = select().from('registration');
+    const category = await query.where('uuid', '=', uuid).load(connection);
 
-    if (!participant) {
-      throw new Error('Invalid participant id');
+    if (!category) {
+      throw new Error('Invalid registration id');
     }
-    await hookable(deleteParticipantData, { ...context, connection, participant })(
+    await hookable(deleteRegistrationData, { ...context, connection, category })(
       uuid,
       connection
     );
 
     await commit(connection);
-    return participant;
+    return category;
   } catch (e) {
     await rollback(connection);
     throw e;
@@ -41,7 +41,7 @@ async function deleteParticipant(uuid: string, context: Record<string, any>) {
 }
 
 /**
- * Delete participant service. This service will delete a participant with all related data
+ * Delete registration service. This service will delete a registration with all related data
  * @param {String} uuid
  * @param {Object} context
  */
@@ -50,6 +50,6 @@ export default async (uuid: string, context: Record<string, any>) => {
   if (context && typeof context !== 'object') {
     throw new Error('Context must be an object');
   }
-  const participant = await hookable(deleteParticipant, context)(uuid, context);
-  return participant;
+  const registration = await hookable(deleteRegistration, context)(uuid, context);
+  return registration;
 };
