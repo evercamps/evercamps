@@ -55,14 +55,21 @@ export default async (request, response, next) => {
       }
 
       debug(`Mollie create client with apikey ${apiKey}`);
-      
+
       const mollieClient = createMollieClient({ apiKey: apiKey });
-      
+
       debug(`Create Mollie payment from order ${JSON.stringify(order)}`);
+      debug(`Create Mollie payment with total amount ${new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }).format(order.sub_total_with_discount_incl_tax)}`);
       // Create a Payment with the order amount and currency
       const payment = await mollieClient.payments.create({
         amount: {
-          value: smallestUnit.default(order.grand_total, order.currency),
+          value: new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }).format(order.sub_total_with_discount_incl_tax),
           currency: order.currency
         },
         description: `Payment for order ${order_id}`,
