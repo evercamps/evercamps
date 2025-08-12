@@ -229,7 +229,7 @@ export default function Registrations({ participant, addRegistrationUrl }) {
                             e.preventDefault();
                             await removeRegistration(
                               r.deleteApi,
-                              r.registrationId
+                              r.uuid
                             );
                           }}
                           className="text-critical hover:first-letter:"
