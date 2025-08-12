@@ -80,6 +80,10 @@
       "type": ["integer", "string"],
       "enum": [0, 1, "0", "1"]
     },
+    "manage_registrations": {
+      "type": ["integer", "string"],
+      "enum": [0, 1, "0", "1"]
+    },
     "images": {
       "type": "array",
       "items": {

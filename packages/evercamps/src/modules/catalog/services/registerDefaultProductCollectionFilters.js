@@ -116,6 +116,18 @@ export default async function registerDefaultProductCollectionFilters() {
       }
     },
     {
+      key: 'manage_registrations',
+      operation: ['eq'],
+      callback: (query, operation, value, currentFilters) => {
+        query.andWhere('product.manage_registrations', OPERATION_MAP[operation], value);
+        currentFilters.push({
+          key: 'manage_registrations',
+          operation,
+          value
+        });
+      }
+    },
+    {
       key: 'type',
       operation: ['eq'],
       callback: (query, operation, value, currentFilters) => {

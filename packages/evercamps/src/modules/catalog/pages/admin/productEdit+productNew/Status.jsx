@@ -32,6 +32,19 @@ export default function Status({ product }) {
           type="radio"
         />
       </Card.Session>
+      <Card.Session>
+        <Field
+          id="manageRegistrations"
+          name="manage_registrations"
+          value={product?.manageRegistrations === undefined ? 1 : product.manageRegistrations}
+          label="Manage Registrations"
+          options={[
+            { value: 0, text: 'Disabled' },
+            { value: 1, text: 'Enabled' }
+          ]}
+          type="radio"
+        />
+      </Card.Session>
     </Card>
   );
 }
@@ -39,14 +52,16 @@ export default function Status({ product }) {
 Status.propTypes = {
   product: PropTypes.shape({
     status: PropTypes.number.isRequired,
-    visibility: PropTypes.number.isRequired
+    visibility: PropTypes.number.isRequired,
+    manageRegistrations: PropTypes.number.isRequired
   })
 };
 
 Status.defaultProps = {
   product: {
     status: 1,
-    visibility: 1
+    visibility: 1,
+    manageRegistrations: 1
   }
 };
 
@@ -60,6 +75,7 @@ export const query = `
     product(id: getContextValue("productId", null)) {
       status
       visibility
+      manageRegistrations
       category {
         value: categoryId
         label: name
