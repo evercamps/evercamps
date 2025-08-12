@@ -1,7 +1,19 @@
 import { select, SelectQuery } from '@evershop/postgres-query-builder';
 
 export const getRegistrationsBaseQuery = (): SelectQuery => {
-  const query = select().from('registration');
+  const query = select(    
+    'registration.registration_id',
+    'registration.uuid',
+    'registration.registration_participant_id',
+    'registration.registration_product_id',
+    'registration.created_at',    
+    'product.product_id',
+    'product.sku',
+    'product_description.name',
+    'product_image.thumb_image',
+    'participant.first_name',
+    'participant.last_name'
+  ).from('registration');
   query
   .leftJoin('product')
   .on('registration.registration_product_id', '=', 'product.product_id');
@@ -22,5 +34,6 @@ export const getRegistrationsBaseQuery = (): SelectQuery => {
     query
   .leftJoin('participant')
   .on('registration.registration_participant_id', '=', 'participant.participant_id');
+  
   return query;
 };
