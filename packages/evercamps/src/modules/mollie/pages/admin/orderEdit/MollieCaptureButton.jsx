@@ -44,7 +44,7 @@ export default function MollieCaptureButton({
   );
 }
 
-StripeCaptureButton.propTypes = {
+MollieCaptureButton.propTypes = {
   captureAPI: PropTypes.string.isRequired,
   order: PropTypes.shape({
     paymentStatus: PropTypes.shape({

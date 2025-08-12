@@ -148,7 +148,6 @@ export function StepContent({
                   className="border-divider payment-method-list"
                 >
                   <div className="py-8">
-                    <span>area{`checkoutPaymentMethod${method.code}`}</span>
                     <Area id={`checkoutPaymentMethod${method.code}`} />
                   </div>
                 </div>
