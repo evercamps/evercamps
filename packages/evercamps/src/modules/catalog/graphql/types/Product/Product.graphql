@@ -16,6 +16,7 @@ type Product {
   metaKeywords: String
   variantGroupId: ID
   visibility: Int
+  manageRegistrations: Int
   groupId: ID
   url: String
 }

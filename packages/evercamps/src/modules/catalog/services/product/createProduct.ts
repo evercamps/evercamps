@@ -26,6 +26,7 @@ export type ProductData = ProductInventoryData & {
   price: number,
   group_id: number,
   visibility?: string,
+  manage_registrations: string,
   attributes?: ProductAttributeData[],
   images?: string[],
   [key: string]: any
