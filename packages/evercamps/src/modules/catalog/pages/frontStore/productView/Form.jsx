@@ -88,7 +88,7 @@ ToastMessage.defaultProps = {
   thumbnail: null
 };
 
-function AddToCart({ stockAvaibility, loading = false, error, onAddToCartClick }) {
+function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick, manageRegistrations }) {
   return (
     <div className="add-to-cart mt-8">
       <div style={{ width: '8rem' }}>
@@ -104,15 +104,15 @@ function AddToCart({ stockAvaibility, loading = false, error, onAddToCartClick }
       </div>
       {error && <div className="text-critical mt-4">{error}</div>}
       <div className="mt-4">
-        {stockAvaibility === true && (
+        {stockAvailability === true && (
           <Button
-            title={_('ADD TO CART')}
+            title={manageRegistrations === 1 ? _('ADD PARTICIPANT') : _('ADD TO CART')}
             outline
             isLoading={loading}
             onAction={onAddToCartClick}
           />
         )}
-        {stockAvaibility === false && (
+        {stockAvailability === false && (
           <Button title={_('SOLD OUT')} onAction={() => {}} />
         )}
       </div>
@@ -204,10 +204,11 @@ export default function ProductForm({ product, action }) {
           {
             component: { default: AddToCart },
             props: {
-              stockAvaibility: product.inventory.isInStock,
+              stockAvailability: product.inventory.isInStock,
               loading,
               error,
-              onAddToCartClick: handleAddToCartClick
+              onAddToCartClick: handleAddToCartClick,
+              manageRegistrations: product.manageRegistrations
             },
             sortOrder: 50,
             id: 'productSingleBuyButton'
