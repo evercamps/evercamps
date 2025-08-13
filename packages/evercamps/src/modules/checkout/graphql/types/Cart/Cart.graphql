@@ -122,6 +122,7 @@ type CartItem implements ShoppingCartItem {
   productCustomOptions: String
   productUrl: String!
   registrations: [CartItemRegistration!]
+  manageRegistrations: Int
   errors: [String!]
 }
 

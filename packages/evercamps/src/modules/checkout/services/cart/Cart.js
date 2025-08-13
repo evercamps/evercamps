@@ -14,7 +14,7 @@ class Item extends DataObject {
   #product;
 
   constructor(cart, initialData = {}) {
-    super(getValueSync('cartItemFields', []), initialData);
+    super(getValueSync('cartItemFields', []), initialData);    
     this.#cart = cart;
   }
 
@@ -216,9 +216,15 @@ async function getCart(uuid) {
   const cartItems = [];
   await Promise.all(
     items.map(async (item) => {
+      const product = await select('product.manage_registrations')
+      .from('product')
+      .where('product_id', '=', item.product_id)
+      .load(pool);
+
       const cartItem = new Item(cartObject, {
         ...item,
-        registrations: registrationsByItem[item.cart_item_id] || []
+        registrations: registrationsByItem[item.cart_item_id] || [],
+        manageRegistrations: product?.manage_registrations
       });
       await cartItem.build();
       cartItems.push(cartItem);

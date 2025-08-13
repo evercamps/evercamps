@@ -81,7 +81,7 @@ export const saveCart = async (cart: Cart) => {
           
           
 
-          const registration = item.getData('registration');
+          const registration = item.getData('registrations');
           if (registration?.firstName && registration?.lastName) {
             await insert('cart_item_registration')
               .given({

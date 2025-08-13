@@ -133,6 +133,11 @@ export const query = `
         }
         removeApi
         updateQtyApi
+        manageRegistrations
+        registrations {
+          firstName
+          lastName
+        }
         errors
       }
     }

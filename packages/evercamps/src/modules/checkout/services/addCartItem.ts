@@ -13,7 +13,7 @@ async function addCartItem(
   }
   const newItem = await cart.createItem(productID, parseInt(qty as string, 10));
   if (context.first_name && context.last_name) {
-    await newItem.setData('registration', {
+    await newItem.setData('registrations', {
       firstName: context.first_name,
       lastName: context.last_name
   });
