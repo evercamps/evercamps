@@ -9,6 +9,8 @@ type Registration {
   name: String
   sku: String
   image: String
+  manageRegistrations: Int
+  deleteApi: String!
 }
 
 type RegistrationCollection {

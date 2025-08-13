@@ -10,6 +10,8 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import './Form.scss';
+import { useModal } from '@components/common/modal/useModal';
+import ParticipantForm from './ParticipantForm.jsx';
 
 function ToastMessage({ thumbnail, name, qty, count, cartUrl, toastId }) {
   return (
@@ -86,7 +88,7 @@ ToastMessage.defaultProps = {
   thumbnail: null
 };
 
-function AddToCart({ stockAvaibility, loading = false, error }) {
+function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick, manageRegistrations }) {
   return (
     <div className="add-to-cart mt-8">
       <div style={{ width: '8rem' }}>
@@ -102,21 +104,15 @@ function AddToCart({ stockAvaibility, loading = false, error }) {
       </div>
       {error && <div className="text-critical mt-4">{error}</div>}
       <div className="mt-4">
-        {stockAvaibility === true && (
+        {stockAvailability === true && (
           <Button
-            title={_('ADD TO CART')}
+            title={manageRegistrations === 1 ? _('ADD PARTICIPANT') : _('ADD TO CART')}
             outline
             isLoading={loading}
-            onAction={() => {
-              document
-                .getElementById('productForm')
-                .dispatchEvent(
-                  new Event('submit', { cancelable: true, bubbles: true })
-                );
-            }}
+            onAction={onAddToCartClick}
           />
         )}
-        {stockAvaibility === false && (
+        {stockAvailability === false && (
           <Button title={_('SOLD OUT')} onAction={() => {}} />
         )}
       </div>
@@ -138,8 +134,11 @@ export default function ProductForm({ product, action }) {
   const [loading, setLoading] = useState(false);
   const [toastId, setToastId] = useState();
   const [error, setError] = useState();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const appContext = useAppState();
   const { setData } = useAppDispatch();
+  const modal = useModal();
 
   const onSuccess = (response) => {
     if (!response.error) {
@@ -168,7 +167,25 @@ export default function ProductForm({ product, action }) {
     }
   };
 
+  const handleAddToCartClick = () => {
+    if (product.manageRegistrations === 1) {
+      modal.openModal();
+    } else {
+      document
+        .getElementById('productForm')
+        .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+  };
+
+  const handleModalSubmit = () => {
+    modal.closeModal();
+    document
+      .getElementById('productForm')
+      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  };
+
   return (
+    <>
     <Form
       id="productForm"
       action={action}
@@ -187,9 +204,11 @@ export default function ProductForm({ product, action }) {
           {
             component: { default: AddToCart },
             props: {
-              stockAvaibility: product.inventory.isInStock,
+              stockAvailability: product.inventory.isInStock,
               loading,
-              error
+              error,
+              onAddToCartClick: handleAddToCartClick,
+              manageRegistrations: product.manageRegistrations
             },
             sortOrder: 50,
             id: 'productSingleBuyButton'
@@ -197,6 +216,30 @@ export default function ProductForm({ product, action }) {
         ]}
       />
     </Form>
+    {modal.state.showing && (
+      <div
+        className={modal.className}
+        onAnimationEnd={modal.onAnimationEnd}
+      >
+        <div
+          className="modal-wrapper flex self-center justify-center items-center"
+          tabIndex={-1}
+          role="dialog"
+        >
+          <div className="modal">
+            <ParticipantForm
+              firstName={firstName}
+              setFirstName={setFirstName}
+              lastName={lastName}
+              setLastName={setLastName}
+              onCancel={modal.closeModal}
+              onSubmit={handleModalSubmit}
+            />
+          </div>
+        </div>
+      </div>
+    )}    
+      </>
   );
 }
 
@@ -228,6 +271,7 @@ export const query = `
       inventory {
         isInStock
       }
+      manageRegistrations
     }
     action:url (routeId: "addMineCartItem")
   }
