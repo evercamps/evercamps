@@ -123,7 +123,7 @@ export const layout = {
 
 export const query = `
   query Query {
-    refundAPI: url(routeId: "refundPayment")
+    refundAPI: url(routeId: "mollieRefundPayment")
     order(uuid: getContextValue("orderId")) {
       orderId
       grandTotal {

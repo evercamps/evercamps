@@ -6,8 +6,6 @@ import {
   commit,
   rollback
 } from '@evershop/postgres-query-builder';
-import stripePayment from 'stripe';
-import smallestUnit from 'zero-decimal-currencies';
 import { error } from '../../../../lib/log/logger.js';
 import { pool } from '../../../../lib/postgres/connection.js';
 import { getConfig } from '../../../../lib/util/getConfig.js';
@@ -30,7 +28,7 @@ export default async (request, response, next) => {
       .from('order')
       .where('order_id', '=', order_id)
       .load(connection);
-    if (!order || order.payment_method !== 'stripe') {
+    if (!order || order.payment_method !== 'mollie') {
       response.status(INVALID_PAYLOAD);
       response.json({
         error: {
