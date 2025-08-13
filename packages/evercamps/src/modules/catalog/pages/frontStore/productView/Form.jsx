@@ -123,7 +123,7 @@ function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick
 AddToCart.propTypes = {
   error: PropTypes.string,
   loading: PropTypes.bool.isRequired,
-  stockAvaibility: PropTypes.bool.isRequired
+  stockAvailability: PropTypes.bool.isRequired
 };
 
 AddToCart.defaultProps = {
@@ -142,6 +142,9 @@ export default function ProductForm({ product, action }) {
 
   const onSuccess = (response) => {
     if (!response.error) {
+      if (product.manageRegistrations === 1) {
+      modal.closeModal();
+    }
       setData(
         produce(appContext, (draff) => {
           draff.cart = appContext.cart || {};
@@ -177,15 +180,13 @@ export default function ProductForm({ product, action }) {
     }
   };
 
-  const handleModalSubmit = () => {
-    modal.closeModal();
+  const handleModalSubmit = () => {        
     document
       .getElementById('productForm')
-      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));    
   };
 
-  return (
-    <>
+  return (    
     <Form
       id="productForm"
       action={action}
@@ -215,8 +216,7 @@ export default function ProductForm({ product, action }) {
           }
         ]}
       />
-    </Form>
-    {modal.state.showing && (
+      {modal.state.showing && (
       <div
         className={modal.className}
         onAnimationEnd={modal.onAnimationEnd}
@@ -238,8 +238,8 @@ export default function ProductForm({ product, action }) {
           </div>
         </div>
       </div>
-    )}    
-      </>
+    )}
+    </Form>
   );
 }
 
