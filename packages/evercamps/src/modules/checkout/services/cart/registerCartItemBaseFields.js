@@ -314,6 +314,16 @@ export function registerCartItemBaseFields(fields) {
         }
       ],
       dependencies: ['cart_item_id', 'uuid']
+    },
+    {
+      key: 'registration',
+      resolvers: [
+        async function resolver() {
+          return this.getTriggeredField() === 'registration'
+        ? this.getRequestedValue()
+        : this.getData('registration') ?? null;
+        }
+      ]
     }
   ]);
   return newFields;

@@ -12,6 +12,12 @@ async function addCartItem(
     throw new Error('Context must be an object');
   }
   const newItem = await cart.createItem(productID, parseInt(qty as string, 10));
+  if (context.first_name && context.last_name) {
+    await newItem.setData('registration', {
+      firstName: context.first_name,
+      lastName: context.last_name
+  });
+  }
   context.cartData = cart.export();
   context.itemData = newItem.export();
   const item = await getValue('cartItemBeforeAdd', newItem, context);

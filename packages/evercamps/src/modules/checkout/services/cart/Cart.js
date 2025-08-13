@@ -192,12 +192,33 @@ async function getCart(uuid) {
     .from('cart_item')
     .where('cart_id', '=', cart.cart_id)
     .execute(pool);
+
+  // Get registrations for all items
+  const cartItemIds = items.map(i => i.cart_item_id);
+  const registrations = await select()
+    .from('cart_item_registration')
+    .where('cart_item_id', 'IN', cartItemIds)
+    .execute(pool);
+
+  // Group registrations by cart_item_id
+  const registrationsByItem = {};
+  registrations.forEach(r => {
+    if (!registrationsByItem[r.cart_item_id]) registrationsByItem[r.cart_item_id] = [];
+    registrationsByItem[r.cart_item_id].push({
+      cartItemRegistrationId: r.cart_item_registration_id,
+      cartItemId: r.cart_item_id,
+      firstName: r.first_name,
+      lastName: r.last_name
+    });
+  });
+
   // Build the cart items
   const cartItems = [];
   await Promise.all(
     items.map(async (item) => {
       const cartItem = new Item(cartObject, {
-        ...item
+        ...item,
+        registrations: registrationsByItem[item.cart_item_id] || []
       });
       await cartItem.build();
       cartItems.push(cartItem);

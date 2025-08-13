@@ -121,7 +121,18 @@ type CartItem implements ShoppingCartItem {
   variantOptions: String
   productCustomOptions: String
   productUrl: String!
+  registrations: [CartItemRegistration!]
   errors: [String!]
+}
+
+"""
+Represents a registration attached to a specific cart item.
+"""
+type CartItemRegistration {
+  cartItemRegistrationId: ID!
+  cartItemId: ID!
+  firstName: String!
+  lastName: String!
 }
 
 """
