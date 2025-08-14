@@ -108,7 +108,13 @@ export default {
     }
   },
   OrderItem: {
-    registrations: (orderItem) => orderItem.registrations || [],
+    registrations: async ({ orderItemId }, _, { pool }) => {
+      const items = await select()
+        .from('order_item_registration')
+        .where('order_item_id', '=', orderItemId)
+        .execute(pool);
+      return items.map((item) => camelCase(item));
+    },
     productUrl: async ({ productId }, _, { pool }) => {
       const product = await select()
         .from('product')
