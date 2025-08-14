@@ -108,6 +108,7 @@ export default {
     }
   },
   OrderItem: {
+    registrations: (orderItem) => orderItem.registrations || [],
     productUrl: async ({ productId }, _, { pool }) => {
       const product = await select()
         .from('product')
