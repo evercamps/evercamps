@@ -124,11 +124,11 @@ function Items({ items, setting: { priceIncludingTax } }) {
                   </div>
                 )}
                 <div className="md:hidden mt-2 flex justify-end">
-                  <Quantity qty={item.qty} api={item.updateQtyApi} />
+                  <Quantity qty={item.qty} api={item.updateQtyApi} disabled={item.manageRegistrations === 1} />
                 </div>
               </td>
               <td className="hidden md:table-cell">
-                <Quantity qty={item.qty} api={item.updateQtyApi} />
+                <Quantity qty={item.qty} api={item.updateQtyApi} disabled={item.manageRegistrations === 1} />
               </td>
               <td className="hidden md:table-cell">
                 <span>
@@ -178,6 +178,7 @@ Items.propTypes = {
         value: PropTypes.number,
         text: PropTypes.string
       }),
+      manageRegistrations: PropTypes.number,
       removeApi: PropTypes.string,
       updateQtyApi: PropTypes.string
     })

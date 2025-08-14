@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 
-export default function Quantity({ qty, api }) {
+export default function Quantity({ qty, api, disabled = false }) {
   const AppContextDispatch = useAppDispatch();
   const [quantity, setQuantity] = React.useState(qty);
   const previousQuantity = React.useRef(qty);
@@ -11,6 +11,7 @@ export default function Quantity({ qty, api }) {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const updateQuantity = (newQuantity) => {
+    if (disabled) return;
     setQuantity(newQuantity);
     if (debounceTimer) {
       clearTimeout(debounceTimer);
@@ -58,7 +59,7 @@ export default function Quantity({ qty, api }) {
       <button
         className="flex justify-center items-center"
         onClick={() => updateQuantity(Math.max(quantity - 1, 0))}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         type="button"
       >
         {isLoading && (
@@ -103,7 +104,7 @@ export default function Quantity({ qty, api }) {
       <button
         className="flex justify-center items-center"
         onClick={() => updateQuantity(quantity + 1)}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         type="button"
       >
         {isLoading && (

@@ -27,7 +27,7 @@ export default async (request, response, next) => {
     } else {
       cart = await getCartByUUID(cartId); // Cart object
     }
-    const { sku, qty } = request.body;
+    const { sku, qty, first_name, last_name } = request.body;
 
     // Load the product by sku
     const product = await select()
@@ -47,9 +47,24 @@ export default async (request, response, next) => {
       return;
     }
 
+    if (product.manageRegistrations === 1) {
+    if (!first_name || !last_name) {
+      response.status(INVALID_PAYLOAD);
+      response.json({
+        error: {
+          status: INVALID_PAYLOAD,
+          message: translate('First name and last name are required')
+        }
+      });
+      return;
+    }
+  }
+
     // If everything is fine, add the product to the cart
     const item = await cart.addItem(product.product_id, parseInt(qty, 10), {
-      request
+      request,
+      first_name,
+      last_name
     });
     await saveCart(cart);
     // Set the new cart id to the context, so next middleware can use it
