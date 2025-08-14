@@ -11,7 +11,6 @@ export function Mollie({ createPaymentApi, orderId, orderPlaced }) {
   const [error, setError] = useState('');
 
   React.useEffect(() => {
-    console.log("changed");
     const createPayment = async () => {
       const response = await fetch(createPaymentApi, {
         method: 'POST',
@@ -66,7 +65,6 @@ export default function MollieMethod({ createPaymentApi }) {
     paymentMethods.find(paymentMethod => paymentMethod.selected) : undefined;
 
   React.useEffect(() => {
-    console.log("mollie method changed");
     const selectedPaymentMethod = paymentMethods.find(
       (paymentMethod) => paymentMethod.selected
     );

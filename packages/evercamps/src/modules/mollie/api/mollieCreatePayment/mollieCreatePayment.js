@@ -7,6 +7,8 @@ import { OK, INVALID_PAYLOAD } from '../../../../lib/util/httpStatus.js';
 import { getSetting } from '../../../setting/services/setting.js';
 import { debug, error } from '../../../../lib/log/logger.js';
 
+import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
+
 export default async (request, response, next) => {
   try {
 
@@ -58,18 +60,18 @@ export default async (request, response, next) => {
 
       const mollieClient = createMollieClient({ apiKey: apiKey });
 
-      debug(`Create Mollie payment from order ${JSON.stringify(order)}`);
       debug(`Create Mollie payment with total amount ${new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(order.sub_total_with_discount_incl_tax)}`);
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(order.grand_total)}`);
+
       // Create a Payment with the order amount and currency
       const payment = await mollieClient.payments.create({
         amount: {
           value: new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
-          }).format(order.sub_total_with_discount_incl_tax),
+          }).format(order.grand_total),
           currency: order.currency
         },
         description: `Payment for order ${order_id}`,
@@ -79,6 +81,22 @@ export default async (request, response, next) => {
           order_id
         }
       });
+
+      await updatePaymentStatus(order.order_id, 'pending');
+
+      // Add transaction data to database
+      await insert('payment_transaction')
+        .given({
+          payment_transaction_order_id: order.order_id,
+          transaction_id: payment.id,
+          amount: order.grand_total,
+          currency: order.currency,
+          status: payment.status,
+          payment_action: 'capture',
+          transaction_type: 'online',
+          additional_information: JSON.stringify(payment)
+        })
+        .execute(pool);
 
       response.status(OK);
       response.json({
