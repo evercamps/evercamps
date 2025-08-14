@@ -85,7 +85,7 @@ export const saveCart = async (cart: Cart) => {
           .where('cart_item_id', '=', cartItemId)
           .execute(connection, false);
 
-          const registrations = item.getData('registrations');
+          const registrations = item.getData('registrations') || [];
           for (const reg of registrations) {
             if (reg.firstName && reg.lastName) {
               await insert('cart_item_registration')
