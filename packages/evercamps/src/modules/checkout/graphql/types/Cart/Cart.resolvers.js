@@ -54,6 +54,7 @@ export default {
     addNoteApi: (cart) => buildUrl('addShippingNote', { cart_id: cart.uuid })
   },
   CartItem: {
+    registrations: (cartItem) => cartItem.registrations || [],
     total: ({ lineTotalInclTax }) =>
       // This field is deprecated, use lineTotalInclTax instead
       lineTotalInclTax,

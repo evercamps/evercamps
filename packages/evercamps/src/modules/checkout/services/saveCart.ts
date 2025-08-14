@@ -63,16 +63,31 @@ export const saveCart = async (cart: Cart) => {
 
       await Promise.all(
         items.map(async (item) => {
+          let cartItemId;
           if (/^\d+$/.test(item.getData('cart_item_id'))) {
             await update('cart_item')
               .given(item.export())
               .where('cart_item_id', '=', item.getData('cart_item_id'))
               .execute(connection, false);
           } else {
-            await insert('cart_item')
+            const insertedItem = await insert('cart_item')
               .given({
                 ...item.export(),
                 cart_id: cart.getData('cart_id') || cartId
+              })
+              .execute(connection, false);
+            cartItemId = insertedItem.insertId;
+          }
+          
+          
+
+          const registration = item.getData('registrations');
+          if (registration?.firstName && registration?.lastName) {
+            await insert('cart_item_registration')
+              .given({
+                cart_item_id: cartItemId,
+                first_name: registration.firstName,
+                last_name: registration.lastName
               })
               .execute(connection, false);
           }
