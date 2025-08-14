@@ -100,17 +100,30 @@ async function saveOrderItems(
   orderId: number,
   connection: PoolClient
 ) {
-  // Save order items
+  // Save order items and create order item registration if needed
   const items = cart.getItems();
   const savedItems = await Promise.all(
-    items.map(async (item) => {
-      await insert('order_item')
+    items.map(async (item) => {      
+      const orderItem = await insert('order_item')
         .given({
           ...item.export(),
           uuid: uuidv4().replace(/-/g, ''),
           order_item_order_id: orderId
         })
         .execute(connection);
+
+      const registrations = item.getData('registrations') || [];
+      for (const reg of registrations) {
+        await insert('order_item_registration')
+          .given({
+            order_item_id: orderItem.insertId,
+            first_name: reg.firstName,
+            last_name: reg.lastName
+          })
+          .execute(connection);        
+      }
+
+      return orderItem;
     })
   );
   return savedItems;
