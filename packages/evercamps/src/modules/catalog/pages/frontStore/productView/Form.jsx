@@ -93,7 +93,7 @@ function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick
     <div className="add-to-cart mt-8">
       <div style={{ width: '8rem' }}>
         <Field
-          type="text"
+          type={manageRegistrations === 1 ? "hidden" : "text"}
           value="1"
           validationRules={['notEmpty']}
           className="qty"
