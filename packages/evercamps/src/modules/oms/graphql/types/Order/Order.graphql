@@ -45,6 +45,17 @@ type OrderItem {
   variantOptions: String
   productCustomOptions: String
   productUrl: String
+  registrations: [OrderItemRegistration!]
+}
+
+"""
+Represents a registration attached to a specific order item.
+"""
+type OrderItemRegistration {
+  orderItemRegistrationId: ID!
+  orderItemId: ID!
+  firstName: String!
+  lastName: String!
 }
 
 """

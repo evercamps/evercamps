@@ -2,7 +2,7 @@ import { ItemVariantOptions } from '@components/admin/oms/orderEdit/items/ItemVa
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export function Name({ name, productSku, productUrl, variantOptions = [] }) {
+export function Name({ name, productSku, productUrl, variantOptions = [], registrations = [] }) {
   return (
     <td>
       <div className="product-column">
@@ -16,6 +16,16 @@ export function Name({ name, productSku, productUrl, variantOptions = [] }) {
           <span>{productSku}</span>
         </div>
         <ItemVariantOptions options={variantOptions} />
+        {registrations.length > 0 && (
+          <div className="mt-3">
+            {registrations.map((reg, idx) => (
+              <div key={idx} className="mb-2">
+                <div className="font-semibold">Participant {idx + 1}:</div>
+                <div>Name: {reg.firstName} {reg.lastName}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </td>
   );
