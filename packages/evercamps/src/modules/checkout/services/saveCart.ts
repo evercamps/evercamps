@@ -9,7 +9,6 @@ import {
 } from '@evershop/postgres-query-builder';
 import { getConnection } from '../../../lib/postgres/connection.js';
 import { Cart } from './cart/Cart.js';
-import { debug } from '../../../lib/log/logger.js';
 
 /**
  * @param {Cart} cart
@@ -87,7 +86,6 @@ export const saveCart = async (cart: Cart) => {
           .execute(connection, false);
 
           const registrations = item.getData('registrations');
-          debug(registrations);
           for (const reg of registrations) {
             if (reg.firstName && reg.lastName) {
               await insert('cart_item_registration')
