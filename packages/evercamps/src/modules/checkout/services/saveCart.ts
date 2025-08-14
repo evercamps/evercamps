@@ -9,6 +9,7 @@ import {
 } from '@evershop/postgres-query-builder';
 import { getConnection } from '../../../lib/postgres/connection.js';
 import { Cart } from './cart/Cart.js';
+import { debug } from '../../../lib/log/logger.js';
 
 /**
  * @param {Cart} cart
@@ -69,6 +70,7 @@ export const saveCart = async (cart: Cart) => {
               .given(item.export())
               .where('cart_item_id', '=', item.getData('cart_item_id'))
               .execute(connection, false);
+            cartItemId = item.getData('cart_item_id');
           } else {
             const insertedItem = await insert('cart_item')
               .given({
@@ -80,16 +82,22 @@ export const saveCart = async (cart: Cart) => {
           }
           
           
+          await del('cart_item_registration')
+          .where('cart_item_id', '=', cartItemId)
+          .execute(connection, false);
 
-          const registration = item.getData('registrations');
-          if (registration?.firstName && registration?.lastName) {
-            await insert('cart_item_registration')
-              .given({
-                cart_item_id: cartItemId,
-                first_name: registration.firstName,
-                last_name: registration.lastName
-              })
-              .execute(connection, false);
+          const registrations = item.getData('registrations');
+          debug(registrations);
+          for (const reg of registrations) {
+            if (reg.firstName && reg.lastName) {
+              await insert('cart_item_registration')
+                .given({
+                  cart_item_id: cartItemId,
+                  first_name: reg.firstName,
+                  last_name: reg.lastName
+                })
+                .execute(connection, false);
+            }
           }
         })
       );
