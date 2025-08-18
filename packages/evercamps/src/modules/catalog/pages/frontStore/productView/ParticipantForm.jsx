@@ -8,6 +8,7 @@ export default function ParticipantForm({
   setFirstName,
   lastName,
   setLastName,
+  loading,
   onCancel,
   onSubmit
 }) {
@@ -44,7 +45,7 @@ export default function ParticipantForm({
         <Card.Session>
           <div className="flex justify-between gap-8">
             <Button title="Cancel" variant="secondary" onAction={onCancel} />
-            <Button title="Add To Cart" variant="primary" onAction={onSubmit} />
+            <Button title="Add To Cart" variant="primary" isLoading={loading} onAction={onSubmit} />
           </div>
         </Card.Session>
       </Card>    

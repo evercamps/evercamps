@@ -232,6 +232,7 @@ export default function ProductForm({ product, action }) {
               setFirstName={setFirstName}
               lastName={lastName}
               setLastName={setLastName}
+              loading={loading}
               onCancel={modal.closeModal}
               onSubmit={handleModalSubmit}
             />
