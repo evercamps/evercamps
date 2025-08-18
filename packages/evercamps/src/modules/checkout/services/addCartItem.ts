@@ -12,12 +12,7 @@ async function addCartItem(
     throw new Error('Context must be an object');
   }
   const newItem = await cart.createItem(productID, parseInt(qty as string, 10));
-  if (context.first_name && context.last_name) {
-    await newItem.setData('registrations', {
-      firstName: context.first_name,
-      lastName: context.last_name
-  });
-  }
+  
   context.cartData = cart.export();
   context.itemData = newItem.export();
   const item = await getValue('cartItemBeforeAdd', newItem, context);
@@ -34,14 +29,39 @@ async function addCartItem(
           'qty',
           item.getData('qty') + items[i].getData('qty')
         );
+
+        if (context.first_name && context.last_name) {
+          const existingRegs = items[i].getData('registrations') || [];
+          const newReg = {
+            firstName: context.first_name,
+            lastName: context.last_name
+          };
+          await items[i].setData('registrations', [
+            ...existingRegs,
+            {
+              firstName: context.first_name,
+              lastName: context.last_name
+            }
+          ]);
+        }
+
         if (items[i].hasError()) {
           throw new Error(Object.values(items[i].getErrors())[0]);
         }
+
         duplicateItem = items[i];
       }
     }
 
     if (!duplicateItem) {
+      if (context.first_name && context.last_name) {
+        await item.setData('registrations', [
+          {
+            firstName: context.first_name,
+            lastName: context.last_name
+          }
+        ]);
+    }
       items = items.concat(item);
     }
     await cart.setData('items', items, true);
