@@ -62,6 +62,11 @@ export default {
       .load(pool);
       return registrations.map((registration) => ({
         ...camelCase(registration),
+        editApi: buildUrl('updateCartItemRegistration', {
+          cart_id: cartUuid,
+          item_id: cartItem.uuid,
+          registration_id: registration.cartItemRegistrationId
+        }),
         removeApi: buildUrl('removeCartItemRegistration', {
           cart_id: cartUuid,
           item_id: cartItem.uuid,

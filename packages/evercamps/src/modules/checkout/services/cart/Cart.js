@@ -69,6 +69,19 @@ class Cart extends DataObject {
 
   /**
    * @param {string} uuid
+   * @param {number} registration_id
+   * @param {string} first_name
+   * @param {string} last_name
+   * @returns {Item}
+   * @throws {Error}
+   */
+  async updateCartItemRegistration(uuid, registration_id, context) {
+    const updatedItem = await this.updateCartItemRegistration(this, uuid, registration_id, context);    
+    return updatedItem;
+  }
+
+  /**
+   * @param {string} uuid
    * @returns {Item}
    * @throws {Error}
    */

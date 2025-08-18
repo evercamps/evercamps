@@ -1,16 +1,46 @@
 import { useAppDispatch } from '@components/common/context/app';
 import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import { ItemOptions } from './ItemOptions';
 import { ItemVariantOptions } from './ItemVariantOptions';
 import './Items.scss';
 import Quantity from './Quantity';
+import EditParticipantForm from './EditParticipantForm.jsx';
+import { useModal } from '@components/common/modal/useModal';
 
 function Items({ items, setting: { priceIncludingTax } }) {
   const AppContextDispatch = useAppDispatch();
+  const modal = useModal();
+  const [editingRegistration, setEditingRegistration] = useState(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const updateRegistration = async (updatedRegistration) => {
+    try {
+      setLoading(true);
+      const response = await fetch(updatedRegistration.updateApi, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedRegistration),
+      });
+
+      const json = await response.json();
+      if (!json.error) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('ajax', true);
+        await AppContextDispatch.fetchPageData(url);
+      } else {
+        toast.error(json.error.message);
+      }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const removeItem = async (item) => {
     const response = await fetch(item.removeApi, {
       method: 'DELETE',
@@ -118,16 +148,32 @@ function Items({ items, setting: { priceIncludingTax } }) {
                             <div key={idx} className="mb-2">
                               <div className="font-semibold">Participant {idx + 1}:</div>
                               <div>Name: {reg.firstName} {reg.lastName}</div>
-                              <a
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  await removeRegistration(reg);
-                                }}
-                                href="#"
-                                className="text-textSubdued underline"
-                              >
-                                <span>{_('Remove participant')}</span>
-                              </a>
+
+                              <div className="flex space-x-4 mt-1">
+                                <a
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    await removeRegistration(reg);
+                                  }}
+                                  href="#"
+                                  className="text-textSubdued underline"
+                                >
+                                  <span>{_('Remove Participant')}</span>
+                                </a>
+
+                                <a
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setEditingRegistration(reg); 
+                                    console.log(editingRegistration);                                   
+                                    modal.openModal();
+                                  }}
+                                  className="text-textSubdued underline"
+                                >
+                                  {_('Edit')}
+                                </a>
+                              </div>
                             </div>
                             
                           ))}
@@ -179,6 +225,32 @@ function Items({ items, setting: { priceIncludingTax } }) {
           ))}
         </tbody>
       </table>
+      {modal.state.showing && editingRegistration && (
+  <div className={modal.className} onAnimationEnd={modal.onAnimationEnd}>
+    <div
+      className="modal-wrapper flex self-center justify-center items-center"
+      tabIndex={-1}
+      role="dialog"
+    >
+      <div className="modal">
+        <EditParticipantForm
+          registration={editingRegistration}
+          setRegistration={setEditingRegistration}
+          loading={loading}
+          onCancel={() => {
+            modal.closeModal();
+            setEditingRegistration(null);
+          }}
+          onSubmit={async () => {
+            await updateRegistration(editingRegistration);
+            modal.closeModal();
+            setEditingRegistration(null);
+          }}
+        />
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
