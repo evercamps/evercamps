@@ -27,6 +27,23 @@ function Items({ items, setting: { priceIncludingTax } }) {
       // TODO: display message
       const data = await response.json();
       toast(data.error.message);
+    }  
+}
+  const removeRegistration = async (registration) => {
+    const response = await fetch(registration.removeApi, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (response.ok) {
+      const currentUrl = window.location.href;
+      const url = new URL(currentUrl, window.location.origin);
+      url.searchParams.set('ajax', true);
+      await AppContextDispatch.fetchPageData(url);
+    } else {
+      const data = await response.json();
+      toast(data.error.message);
     }
   };
 
@@ -101,7 +118,18 @@ function Items({ items, setting: { priceIncludingTax } }) {
                             <div key={idx} className="mb-2">
                               <div className="font-semibold">Participant {idx + 1}:</div>
                               <div>Name: {reg.firstName} {reg.lastName}</div>
+                              <a
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  await removeRegistration(reg);
+                                }}
+                                href="#"
+                                className="text-textSubdued underline"
+                              >
+                                <span>{_('Remove participant')}</span>
+                              </a>
                             </div>
+                            
                           ))}
                         </div>
                       )}

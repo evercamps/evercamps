@@ -6,6 +6,7 @@ import { getValue, getValueSync } from '../../../../lib/util/registry.js';
 import addCartItem from '../../../../modules/checkout/services/addCartItem.js';
 import { DataObject } from '../../../../modules/checkout/services/cart/DataObject.js';
 import removeCartItem from '../../../../modules/checkout/services/removeCartItem.js';
+import removeCartItemRegistration from '../../../../modules/checkout/services/removeCartItemRegistration.js';
 import updateCartItemQty from '../../../../modules/checkout/services/updateCartItemQty.js';
 
 class Item extends DataObject {
@@ -73,6 +74,23 @@ class Cart extends DataObject {
    */
   async removeItem(uuid, context) {
     const removedItem = await removeCartItem(this, uuid, context);
+    return removedItem;
+  }
+
+  /**
+   * @param {string} uuid
+   * @param {number} registration_id
+   * @returns {Item}
+   * @throws {Error}
+   */
+  async removeCartItemRegistration(uuid, registration_id, context) {
+    const removedItem = await removeCartItemRegistration(this, uuid, registration_id, context);
+    if ((removedItem.getData('registrations') || []).length === 0) {
+      removedItem = await removeCartItem(this, uuid, context)
+    }
+    else {
+      removedItem = await updateCartItemQty(this, uuid, 1, "decrease", context);
+    }
     return removedItem;
   }
 

@@ -134,6 +134,7 @@ type CartItemRegistration {
   cartItemId: ID!
   firstName: String!
   lastName: String!
+  removeApi: String!
 }
 
 """

@@ -137,6 +137,7 @@ export const query = `
         registrations {
           firstName
           lastName
+          removeApi
         }
         errors
       }

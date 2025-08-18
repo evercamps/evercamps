@@ -10,6 +10,10 @@ export default function Quantity({ qty, api, disabled = false }) {
   const [debounceTimer, setDebounceTimer] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
+  React.useEffect(() => {
+  setQuantity(qty);
+  previousQuantity.current = qty;}, [qty]);
+
   const updateQuantity = (newQuantity) => {
     if (disabled) return;
     setQuantity(newQuantity);

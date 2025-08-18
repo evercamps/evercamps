@@ -54,7 +54,21 @@ export default {
     addNoteApi: (cart) => buildUrl('addShippingNote', { cart_id: cart.uuid })
   },
   CartItem: {
-    registrations: (cartItem) => cartItem.registrations || [],
+    registrations: async (cartItem, _, { pool }) => {
+      const registrations = cartItem.registrations || [];
+      const { uuid: cartUuid } = await select('uuid')
+      .from('cart')
+      .where('cart_id', '=', cartItem.cartId)
+      .load(pool);
+      return registrations.map((registration) => ({
+        ...camelCase(registration),
+        removeApi: buildUrl('removeCartItemRegistration', {
+          cart_id: cartUuid,
+          item_id: cartItem.uuid,
+          registration_id: registration.cartItemRegistrationId
+        })
+      }));
+    },
     total: ({ lineTotalInclTax }) =>
       // This field is deprecated, use lineTotalInclTax instead
       lineTotalInclTax,
