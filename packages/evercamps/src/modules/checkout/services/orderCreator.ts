@@ -114,6 +114,32 @@ async function saveOrderItems(
 
       const registrations = item.getData('registrations') || [];
       for (const reg of registrations) {
+        let participant = await select()
+        .from('participant')
+        .where('first_name', '=', reg.firstName)
+        .and('last_name', '=', reg.lastName)
+        .load(connection);
+
+        let participantId;
+
+      if (participant) {
+        participantId = participant.participant_id;
+      } else {
+        participant = await insert('participant')
+          .given({
+            first_name: reg.firstName,
+            last_name: reg.lastName
+          })
+          .execute(connection);
+
+        participantId = participant.insertId;
+      }
+      await insert('registration')
+        .given({
+          registration_participant_id: participantId,
+          registration_product_id: item.getData('product_id'),
+        })
+        .execute(connection);
         await insert('order_item_registration')
           .given({
             order_item_id: orderItem.insertId,
