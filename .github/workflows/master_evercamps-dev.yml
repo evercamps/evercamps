@@ -32,16 +32,14 @@ jobs:
       - name: List files before upload
         run: ls -la
 
-      - name: Find .evercamps folder
-        run: find . -name ".evercamps"
+      - name: Find evercamps folder
+        run: find . -name "evercamps"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: |
-            ./.evercamps
-            .
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
