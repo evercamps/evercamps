@@ -22,8 +22,8 @@ export default async (request, response, next) => {
       });
       return;
     }   
-    const { first_name, last_name } = request.body; 
-    const item = await cart.updateCartItemRegistration(item_id, registration_id, first_name, last_name);
+    const { firstName, lastName } = request.body; 
+    const item = await cart.updateCartItemRegistration(item_id, registration_id, {firstName, lastName});
     await saveCart(cart);
     response.status(OK);
     response.$body = {

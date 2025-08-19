@@ -1,36 +1,38 @@
 import { hookable } from '../../../lib/util/hookable.js';
 import { Cart, Item } from './cart/Cart.js';
 
-async function updateCartItemRegistration(cart: Cart, itemUuid: string, registrationId: number, firstName: string, lastName:string) {
+async function updateCartItemRegistration(cart: Cart, itemUuid: string, registrationId: number, context: Record<string, unknown> = {}) {
+  if (typeof context !== 'object' || context === null) {
+    throw new Error('Context must be an object');
+  }
   const item = cart.getItem(itemUuid);
-
   if (!item) {
     throw new Error("Cart item not found");
   }
+  if (context.firstName && context.lastName){      
+    const registrations = item.getData("registrations") || [];
+    
+    const regIndex = registrations.findIndex(
+      (r) => Number(r.cartItemRegistrationId) === Number(registrationId)
+    );
 
-  const registrations = item.getData("registrations") || [];
-  
-  const regIndex = registrations.findIndex(
-    (r) => Number(r.cartItemRegistrationId) === Number(registrationId)
-  );
-
-  if (regIndex === -1) {
-    throw new Error("Registration not found for this cart item");
+    if (regIndex === -1) {
+      throw new Error("Registration not found for this cart item");
+    }
+    
+    const updatedRegs = [...registrations];
+    updatedRegs[regIndex] = {
+      ...updatedRegs[regIndex],
+      firstName: context.firstName,
+      lastName: context.lastName,
+    };
+    await item.setData("registrations", updatedRegs);  
   }
-  
-  const updatedRegs = [...registrations];
-  updatedRegs[regIndex] = {
-    ...updatedRegs[regIndex],
-    firstName,
-    lastName,
-  };
-  await item.setData("registrations", updatedRegs);
-  
   const items = cart.getItems().map((i) =>
     i.getData("uuid") === itemUuid ? item : i
   );
   await cart.setData("items", items, true);
-
+  
   return item;
 }
 
@@ -46,16 +48,13 @@ async function updateCartItemRegistration(cart: Cart, itemUuid: string, registra
 export default async (
   cart: Cart,
   itemUuid: string,
-  registrationId: number,
-  firstName: string,
-  lastName: string,
+  registrationId: number,  
   context: Record<string, unknown>
 ): Promise<Item> => {
   return hookable(updateCartItemRegistration, context)(
     cart,
     itemUuid,
     registrationId,
-    firstName,
-    lastName
+    context
   );
 };

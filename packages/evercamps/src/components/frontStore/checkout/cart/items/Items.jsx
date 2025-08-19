@@ -10,6 +10,7 @@ import './Items.scss';
 import Quantity from './Quantity';
 import EditParticipantForm from './EditParticipantForm.jsx';
 import { useModal } from '@components/common/modal/useModal';
+import { Form } from '@components/common/form/Form';
 
 function Items({ items, setting: { priceIncludingTax } }) {
   const AppContextDispatch = useAppDispatch();
@@ -20,7 +21,7 @@ function Items({ items, setting: { priceIncludingTax } }) {
   const updateRegistration = async (updatedRegistration) => {
     try {
       setLoading(true);
-      const response = await fetch(updatedRegistration.updateApi, {
+      const response = await fetch(updatedRegistration.editApi, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedRegistration),
@@ -66,6 +67,7 @@ function Items({ items, setting: { priceIncludingTax } }) {
         'Content-Type': 'application/json'
       }
     });
+    
     if (response.ok) {
       const currentUrl = window.location.href;
       const url = new URL(currentUrl, window.location.origin);
@@ -165,8 +167,7 @@ function Items({ items, setting: { priceIncludingTax } }) {
                                   href="#"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setEditingRegistration(reg); 
-                                    console.log(editingRegistration);                                   
+                                    setEditingRegistration(reg);                                 
                                     modal.openModal();
                                   }}
                                   className="text-textSubdued underline"
@@ -233,20 +234,35 @@ function Items({ items, setting: { priceIncludingTax } }) {
       role="dialog"
     >
       <div className="modal">
-        <EditParticipantForm
-          registration={editingRegistration}
-          setRegistration={setEditingRegistration}
-          loading={loading}
-          onCancel={() => {
+        <Form
+          id="editParticipantForm"
+          action={editingRegistration.editApi}
+          method="PATCH"
+          submitBtn={false}
+          onSuccess={() => {
             modal.closeModal();
             setEditingRegistration(null);
           }}
-          onSubmit={async () => {
-            await updateRegistration(editingRegistration);
-            modal.closeModal();
-            setEditingRegistration(null);
-          }}
-        />
+          onStart={() => setLoading(true)}
+          onComplete={() => setLoading(false)}
+          onError={(e) => toast.error(e.message)}
+          isJSON
+        >
+          <EditParticipantForm
+            registration={editingRegistration}
+            setRegistration={setEditingRegistration}
+            loading={loading}
+            onCancel={() => {
+              modal.closeModal();
+              setEditingRegistration(null);
+            }}
+            onSubmit={async () => {
+              await updateRegistration(editingRegistration);              
+              modal.closeModal();
+              setEditingRegistration(null);
+            }}
+          />
+        </Form>
       </div>
     </div>
   </div>

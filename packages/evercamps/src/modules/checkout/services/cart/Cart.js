@@ -8,6 +8,7 @@ import { DataObject } from '../../../../modules/checkout/services/cart/DataObjec
 import removeCartItem from '../../../../modules/checkout/services/removeCartItem.js';
 import removeCartItemRegistration from '../../../../modules/checkout/services/removeCartItemRegistration.js';
 import updateCartItemQty from '../../../../modules/checkout/services/updateCartItemQty.js';
+import updateCartItemRegistration from '../../../../modules/checkout/services/updateCartItemRegistration.js';
 
 class Item extends DataObject {
   #cart;
@@ -76,7 +77,7 @@ class Cart extends DataObject {
    * @throws {Error}
    */
   async updateCartItemRegistration(uuid, registration_id, context) {
-    const updatedItem = await this.updateCartItemRegistration(this, uuid, registration_id, context);    
+    const updatedItem = await updateCartItemRegistration(this, uuid, registration_id, context);    
     return updatedItem;
   }
 
@@ -97,14 +98,16 @@ class Cart extends DataObject {
    * @throws {Error}
    */
   async removeCartItemRegistration(uuid, registration_id, context) {
-    const removedItem = await removeCartItemRegistration(this, uuid, registration_id, context);
-    if ((removedItem.getData('registrations') || []).length === 0) {
-      removedItem = await removeCartItem(this, uuid, context)
+    const removedItemRegistration = await removeCartItemRegistration(this, uuid, registration_id, context);
+    if ((removedItemRegistration.getData('registrations') || []).length === 0) {
+      const removedItem = await removeCartItem(this, uuid, context)
+      return removedItem;
     }
     else {
-      removedItem = await updateCartItemQty(this, uuid, 1, "decrease", context);
+      const updatedItem = await updateCartItemQty(this, uuid, 1, "decrease", context);
+      return updatedItem
     }
-    return removedItem;
+   
   }
 
   /**
