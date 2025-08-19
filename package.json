@@ -44,5 +44,8 @@
     "ts-jest": "^29.3.2",
     "typescript": "^5.8.3",
     "webpack-bundle-analyzer": "^4.5.0"
+  },
+  "optionalDependencies": {
+    "@swc/core-linux-x64-gnu": "^1.2.160"
   }
 }
