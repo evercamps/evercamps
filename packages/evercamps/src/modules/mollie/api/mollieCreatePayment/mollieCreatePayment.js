@@ -1,4 +1,4 @@
-import { select } from '@evershop/postgres-query-builder';
+import { select, insert } from '@evershop/postgres-query-builder';
 import { createMollieClient } from '@mollie/api-client';
 import smallestUnit from 'zero-decimal-currencies';
 import { pool } from '../../../../lib/postgres/connection.js';
@@ -6,14 +6,15 @@ import { getConfig } from '../../../../lib/util/getConfig.js';
 import { OK, INVALID_PAYLOAD } from '../../../../lib/util/httpStatus.js';
 import { getSetting } from '../../../setting/services/setting.js';
 import { debug, error } from '../../../../lib/log/logger.js';
+import { buildUrl } from '../../../../lib/router/buildUrl.js';
 
 import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
+import { getContextValue } from '../../../graphql/services/contextHelper.js';
+import { buildAbsoluteUrl } from '../../../../lib/router/buildAbsoluteUrl.js';
 
 export default async (request, response, next) => {
   try {
-
     const { order_id } = request.body;
-
     debug(`Mollie create payment from order ${order_id}`);
 
     const order = await select()
@@ -65,6 +66,7 @@ export default async (request, response, next) => {
         maximumFractionDigits: 2
       }).format(order.grand_total)}`);
 
+
       // Create a Payment with the order amount and currency
       const payment = await mollieClient.payments.create({
         amount: {
@@ -74,9 +76,9 @@ export default async (request, response, next) => {
           }).format(order.grand_total),
           currency: order.currency
         },
-        description: `Payment for order ${order_id}`,
-        redirectUrl: 'https://demo.evercamps.io/done',
-        webhookUrl: 'https://demo.evercamps.io/webhook',
+        description: `Payment for order #${order.order_id}`,
+        redirectUrl: buildAbsoluteUrl("checkoutSuccess", {orderId: order_id}),
+        webhookUrl: buildAbsoluteUrl("mollieWebhook"),
         metadata: {
           order_id
         }
