@@ -58,8 +58,8 @@ let completed = 0;
 
 spinner.text = `Start building ☕☕☕☕☕\n${Array(total).fill('▒').join('')}`;
 
-if (existsSync(path.resolve(CONSTANTS.ROOTPATH, './.evercamps/build'))) {
-  rmdirSync(path.resolve(CONSTANTS.ROOTPATH, './.evercamps/build'), {
+if (existsSync(path.resolve(CONSTANTS.ROOTPATH, './evercamps/build'))) {
+  rmdirSync(path.resolve(CONSTANTS.ROOTPATH, './evercamps/build'), {
     recursive: true
   });
 }
@@ -114,13 +114,13 @@ webpackVendorPromise.then(async () => {
         .replace(/---'/g, '')}`;
       content += '\r\n';
       await mkdir(
-        path.resolve(CONSTANTS.ROOTPATH, './.evercamps/build', buildPath),
+        path.resolve(CONSTANTS.ROOTPATH, './evercamps/build', buildPath),
         { recursive: true }
       );
       await writeFile(
         path.resolve(
           CONSTANTS.ROOTPATH,
-          '.evercamps/build',
+          'evercamps/build',
           buildPath,
           'components.js'
         ),
@@ -132,7 +132,7 @@ webpackVendorPromise.then(async () => {
       entry[name] = [
         path.resolve(
           CONSTANTS.ROOTPATH,
-          '.evercamps',
+          'evercamps',
           'build',
           buildPath,
           'components.js'
@@ -182,7 +182,7 @@ webpackVendorPromise.then(async () => {
                   options: {
                     componentsPath: path.resolve(
                       CONSTANTS.ROOTPATH,
-                      './.evercamps/build',
+                      './evercamps/build',
                       buildPath,
                       'components.js'
                     )
@@ -198,7 +198,7 @@ webpackVendorPromise.then(async () => {
         output: {
           path: path.resolve(
             CONSTANTS.ROOTPATH,
-            './.evercamps/build',
+            './evercamps/build',
             buildPath,
             'server'
           ),
@@ -215,7 +215,7 @@ webpackVendorPromise.then(async () => {
           new webpack.DllReferencePlugin({
             manifest: path.resolve(
               CONSTANTS.ROOTPATH,
-              './.evercamps/build/vendor-manifest.json'
+              './evercamps/build/vendor-manifest.json'
             )
           })
         ]

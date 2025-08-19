@@ -6,6 +6,7 @@ import {
   PoolClient,
   rollback,
   select,
+  del,
   startTransaction
 } from '@evershop/postgres-query-builder';
 import { error } from '../../../lib/log/logger.js';
@@ -68,6 +69,48 @@ async function reStockAfterCancel(orderID: number, connection: PoolClient) {
   );
 }
 
+async function removeRegistrationsAndParticipants(
+  orderID: number,
+  connection: PoolClient
+) {  
+  const orderItemRegs = await select()
+  .from('order_item_registration')
+  .leftJoin('order_item')
+  .on('order_item.order_item_id', '=', 'order_item_registration.order_item_id')
+  .and('order_item.order_item_order_id', '=', orderID)
+  .execute(connection, false);
+
+  if (orderItemRegs.length === 0) {
+    return;
+  }
+
+  for (const reg of orderItemRegs) {
+    const participant = await select()
+      .from('participant')
+      .where('first_name', '=', reg.first_name)
+      .and('last_name', '=', reg.last_name)
+      .load(connection, false);
+
+    if (participant) {
+      await del('registration')
+        .where('registration_participant_id', '=', participant.participant_id)
+        .and('registration_product_id', '=', reg.product_id)
+        .execute(connection);
+      
+      const remainingRegs = await select()
+        .from('registration')
+        .where('registration_participant_id', '=', participant.participant_id)
+        .execute(connection, false);
+
+      if (remainingRegs.length === 0) {
+        await del('participant')
+          .where('participant_id', '=', participant.participant_id)
+          .execute(connection);
+      }
+    }
+  }  
+}
+
 async function addCancellationActivity(
   orderID: number,
   reason: string | undefined,
@@ -117,6 +160,10 @@ async function cancelOrder(uuid: string, reason: string | undefined) {
       connection
     );
     await hookable(reStockAfterCancel, { order })(order.order_id, connection);
+    await hookable(removeRegistrationsAndParticipants, { order })(
+      order.order_id,
+      connection
+    );
     await commit(connection);
   } catch (err) {
     error(err);

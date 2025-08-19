@@ -95,6 +95,16 @@ function Items({ items, setting: { priceIncludingTax } }) {
                       >
                         <span>{_('Remove')}</span>
                       </a>
+                      {item.registrations.length > 0 && (
+                        <div className="mt-2">
+                          {item.registrations.map((reg, idx) => (
+                            <div key={idx} className="mb-2">
+                              <div className="font-semibold">Participant {idx + 1}:</div>
+                              <div>Name: {reg.firstName} {reg.lastName}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

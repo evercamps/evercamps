@@ -43,11 +43,12 @@ export default function Items({ order: { items, shipmentStatus } }) {
                         name: i.productName,
                         productSku: i.productSku,
                         productUrl: i.productUrl,
-                        variantOptions: JSON.parse(i.variantOptions || '[]')
+                        variantOptions: JSON.parse(i.variantOptions || '[]'),
+                        registrations: i.registrations,   
                       }, // TODO: Implement custom options
                       sortOrder: 20,
                       id: 'productName'
-                    },
+                    },                    
                     {
                       component: { default: Price },
                       props: { price: i.productPrice.text, qty: i.qty },
@@ -148,6 +149,10 @@ export const query = `
       items {
         id: orderItemId
         qty
+        registrations {
+          firstName
+          lastName
+        }
         productName
         productSku
         productUrl
