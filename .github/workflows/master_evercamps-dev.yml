@@ -34,8 +34,8 @@ jobs:
         with:
           name: node-app
           path: |
-            .evercamps
-            .
+            .evercamps/
+            ./
 
   deploy:
     runs-on: ubuntu-latest
@@ -64,4 +64,5 @@ jobs:
           app-name: 'evercamps-dev'
           slot-name: 'Production'
           package: .
+
           
