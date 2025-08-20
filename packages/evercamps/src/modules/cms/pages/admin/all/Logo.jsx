@@ -7,17 +7,17 @@ export default function Logo({
   themeConfig: {
     logo: { src, alt = 'EverCamps', width = '128px', height = '128px' }
   },
-  dashboardUrl
+  homepageUrl
 }) {
   return (
     <div className="logo">
       {src && (
-        <a href={dashboardUrl} className="flex items-end">
+        <a href={homepageUrl} className="flex items-end">
           <img src={src} alt={alt} width={width} height={height} />
         </a>
       )}
       {!src && (
-        <a href={dashboardUrl} className="flex items-end">
+        <a href={homepageUrl} className="flex items-end">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="254"
@@ -59,7 +59,7 @@ Logo.propTypes = {
       height: PropTypes.string
     })
   }),
-  dashboardUrl: PropTypes.string.isRequired
+  homepageUrl: PropTypes.string.isRequired
 };
 
 Logo.defaultProps = {
@@ -86,6 +86,6 @@ export const query = `
         alt
       }
     }
-    dashboardUrl: url(routeId:"dashboard")
+    homepageUrl: url(routeId:"homepage")
   }
 `;
