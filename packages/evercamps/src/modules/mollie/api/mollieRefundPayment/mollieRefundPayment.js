@@ -62,10 +62,10 @@ export default async (request, response, next) => {
     const apiKey = await getMollieApiKey();
     const mollieClient = createMollieClient({ apiKey });
     debug(`We want to refund amount: ${new Intl.NumberFormat('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).format(amount)}`);
-    
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount)}`);
+
     // Refund
     const refund = await mollieClient.paymentRefunds.create({
       paymentId: paymentTransaction.transaction_id,
@@ -80,6 +80,20 @@ export default async (request, response, next) => {
         order_id: order.order_id
       }
     });
+
+    // Add transaction data to database
+    await insert('payment_transaction')
+      .given({
+        payment_transaction_order_id: order.order_id,
+        transaction_id: refund.id,
+        parent_transaction_id: paymentTransaction.transaction_id,
+        amount: amount,
+        currency: order.currency,
+        payment_action: 'refund',
+        transaction_type: 'online',
+        additional_information: JSON.stringify(refund)
+      })
+      .execute(pool);
 
     await insert('order_activity')
       .given({

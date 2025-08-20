@@ -70,8 +70,7 @@ export default async (request, response, next) => {
       },
       description: `Payment for order #${order.order_number}`,
       redirectUrl: buildAbsoluteUrl("checkoutSuccess", { orderId: order_id }),
-      // webhookUrl: buildAbsoluteUrl("mollieWebhook"), // re-add when pushing, just change for dev purposes
-      webhookUrl: "https://webhook.site/89cdd0e8-e34c-4324-b997-4ab39f5e05b1",
+      webhookUrl: buildAbsoluteUrl("mollieWebhook"), // re-add when pushing, just change for dev purposes
       metadata: {
         order_id
       }
@@ -86,7 +85,6 @@ export default async (request, response, next) => {
         transaction_id: payment.id,
         amount: order.grand_total,
         currency: order.currency,
-        status: payment.status,
         payment_action: 'capture',
         transaction_type: 'online',
         additional_information: JSON.stringify(payment)
