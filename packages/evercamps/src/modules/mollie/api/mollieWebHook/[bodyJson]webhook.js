@@ -58,7 +58,7 @@ export default async (request, response, next) => {
 
     const payment = await mollieClient.payments.get(paymentId);
 
-    if(!payment) {
+    if (!payment) {
       error("no payment found");
       response.json({ received: true });
       return;
@@ -70,19 +70,57 @@ export default async (request, response, next) => {
       case "paid":
         debug(`payment status paid received: ${paymentId}`);
 
-        // Update the order
-        await updatePaymentStatus(order.order_id, 'paid', connection);
+        if (order.payment_status === 'paid' || order.payment_status === 'refunded' || order.payment_status === 'partial_refunded') {
+          debug(`${JSON.stringify(payment.amountRefunded)}`);
+          if (payment.amountRefunded && Number(payment.amountRefunded.value) > 0) {
+            // if the order was already in the paid status, then there was a possible refund happening
 
-        // Add an activity log
-        await insert('order_activity')
-          .given({
-            order_activity_order_id: order.order_id,
-            comment: `Customer paid by using Mollie.`
-          })
-          .execute(connection);
+            // // Update the order status
+            const status = payment.amountRemaing <= 0 ? 'refunded' : 'partial_refunded';
+            await updatePaymentStatus(order.order_id, status, connection);
 
-        // Emit event to add order placed event // do I need to do this?
-        await emit('order_placed', { ...order });
+            // using fetch-API as mollieClient is not working
+            const response = await fetch(`https://api.mollie.com/v2/payments/${paymentId}/refunds`, {
+              headers: {
+                method: "GET", 
+                'Authorization': `Bearer ${apiKey}`
+              }
+            }
+            );
+            const refunds = await response.json();
+
+            let comment = "";
+            for(const refund of refunds._embedded.refunds) {
+              comment += `Refund with id ${refund.id} - amount: ${refund.amount.value} ${refund.amount.currency} - status: ${refund.status}\n`;
+            }
+
+            // const comment = `Refunded ${payment.amountRefunded.value} ${payment.amountRefunded.currency}, remaining: ${payment.amountRemaining.value} ${payment.amountRemaining.currency}`
+            await insert('order_activity')
+              .given({
+                order_activity_order_id: order.order_id,
+                comment
+              })
+              .execute(connection);
+          }
+          else {
+            debug(`nogthing happend ${JSON.stringify(payment.amountRefunded)}`)
+          }
+        }
+        else {
+          // Update the order
+          await updatePaymentStatus(order.order_id, 'paid', connection);
+
+          // Add an activity log
+          await insert('order_activity')
+            .given({
+              order_activity_order_id: order.order_id,
+              comment: `Customer paid by using Mollie.`
+            })
+            .execute(connection);
+
+          // Emit event to add order placed event // do I need to do this?
+          await emit('order_placed', { ...order });
+        }
         break;
       case "expired":
       case "failed":

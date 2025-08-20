@@ -6,7 +6,7 @@ import {
   commit,
   rollback
 } from '@evershop/postgres-query-builder';
-import { error } from '../../../../lib/log/logger.js';
+import { error, debug } from '../../../../lib/log/logger.js';
 import { pool } from '../../../../lib/postgres/connection.js';
 import { getConfig } from '../../../../lib/util/getConfig.js';
 import {
@@ -16,6 +16,8 @@ import {
 } from '../../../../lib/util/httpStatus.js';
 import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
 import { getSetting } from '../../../setting/services/setting.js';
+import { getMollieApiKey } from '../../services/getMollieApiKey.js';
+import { createMollieClient } from '@mollie/api-client';
 
 export default async (request, response, next) => {
   const connection = await getConnection(pool);
@@ -28,6 +30,7 @@ export default async (request, response, next) => {
       .from('order')
       .where('order_id', '=', order_id)
       .load(connection);
+
     if (!order || order.payment_method !== 'mollie') {
       response.status(INVALID_PAYLOAD);
       response.json({
@@ -44,6 +47,7 @@ export default async (request, response, next) => {
       .from('payment_transaction')
       .where('payment_transaction_order_id', '=', order.order_id)
       .load(connection);
+
     if (!paymentTransaction) {
       response.status(INVALID_PAYLOAD);
       response.json({
@@ -55,35 +59,39 @@ export default async (request, response, next) => {
       return;
     }
 
-    const stripeConfig = getConfig('system.stripe', {});
-    let stripeSecretKey;
-
-    if (stripeConfig.secretKey) {
-      stripeSecretKey = stripeConfig.secretKey;
-    } else {
-      stripeSecretKey = await getSetting('stripeSecretKey', '');
-    }
-    const stripe = stripePayment(stripeSecretKey);
+    const apiKey = await getMollieApiKey();
+    const mollieClient = createMollieClient({ apiKey });
+    debug(`We want to refund amount: ${new Intl.NumberFormat('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(amount)}`);
+    
     // Refund
-    const refund = await stripe.refunds.create({
-      payment_intent: paymentTransaction.transaction_id,
-      amount: smallestUnit.default(amount, order.currency)
+    const refund = await mollieClient.paymentRefunds.create({
+      paymentId: paymentTransaction.transaction_id,
+      amount: {
+        value: new Intl.NumberFormat('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(amount),
+        currency: order.currency
+      },
+      metadata: {
+        order_id: order.order_id
+      }
     });
-    const charge = await stripe.charges.retrieve(refund.charge);
-    // Update the order status
-    const status = charge.refunded === true ? 'refunded' : 'partial_refunded';
-    await updatePaymentStatus(order.order_id, status, connection);
+
     await insert('order_activity')
       .given({
         order_activity_order_id: order.order_id,
-        comment: `Refunded ${amount} ${charge.currency}`
+        comment: `Refund request ${refund.amount.value} ${refund.amount.currency} with mollie refund-id ${refund.id}`
       })
       .execute(connection);
     await commit(connection);
     response.status(OK);
     response.json({
       data: {
-        amount: refund.amount
+        amount: refund.amount.value
       }
     });
   } catch (err) {

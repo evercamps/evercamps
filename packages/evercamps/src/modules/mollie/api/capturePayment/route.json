@@ -1,5 +1,0 @@
-{
-  "methods": ["POST"],
-  "path": "/mollie/paymentIntents/capture",
-  "access": "private"
-}
