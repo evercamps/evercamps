@@ -12,7 +12,7 @@ export default [
       "**/*test.js",
       "**/tests/**",
       "**/create-evercamps-app/**",
-      "**/.evercamps/**",
+      "**/evercamps/**",
       "/.vscode/**",
       "/.git/**",
       "/.idea/**",
