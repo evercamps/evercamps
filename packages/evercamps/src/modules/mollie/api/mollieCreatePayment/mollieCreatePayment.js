@@ -70,7 +70,7 @@ export default async (request, response, next) => {
       },
       description: `Payment for order #${order.order_number}`,
       redirectUrl: buildAbsoluteUrl("checkoutSuccess", { orderId: order_id }),
-      webhookUrl: buildAbsoluteUrl("mollieWebhook"), // re-add when pushing, just change for dev purposes
+      webhookUrl: buildAbsoluteUrl("mollieWebhook"),
       metadata: {
         order_id
       }
