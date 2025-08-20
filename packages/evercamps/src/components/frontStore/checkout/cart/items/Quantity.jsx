@@ -85,7 +85,7 @@ export default function Quantity({ qty, api, disabled = false }) {
             />
           </svg>
         )}
-        {!isLoading && (
+        {!isLoading && !disabled && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
@@ -111,7 +111,7 @@ export default function Quantity({ qty, api, disabled = false }) {
         disabled={isLoading || disabled}
         type="button"
       >
-        {isLoading && (
+        {isLoading &&  (
           <svg
             aria-hidden="true"
             focusable="false"
@@ -130,7 +130,7 @@ export default function Quantity({ qty, api, disabled = false }) {
             />
           </svg>
         )}
-        {!isLoading && (
+        {!isLoading && !disabled  && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
