@@ -14,7 +14,8 @@ export default function LoginForm({
   forgotPasswordUrl
 }) {
   const [error, setError] = React.useState(null);
-
+  const params = new URLSearchParams(window.location.search);
+  const redirectUrl = params.get("redirect"); 
   return (
     <div className="flex justify-center items-center">
       <div className="login-form flex justify-center items-center">
@@ -27,8 +28,8 @@ export default function LoginForm({
             isJSON
             method="POST"
             onSuccess={(response) => {
-              if (!response.error) {
-                window.location.href = homeUrl;
+              if (!response.error) {                     
+                window.location.href = redirectUrl || homeUrl;
               } else {
                 setError(response.error.message);
               }
@@ -62,7 +63,7 @@ export default function LoginForm({
             />
           </Form>
           <div className="text-center mt-4 gap-8 flex justify-center">
-            <a className="text-interactive" href={registerUrl}>
+            <a className="text-interactive" href={`${registerUrl}${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}>
               {_('Create an account')}
             </a>
             <a href={forgotPasswordUrl}>{_('Forgot your password?')}</a>

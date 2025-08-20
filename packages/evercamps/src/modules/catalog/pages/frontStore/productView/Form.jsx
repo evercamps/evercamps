@@ -130,7 +130,7 @@ AddToCart.defaultProps = {
   error: undefined
 };
 
-export default function ProductForm({ product, action }) {
+export default function ProductForm({ product, action, currentCustomer, loginUrl, registerUrl}) {
   const [loading, setLoading] = useState(false);
   const [toastId, setToastId] = useState();
   const [error, setError] = useState();
@@ -235,6 +235,9 @@ export default function ProductForm({ product, action }) {
               loading={loading}
               onCancel={modal.closeModal}
               onSubmit={handleModalSubmit}
+              customer={currentCustomer}
+              loginUrl={loginUrl}
+              registerUrl={registerUrl}
             />
           </div>
         </div>
@@ -274,6 +277,11 @@ export const query = `
       }
       manageRegistrations
     }
+    currentCustomer {
+      email
+    }
     action:url (routeId: "addMineCartItem")
+    loginUrl: url(routeId: "login")
+    registerUrl: url(routeId: "register")
   }
 `;
