@@ -134,7 +134,8 @@ function Items({ items, setting: { priceIncludingTax } }) {
                       options={JSON.parse(item.variantOptions || '[]')}
                     />
                     <div className="mt-2">
-                      <a
+                      {item.manageRegistrations !== 1 && (
+                        <a
                         onClick={async (e) => {
                           e.preventDefault();
                           await removeItem(item);
@@ -144,6 +145,7 @@ function Items({ items, setting: { priceIncludingTax } }) {
                       >
                         <span>{_('Remove')}</span>
                       </a>
+                    )} 
                       {item.registrations.length > 0 && (
                         <div className="mt-2">
                           {item.registrations.map((reg, idx) => (
