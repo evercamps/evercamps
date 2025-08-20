@@ -6,7 +6,9 @@ import { getValue, getValueSync } from '../../../../lib/util/registry.js';
 import addCartItem from '../../../../modules/checkout/services/addCartItem.js';
 import { DataObject } from '../../../../modules/checkout/services/cart/DataObject.js';
 import removeCartItem from '../../../../modules/checkout/services/removeCartItem.js';
+import removeCartItemRegistration from '../../../../modules/checkout/services/removeCartItemRegistration.js';
 import updateCartItemQty from '../../../../modules/checkout/services/updateCartItemQty.js';
+import updateCartItemRegistration from '../../../../modules/checkout/services/updateCartItemRegistration.js';
 
 class Item extends DataObject {
   #cart;
@@ -68,12 +70,44 @@ class Cart extends DataObject {
 
   /**
    * @param {string} uuid
+   * @param {number} registration_id
+   * @param {string} first_name
+   * @param {string} last_name
+   * @returns {Item}
+   * @throws {Error}
+   */
+  async updateCartItemRegistration(uuid, registration_id, context) {
+    const updatedItem = await updateCartItemRegistration(this, uuid, registration_id, context);    
+    return updatedItem;
+  }
+
+  /**
+   * @param {string} uuid
    * @returns {Item}
    * @throws {Error}
    */
   async removeItem(uuid, context) {
     const removedItem = await removeCartItem(this, uuid, context);
     return removedItem;
+  }
+
+  /**
+   * @param {string} uuid
+   * @param {number} registration_id
+   * @returns {Item}
+   * @throws {Error}
+   */
+  async removeCartItemRegistration(uuid, registration_id, context) {
+    const removedItemRegistration = await removeCartItemRegistration(this, uuid, registration_id, context);
+    if ((removedItemRegistration.getData('registrations') || []).length === 0) {
+      const removedItem = await removeCartItem(this, uuid, context)
+      return removedItem;
+    }
+    else {
+      const updatedItem = await updateCartItemQty(this, uuid, 1, "decrease", context);
+      return updatedItem
+    }
+   
   }
 
   /**
