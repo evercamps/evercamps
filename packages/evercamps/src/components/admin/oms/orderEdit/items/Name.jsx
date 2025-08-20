@@ -21,7 +21,21 @@ export function Name({ name, productSku, productUrl, variantOptions = [], regist
             {registrations.map((reg, idx) => (
               <div key={idx} className="mb-2">
                 <div className="font-semibold">Participant {idx + 1}:</div>
-                <div>Name: {reg.firstName} {reg.lastName}</div>
+                <div>
+                  <span className="font-semibold">Name: </span>
+                  {reg.participant?.editUrl ? (
+                    <a
+                      href={reg.participant.editUrl}
+                      className="hover:underline"
+                    >
+                      {reg.firstName} {reg.lastName}
+                    </a>
+                  ) : (
+                    <span>
+                      {reg.firstName} {reg.lastName}
+                    </span>
+                  )}
+                </div>              
               </div>
             ))}
           </div>
