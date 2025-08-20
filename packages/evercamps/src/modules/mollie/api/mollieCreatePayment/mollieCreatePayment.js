@@ -11,6 +11,7 @@ import { buildUrl } from '../../../../lib/router/buildUrl.js';
 import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
 import { getContextValue } from '../../../graphql/services/contextHelper.js';
 import { buildAbsoluteUrl } from '../../../../lib/router/buildAbsoluteUrl.js';
+import { getMollieApiKey } from '../../services/getMollieApiKey.js';
 
 export default async (request, response, next) => {
   try {
@@ -32,82 +33,80 @@ export default async (request, response, next) => {
           message: 'Invalid order'
         }
       });
-    } else {
-      const mollieConfig = getConfig('system.mollie', {});
-      debug(`Mollie config ${JSON.stringify(mollieConfig)}`)
-      let apiKey;
-      if (mollieConfig.mollieLiveApiKey || mollieConfig.mollieTestApiKey) {
-        apiKey = mollieConfig.molliePaymentMode ? mollieConfig.mollieLiveApiKey : mollieConfig.mollieTestApiKey;
-      } else {
-        const mollieLiveApiKey = await getSetting('mollieLiveApiKey', null);
-        const mollieTestApiKey = await getSetting('mollieTestApiKey', null);
-        const molliePaymentMode = await getSetting('molliePaymentMode', 0);
-        debug(`Mollie config ${mollieLiveApiKey}, ${mollieTestApiKey}, ${molliePaymentMode}`);
+      return;
+    }
 
-        apiKey = parseInt(molliePaymentMode, 10) === 1 ? mollieLiveApiKey : mollieTestApiKey;
-
-        if (!apiKey) {
-          response.status(INVALID_PAYLOAD);
-          response.json({
-            error: {
-              status: INVALID_PAYLOAD,
-              message: 'Invalid apikey'
-            }
-          });
-        }
-      }
-
-      debug(`Mollie create client with apikey ${apiKey}`);
-
-      const mollieClient = createMollieClient({ apiKey: apiKey });
-
-      debug(`Create Mollie payment with total amount ${new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(order.grand_total)}`);
-
-
-      // Create a Payment with the order amount and currency
-      const payment = await mollieClient.payments.create({
-        amount: {
-          value: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(order.grand_total),
-          currency: order.currency
-        },
-        description: `Payment for order #${order.order_id}`,
-        redirectUrl: buildAbsoluteUrl("checkoutSuccess", {orderId: order_id}),
-        webhookUrl: buildAbsoluteUrl("mollieWebhook"),
-        metadata: {
-          order_id
-        }
-      });
-
-      await updatePaymentStatus(order.order_id, 'pending');
-
-      // Add transaction data to database
-      await insert('payment_transaction')
-        .given({
-          payment_transaction_order_id: order.order_id,
-          transaction_id: payment.id,
-          amount: order.grand_total,
-          currency: order.currency,
-          status: payment.status,
-          payment_action: 'capture',
-          transaction_type: 'online',
-          additional_information: JSON.stringify(payment)
-        })
-        .execute(pool);
-
-      response.status(OK);
+    const apiKey = await getMollieApiKey();
+    debug(`getMollie Api key ${apiKey}`);
+    
+    if (!apiKey) {
+      response.status(INVALID_PAYLOAD);
       response.json({
-        data: {
-          // clientSecret: payment.getCheckoutUrl()
-          returnUrl: payment.getCheckoutUrl()
+        error: {
+          status: INVALID_PAYLOAD,
+          message: 'Invalid apikey'
         }
       });
     }
+
+    debug(`Mollie create client with apikey ${apiKey}`);
+
+    const mollieClient = createMollieClient({ apiKey: apiKey });
+
+    debug(`Create Mollie payment with total amount ${new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(order.grand_total)}`);
+
+
+    // Create a Payment with the order amount and currency
+    const payment = await mollieClient.payments.create({
+      amount: {
+        value: new Intl.NumberFormat('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(order.grand_total),
+        currency: order.currency
+      },
+      description: `Payment for order #${order.order_number}`,
+      redirectUrl: buildAbsoluteUrl("checkoutSuccess", { orderId: order_id }),
+      // webhookUrl: buildAbsoluteUrl("mollieWebhook"), // re-add when pushing, just change for dev purposes
+      webhookUrl: "https://webhook.site/89cdd0e8-e34c-4324-b997-4ab39f5e05b1",
+      metadata: {
+        order_id
+      }
+    });
+
+    await updatePaymentStatus(order.order_id, 'pending');
+
+    // Add transaction data to database
+    await insert('payment_transaction')
+      .given({
+        payment_transaction_order_id: order.order_id,
+        transaction_id: payment.id,
+        amount: order.grand_total,
+        currency: order.currency,
+        status: payment.status,
+        payment_action: 'capture',
+        transaction_type: 'online',
+        additional_information: JSON.stringify(payment)
+      })
+      .execute(pool);
+
+    await insert('order_activity')
+      .given({
+        order_activity_order_id: order.order_id,
+        comment: `Customer authorized by using Mollie. Transaction ID: ${payment.id}`
+      })
+      .execute(pool);
+
+    response.status(OK);
+    response.json({
+      data: {
+        // clientSecret: payment.getCheckoutUrl()
+        returnUrl: payment.getCheckoutUrl()
+      }
+    });
   }
   catch (err) {
     error(err);

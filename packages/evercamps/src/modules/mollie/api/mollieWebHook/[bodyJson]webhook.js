@@ -6,137 +6,118 @@ import {
   select,
   insertOnUpdate
 } from '@evershop/postgres-query-builder';
-import stripePgk from 'stripe';
-import { display } from 'zero-decimal-currencies';
 import { emit } from '../../../../lib/event/emitter.js';
 import { debug, error } from '../../../../lib/log/logger.js';
 import { getConnection } from '../../../../lib/postgres/connection.js';
-import { getConfig } from '../../../../lib/util/getConfig.js';
 import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
-import { getSetting } from '../../../setting/services/setting.js';
+import { getMollieApiKey } from '../../services/getMollieApiKey.js';
+import { createMollieClient } from '@mollie/api-client';
+import { INVALID_PAYLOAD } from '../../../../lib/util/httpStatus.js';
 
 export default async (request, response, next) => {
-  const sig = request.headers['mollie-signature'];
 
-  let event;
+  const paymentId = request.body.id;
+
+  debug(`Received webhook call with payment id: ${paymentId}`);
+
   const connection = await getConnection();
+
   try {
-    const mollieConfig = getConfig('system.mollie', {});
-    let mollieSecretKey;
-    if (stripeConfig.secretKey) {
-      mollieSecretKey = stripeConfig.secretKey;
-    } else {
-      mollieSecretKey = await getSetting('mollieSecretKey', '');
-    }
-    const stripe = stripePgk(mollieSecretKey);
 
-    // Webhook enpoint secret
-    let endpointSecret;
-    if (stripeConfig.endpointSecret) {
-      endpointSecret = stripeConfig.endpointSecret;
-    } else {
-      endpointSecret = await getSetting('mollieEndpointSecret', '');
-    }
-
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
     await startTransaction(connection);
-    const paymentIntent = event.data.object;
-    const { order_id } = paymentIntent.metadata;
     const transaction = await select()
       .from('payment_transaction')
-      .where('transaction_id', '=', paymentIntent.id)
+      .where('transaction_id', '=', paymentId)
       .load(connection);
-    // Load the order
+
+
+    if (!transaction) {
+      error("transaction id not found");
+      response.status(200).send();
+    }
+
     const order = await select()
       .from('order')
-      .where('uuid', '=', order_id)
+      .where('order_id', '=', transaction.payment_transaction_order_id)
       .load(connection);
-    // Handle the event
-    switch (event.type) {
-      case 'payment_intent.succeeded': {
-        debug('payment_intent.succeeded event received');
+
+    const apiKey = await getMollieApiKey();
+
+    if (!apiKey) {
+      response.status(INVALID_PAYLOAD);
+      response.json({
+        error: {
+          status: INVALID_PAYLOAD,
+          message: 'Invalid apikey'
+        }
+      });
+    }
+
+    debug(`Mollie create client with apikey ${apiKey}`);
+    const mollieClient = createMollieClient({ apiKey: apiKey });
+
+    const payment = await mollieClient.payments.get(paymentId);
+
+    if(!payment) {
+      error("no payment found");
+      response.json({ received: true });
+      return;
+    }
+
+    debug(JSON.stringify(payment));
+
+    switch (payment.status) {
+      case "paid":
+        debug(`payment status paid received: ${paymentId}`);
+
         // Update the order
-        // Create payment transaction
-        await insertOnUpdate('payment_transaction', [
-          'transaction_id',
-          'payment_transaction_order_id'
-        ])
+        await updatePaymentStatus(order.order_id, 'paid', connection);
+
+        // Add an activity log
+        await insert('order_activity')
           .given({
-            amount: parseFloat(
-              display(paymentIntent.amount, paymentIntent.currency)
-            ),
-            payment_transaction_order_id: order.order_id,
-            transaction_id: paymentIntent.id,
-            transaction_type: 'online',
-            payment_action:
-              paymentIntent.capture_method === 'manual' ? 'Manual' : 'Automatic'
+            order_activity_order_id: order.order_id,
+            comment: `Customer paid by using Mollie.`
           })
           .execute(connection);
 
-        if (!transaction) {
-          await updatePaymentStatus(order.order_id, 'paid', connection);
-
-          // Add an activity log
-          await insert('order_activity')
-            .given({
-              order_activity_order_id: order.order_id,
-              comment: `Customer paid by using Stripe. Transaction ID: ${paymentIntent.id}`
-            })
-            .execute(connection);
-
-          // Emit event to add order placed event
-          await emit('order_placed', { ...order });
-        }
+        // Emit event to add order placed event // do I need to do this?
+        await emit('order_placed', { ...order });
         break;
-      }
-      case 'payment_intent.amount_capturable_updated': {
-        debug('payment_intent.amount_capturable_updated event received');
-        // Create payment transaction
-        await insertOnUpdate('payment_transaction', [
-          'transaction_id',
-          'payment_transaction_order_id'
-        ])
-          .given({
-            amount: parseFloat(
-              display(paymentIntent.amount, paymentIntent.currency)
-            ),
-            payment_transaction_order_id: order.order_id,
-            transaction_id: paymentIntent.id,
-            transaction_type: 'online',
-            payment_action:
-              paymentIntent.capture_method === 'manual'
-                ? 'authorize'
-                : 'capture'
-          })
-          .execute(connection);
-
-        if (!transaction) {
-          await updatePaymentStatus(order.order_id, 'authorized', connection);
-          // Add an activity log
-          await insert('order_activity')
-            .given({
-              order_activity_order_id: order.order_id,
-              comment: `Customer authorized by using Stripe. Transaction ID: ${paymentIntent.id}`
-            })
-            .execute(connection);
-
-          // Emit event to add order placed event
-          await emit('order_placed', { ...order });
-        }
-        break;
-      }
-      case 'payment_intent.canceled': {
-        debug('payment_intent.canceled event received');
+      case "expired":
+      case "failed":
+        debug('payment expired or failed status received');
         await updatePaymentStatus(order.order_id, 'canceled', connection);
+        // Add an activity log
+        await insert('order_activity')
+          .given({
+            order_activity_order_id: order.order_id,
+            comment: `Payment was expired or failed`
+          })
+          .execute(connection);
         break;
-      }
+      case "authorized":
+        break;
+      case "canceled":
+        debug('payment canceled status received');
+        await updatePaymentStatus(order.order_id, 'canceled', connection);
+        // Add an activity log
+        await insert('order_activity')
+          .given({
+            order_activity_order_id: order.order_id,
+            comment: `Customer canceled the payment.`
+          })
+          .execute(connection);
+        break;
       default: {
-        debug(`Unhandled event type ${event.type}`);
+        debug(`Unhandled mollie status type ${payment.status}`);
       }
     }
+
     await commit(connection);
     // Return a response to acknowledge receipt of the event
     response.json({ received: true });
+
   } catch (err) {
     error(err);
     await rollback(connection);

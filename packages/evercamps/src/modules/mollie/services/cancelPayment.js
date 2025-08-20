@@ -3,6 +3,8 @@ import { error } from '../../../lib/log/logger.js';
 import { pool } from '../../../lib/postgres/connection.js';
 import { getConfig } from '../../../lib/util/getConfig.js';
 import { getSetting } from '../../setting/services/setting.js';
+import { getMollieApiKey } from './getMollieApiKey.js';
+import { createMollieClient} from '@mollie/api-client';
 
 export async function cancelPaymentIntent(orderID) {
   try {
@@ -13,27 +15,23 @@ export async function cancelPaymentIntent(orderID) {
     if (!transaction) {
       return;
     }
-    const stripeConfig = getConfig('system.mollie', {});
-    let stripeSecretKey;
 
-    if (stripeConfig.secretKey) {
-      stripeSecretKey = stripeConfig.secretKey;
-    } else {
-      stripeSecretKey = await getSetting('stripeSecretKey', '');
-    }
-    const stripe = stripePayment(stripeSecretKey);
+    const apiKey = await getMollieApiKey();
+    const mollieClient = createMollieClient({ apiKey});
 
+    
     // Get the payment intent
-    const paymentIntent = await stripe.paymentIntents.retrieve(
-      transaction.transaction_id
-    );
-    if (!paymentIntent) {
+    const payment = await mollieClient.payments.get(transaction.transaction_id);
+    
+    if (!payment) {
       throw new Error('Can not find payment intent');
     }
-    if (paymentIntent.status === 'canceled') {
+    
+    if(!payment.isCancelable) {
       return;
     }
-    await stripe.paymentIntents.cancel(transaction.transaction_id);
+
+    await mollieClient.payments.cancel(transaction.transaction_id);
   } catch (err) {
     error(err);
     throw err;
