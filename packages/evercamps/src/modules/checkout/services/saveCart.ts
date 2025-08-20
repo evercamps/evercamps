@@ -81,20 +81,53 @@ export const saveCart = async (cart: Cart) => {
           }
           
           
-          await del('cart_item_registration')
-          .where('cart_item_id', '=', cartItemId)
-          .execute(connection, false);
+          // Fetch current registrations from DB
+          const currentRegs = await select()
+            .from('cart_item_registration')
+            .where('cart_item_id', '=', cartItemId)
+            .execute(connection, false);
 
-          const registrations = item.getData('registrations') || [];
-          for (const reg of registrations) {
-            if (reg.firstName && reg.lastName) {
+          const newRegs = item.getData('registrations') || [];
+
+          // Map by ID for easier comparison
+          const currentById = new Map(currentRegs.map(r => [r.cart_item_registration_id, r]));
+          const newById = new Map(newRegs.map(r => [r.cartItemRegistrationId, r]));
+
+          // Delete regs that are in DB but not in new list
+          for (const r of currentRegs) {
+            if (!newById.has(r.cart_item_registration_id)) {
+              await del('cart_item_registration')
+                .where('cart_item_registration_id', '=', r.cart_item_registration_id)
+                .execute(connection, false);
+            }
+          }
+
+          // Insert regs that are new
+          for (const r of newRegs) {
+            if (!r.cartItemRegistrationId) {
               await insert('cart_item_registration')
                 .given({
                   cart_item_id: cartItemId,
-                  first_name: reg.firstName,
-                  last_name: reg.lastName
+                  first_name: r.firstName,
+                  last_name: r.lastName
                 })
                 .execute(connection, false);
+            }
+          }
+
+          // Update regs that exist but changed
+          for (const r of newRegs) {
+            if (r.cartItemRegistrationId && currentById.has(r.cartItemRegistrationId)) {
+              const existing = currentById.get(r.cartItemRegistrationId);
+              if (existing.first_name !== r.firstName || existing.last_name !== r.lastName) {
+                await update('cart_item_registration')
+                  .given({
+                    first_name: r.firstName,
+                    last_name: r.lastName
+                  })
+                  .where('cart_item_registration_id', '=', r.cartItemRegistrationId)
+                  .execute(connection, false);
+              }
             }
           }
         })

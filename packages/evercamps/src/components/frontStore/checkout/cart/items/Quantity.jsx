@@ -10,6 +10,10 @@ export default function Quantity({ qty, api, disabled = false }) {
   const [debounceTimer, setDebounceTimer] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
+  React.useEffect(() => {
+  setQuantity(qty);
+  previousQuantity.current = qty;}, [qty]);
+
   const updateQuantity = (newQuantity) => {
     if (disabled) return;
     setQuantity(newQuantity);
@@ -81,7 +85,7 @@ export default function Quantity({ qty, api, disabled = false }) {
             />
           </svg>
         )}
-        {!isLoading && (
+        {!isLoading && !disabled && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
@@ -107,7 +111,7 @@ export default function Quantity({ qty, api, disabled = false }) {
         disabled={isLoading || disabled}
         type="button"
       >
-        {isLoading && (
+        {isLoading &&  (
           <svg
             aria-hidden="true"
             focusable="false"
@@ -126,7 +130,7 @@ export default function Quantity({ qty, api, disabled = false }) {
             />
           </svg>
         )}
-        {!isLoading && (
+        {!isLoading && !disabled  && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
