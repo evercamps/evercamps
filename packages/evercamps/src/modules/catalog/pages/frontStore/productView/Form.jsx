@@ -171,6 +171,20 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
   };
 
   const handleAddToCartClick = () => {
+    const { variantGroup } = product;
+    
+    if (variantGroup && variantGroup.variantAttributes?.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      const missingAttribute = variantGroup.variantAttributes.some(
+        (attr) => !urlParams.has(attr.attributeCode)
+      );
+
+      if (missingAttribute) {
+        setError(_('Please select variant options'));
+        return;
+      }
+    }
     if (product.manageRegistrations === 1) {
       modal.openModal();
     } else {
@@ -276,6 +290,11 @@ export const query = `
         isInStock
       }
       manageRegistrations
+      variantGroup {
+        variantAttributes {
+          attributeCode
+        }
+      }
     }
     currentCustomer {
       email
