@@ -128,5 +128,16 @@ export default {
     subTotal: ({ lineTotal }) =>
       // This field is deprecated, use lineTotal instead
       lineTotal
+  },
+  OrderItemRegistration: {
+    participant: async ({ registrationId }, _, { pool }) => {
+      const query = select('participant.uuid')
+      .from('participant');
+      query.leftJoin('registration')
+      .on('registration.registration_participant_id', '=', 'participant.participant_id');
+      const participant = await query.where('registration.registration_id', '=', registrationId)
+      .load(pool);
+      return participant ? camelCase(participant) : null;
+    }
   }
 };

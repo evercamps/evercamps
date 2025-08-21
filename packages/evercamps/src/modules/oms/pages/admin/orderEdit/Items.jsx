@@ -152,6 +152,9 @@ export const query = `
         registrations {
           firstName
           lastName
+          participant {
+              editUrl
+            }
         }
         productName
         productSku

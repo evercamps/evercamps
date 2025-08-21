@@ -13,7 +13,7 @@ dist
 !extensions/product_review
 /themes
 .idea/*
-evercamps
+/evercamps
 .vscode
 npm-debug.log
 /package-log.json

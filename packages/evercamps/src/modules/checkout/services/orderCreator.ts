@@ -121,7 +121,7 @@ async function saveOrderItems(
         .load(connection);
 
         let participantId;
-
+        let registrationId;
       if (participant) {
         participantId = participant.participant_id;
       } else {
@@ -134,17 +134,19 @@ async function saveOrderItems(
 
         participantId = participant.insertId;
       }
-      await insert('registration')
+      let registration = await insert('registration')
         .given({
           registration_participant_id: participantId,
           registration_product_id: item.getData('product_id'),
         })
         .execute(connection);
+        registrationId = registration.insertId;
         await insert('order_item_registration')
           .given({
             order_item_id: orderItem.insertId,
             first_name: reg.firstName,
-            last_name: reg.lastName
+            last_name: reg.lastName,
+            registration_id: registrationId
           })
           .execute(connection);        
       }

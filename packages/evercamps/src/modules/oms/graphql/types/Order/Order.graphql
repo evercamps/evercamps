@@ -54,8 +54,10 @@ Represents a registration attached to a specific order item.
 type OrderItemRegistration {
   orderItemRegistrationId: ID!
   orderItemId: ID!
+  registrationId: ID!
   firstName: String!
   lastName: String!
+  participant: Participant
 }
 
 """
