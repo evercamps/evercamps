@@ -1,0 +1,5 @@
+extend type Setting {
+  molliePaymentStatus: Int
+  mollieDisplayName: String
+  molliePaymentMode: Int
+}
