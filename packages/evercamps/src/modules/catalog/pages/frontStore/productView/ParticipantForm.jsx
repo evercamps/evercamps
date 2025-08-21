@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import { Field } from '@components/common/form/Field';
+import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export default function ParticipantForm({
   firstName,
@@ -10,11 +11,32 @@ export default function ParticipantForm({
   setLastName,
   loading,
   onCancel,
-  onSubmit
+  onSubmit,
+  customer,
+  loginUrl,
+  registerUrl
 }) {
   return (    
       <Card title="Enter Participant Details">
         <Card.Session>
+          {!customer && (
+            <div className="mb-4">
+              <span>{_('Want to check out faster?')}</span>{' '}
+              <a
+                className="text-interactive hover:underline"
+                href={`${loginUrl}?redirect=${encodeURIComponent(window.location.href)}`}
+              >
+                {_('Login')}
+              </a>
+              {' '}{_('or')}{' '}
+              <a
+                className="text-interactive hover:underline"
+                href={`${registerUrl}?redirect=${encodeURIComponent(window.location.href)}`}
+              >
+                {_('Register')}
+              </a>
+            </div>
+          )}         
           <label className="block mb-2 font-medium">First Name</label>
           <div className="mb-8">
             <Field

@@ -11,6 +11,8 @@ export default function RegisterForm({ action, homeUrl, loginApi, loginUrl }) {
   const [error, setError] = React.useState(null);
   const [email, setEmail] = React.useState(null);
   const [password, setPassword] = React.useState(null);
+  const params = new URLSearchParams(window.location.search);
+  const redirectUrl = params.get("redirect"); 
 
   return (
     <div className="flex justify-center items-center">
@@ -41,7 +43,7 @@ export default function RegisterForm({ action, homeUrl, loginApi, loginUrl }) {
                 if (loginResponseJson.error) {
                   setError(loginResponseJson.error.message);
                 } else {
-                  window.location.href = homeUrl;
+                  window.location.href = redirectUrl || homeUrl;
                 }
               } else {
                 setError(response.error.message);
@@ -103,7 +105,7 @@ export default function RegisterForm({ action, homeUrl, loginApi, loginUrl }) {
           <div className="text-center mt-4">
             <span>
               {_('Already have an account?')}
-              <a className="text-interactive" href={loginUrl}>
+              <a className="text-interactive" href={`${loginUrl}${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}>
                 {' '}
                 {_('Login')}{' '}
               </a>
