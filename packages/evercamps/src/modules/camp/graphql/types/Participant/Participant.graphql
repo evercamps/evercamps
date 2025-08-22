@@ -8,6 +8,9 @@ type Participant {
   updateApi: String!
   deleteApi: String!
   registrations(filters: [FilterInput]): RegistrationCollection
+  customer: Customer
+  addCustomerUrl: String!
+  removeCustomerUrl: String!
 }
 
 type ParticipantCollection {

@@ -61,6 +61,37 @@ Status.propTypes = {
   status: PropTypes.number.isRequired
 };
 
+function Participants({ participants }) {
+  if (!participants || participants.length === 0) {
+    return (
+      <Card.Session title="Participants">
+        <div>No participants assigned</div>
+      </Card.Session>
+    );
+  }
+
+  return (
+    <Card.Session title="Participants">
+      <ul>
+        {participants.map((p, idx) => (
+          <li key={idx}>
+            {p.firstName} {p.lastName}
+          </li>
+        ))}
+      </ul>
+    </Card.Session>
+  );
+}
+
+Participants.propTypes = {
+  participants: PropTypes.arrayOf(
+    PropTypes.shape({
+      firstName: PropTypes.string,
+      lastName: PropTypes.string
+    })
+  )
+};
+
 export default function General({ customer }) {
   return (
     <Card>
@@ -82,8 +113,12 @@ export default function General({ customer }) {
             sortOrder: 20
           },
           {
-            component: { default: () => <Status status={customer.status} /> },
+            component: { default: () => <Participants participants={customer.participants} /> },
             sortOrder: 25
+          },
+          {
+            component: { default: () => <Status status={customer.status} /> },
+            sortOrder: 30
           }
         ]}
       />
@@ -116,6 +151,10 @@ export const query = `
       status
       group {
         groupName
+      }
+      participants {
+        firstName
+        lastName
       }
     }
   }
