@@ -4,6 +4,7 @@ import { getParticipantsBaseQuery } from '../../../services/getParticipantsBaseQ
 import { getRegistrationsByParticipantBaseQuery } from '../../../services/getRegistrationsByParticipantBaseQuery.js';
 import { ParticipantCollection } from '../../../services/ParticipantCollection.js';
 import { RegistrationCollection } from '../../../services/RegistrationCollection.js';
+import { select } from '@evershop/postgres-query-builder';
 
 export default {
   Query: {
@@ -24,6 +25,8 @@ export default {
     editUrl: (participant) => buildUrl('participantEdit', { id: participant.uuid }),
     updateApi: (participant) => buildUrl('updateParticipant', { id: participant.uuid }),
     deleteApi: (participant) => buildUrl('deleteParticipant', { id: participant.uuid }),
+    addCustomerUrl: (participant) => buildUrl('addCustomer', { participantId: participant.uuid }),
+    removeCustomerUrl: (participant) => buildUrl('removeCustomer', { participantId: participant.uuid }),
 
     registrations: async (participant, { filters = [] }, { user }) => {
           const query = await getRegistrationsByParticipantBaseQuery(
@@ -33,6 +36,13 @@ export default {
           const root = new RegistrationCollection(query);
           await root.init(filters, !!user);
           return root;
-        }
+    },
+    customer: async ({ customerId }, _, { pool }) => {      
+      const customer = await select()
+        .from('customer')
+        .where('customer_id', '=', customerId)
+        .load(pool);
+      return customer ? camelCase(customer) : null;
+    }
   }
 };
