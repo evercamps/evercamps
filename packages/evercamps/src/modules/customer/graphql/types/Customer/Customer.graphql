@@ -29,6 +29,7 @@ type Customer {
   addAddressApi: String!
   fullName: String!
   createdAt: Date!
+  participants: [Participant!]!
 }
 
 extend type Query {

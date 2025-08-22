@@ -5,6 +5,7 @@ import { getRegistrationsBaseQuery } from './getRegistrationsBaseQuery.js';
 import createRegistration from './registration/createRegistration.js';
 import deleteParticipant from './participant/deleteParticipant.js';
 import deleteRegistration from './registration/deleteRegistration.js';
+import addCustomer from './participant/addCustomer.js';
 
 export {
   getParticipantsBaseQuery,
@@ -13,5 +14,6 @@ export {
   deleteParticipant,
   getRegistrationsBaseQuery,
   createRegistration,
-  deleteRegistration
+  deleteRegistration,
+  addCustomer
 };

@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "customer_id": {
+      "type": "number"
+    }
+  },
+  "required": ["customer_id"],
+  "additionalProperties": false
+}

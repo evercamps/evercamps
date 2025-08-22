@@ -26,6 +26,13 @@ export default {
         })
       }));
     },
+    participants: async ({ customer }, _, { pool }) => {
+    const participants = await select()
+      .from('participant')
+      .where('customer_id', '=', customer.customerId)
+      .execute(pool);
+    return participants.map(p => camelCase(p));
+    },
     addAddressApi: (customer) =>
       buildUrl('createCustomerAddress', {
         customer_id: customer.uuid
