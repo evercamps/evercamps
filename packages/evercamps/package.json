@@ -116,7 +116,7 @@
   "license": "GNU GENERAL PUBLIC LICENSE 3.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/evershopcommerce/evershop.git"
+    "url": "git+https://github.com/evercamps/evercamps.git"
   },
   "keywords": [
     "ecommerce",
@@ -124,9 +124,9 @@
     "cart"
   ],
   "bugs": {
-    "url": "https://github.com/evershopcommerce/evershop/issues"
+    "url": "https://github.com/evercamps/evercamps/issues"
   },
-  "homepage": "http://evershop.io/",
+  "homepage": "http://evercamps.io/",
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^36.0.1",
     "@ckeditor/ckeditor5-react": "^5.1.0",
@@ -142,6 +142,7 @@
     "@graphql-tools/schema": "^9.0.19",
     "@hapi/topo": "^5.0.0",
     "@heroicons/react": "^1.0.5",
+    "@mollie/api-client": "^4.3.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.6.0",
     "@shopify/draggable": "^1.0.0-beta.8",
     "@stripe/react-stripe-js": "^1.5.0",

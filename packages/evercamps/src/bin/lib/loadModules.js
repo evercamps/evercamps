@@ -57,6 +57,11 @@ const coreModules = [
     path: path.resolve(__dirname, '../../modules/oms')
   },
   {
+    name: 'mollie',
+    resolve: path.resolve(__dirname, '../../modules/mollie'),
+    path: path.resolve(__dirname, '../../modules/mollie')
+  },
+  {
     name: 'paypal',
     resolve: path.resolve(__dirname, '../../modules/paypal'),
     path: path.resolve(__dirname, '../../modules/paypal')

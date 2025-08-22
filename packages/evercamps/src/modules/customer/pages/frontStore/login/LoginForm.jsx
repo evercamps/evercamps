@@ -14,8 +14,14 @@ export default function LoginForm({
   forgotPasswordUrl
 }) {
   const [error, setError] = React.useState(null);
-  const params = new URLSearchParams(window.location.search);
-  const redirectUrl = params.get("redirect"); 
+  const [redirectUrl, setRedirectUrl] = React.useState(null);
+  
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect"); 
+    setRedirectUrl(redirect);
+  }, [])
+  
   return (
     <div className="flex justify-center items-center">
       <div className="login-form flex justify-center items-center">

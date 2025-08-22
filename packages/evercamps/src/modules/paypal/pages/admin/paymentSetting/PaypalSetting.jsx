@@ -29,13 +29,13 @@ export default function PaypalPayment({
       <Card.Session>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
-            <h4>Dislay Name</h4>
+            <h4>Display Name</h4>
           </div>
           <div className="col-span-2">
             <Field
               type="text"
               name="paypalDisplayName"
-              placeholder="Dislay Name"
+              placeholder="Display Name"
               value={paypalDisplayName}
             />
           </div>
