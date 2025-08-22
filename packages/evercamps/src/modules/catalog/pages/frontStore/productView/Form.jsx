@@ -298,6 +298,11 @@ export const query = `
     }
     currentCustomer {
       email
+      participants {
+        participantId
+        firstName
+        lastName
+      }
     }
     action:url (routeId: "addMineCartItem")
     loginUrl: url(routeId: "login")

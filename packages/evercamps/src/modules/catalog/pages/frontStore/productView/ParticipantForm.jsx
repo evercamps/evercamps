@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import { Field } from '@components/common/form/Field';
@@ -16,6 +16,14 @@ export default function ParticipantForm({
   loginUrl,
   registerUrl
 }) {
+  const [selectedParticipant, setSelectedParticipant] = useState(null);
+  
+  React.useEffect(() => {
+    if (selectedParticipant) {
+      setFirstName(selectedParticipant.firstName || '');
+      setLastName(selectedParticipant.lastName || '');
+    }
+  }, [selectedParticipant, setFirstName, setLastName]);
   return (    
       <Card title="Enter Participant Details">
         <Card.Session>
@@ -36,7 +44,34 @@ export default function ParticipantForm({
                 {_('Register')}
               </a>
             </div>
-          )}         
+          )}
+          {customer && customer.participants && customer.participants.length > 0 && (
+          <div className="mb-4">
+            <Field
+              id="participant"
+              name="participant"
+              type="select"
+              label={_('Select a Saved Participant')}
+              value={selectedParticipant ? selectedParticipant.participantId : ''}
+              placeholder={_('Choose a participant')}
+              disableDefaultOption={false}
+              options={customer.participants.map((p) => ({
+                text: `${p.firstName} ${p.lastName}`,
+                value: p.participantId
+              }))}
+              onChange={(e) => {
+                const participant = customer.participants.find(
+                  (p) => p.participantId.toString() === e.target.value
+                );
+                setSelectedParticipant(participant);
+                if (participant) {
+                  setFirstName(participant.firstName);
+                  setLastName(participant.lastName);
+                }
+              }}
+            />
+          </div>
+        )}         
           <label className="block mb-2 font-medium">First Name</label>
           <div className="mb-8">
             <Field
