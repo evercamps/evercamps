@@ -2,6 +2,7 @@ import { Card } from '@components/admin/cms/Card';
 import { AddressSummary } from '@components/common/customer/address/AddressSummary';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export default function Customer({
   order: {
@@ -32,11 +33,17 @@ export default function Customer({
           </a>
         </div>
         <div>
-          <span>{shippingAddress.telephone}</span>
+          <span>
+          {shippingAddress?.telephone || billingAddress?.telephone || _('No phone provided')}
+          </span>
         </div>
       </Card.Session>
       <Card.Session title="Shipping Address">
-        <AddressSummary address={shippingAddress} />
+        {shippingAddress ? (
+          <AddressSummary address={shippingAddress} />
+        ) : (
+          <span className="italic text-textSubdued">{_('No shipping address provided')}</span>
+        )}
       </Card.Session>
       <Card.Session title="Billing address">
         <AddressSummary address={billingAddress} />
@@ -64,7 +71,7 @@ Customer.propTypes = {
         code: PropTypes.string.isRequired,
         name: PropTypes.string.isRequired
       }).isRequired
-    }).isRequired,
+    }),
     billingAddress: PropTypes.shape({
       fullName: PropTypes.string.isRequired,
       address1: PropTypes.string.isRequired,

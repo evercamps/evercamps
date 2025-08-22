@@ -62,7 +62,11 @@ export default function CustomerInfo({
               <h3>{_('Shipping Address')}</h3>
             </div>
             <div className="text-textSubdued">
-              <AddressSummary address={shippingAddress} />
+              {shippingAddress ? (
+                <AddressSummary address={shippingAddress} />
+              ) : (
+                <span className="italic text-textSubdued">{_('No shipping address provided')}</span>
+              )}
             </div>
           </div>
           <div>

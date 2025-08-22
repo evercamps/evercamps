@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../../lib/locale/translate/_.js';
 
-export function BillingAddress({ useShippingAddress, setUseShippingAddress }) {
+export function BillingAddress({ useShippingAddress, setUseShippingAddress, hideCheckbox }) {
+  if (hideCheckbox) return null;
   return (
     <div>
       <Field

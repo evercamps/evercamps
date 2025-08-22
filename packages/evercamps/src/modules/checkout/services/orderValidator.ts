@@ -44,11 +44,10 @@ const initialValidators: Validator<Cart>[] = [
      * @returns {boolean}
      */
     func: (cart: Cart) => {
-      if (!cart.getData('shipping_address_id')) {
-        return false;
-      } else {
-        return true;
-      }
+      const allManaged = cart.getItems().every(item => item.getData('manageRegistrations'));
+      if (allManaged) return true;
+      
+      return !!cart.getData('shipping_address_id');
     },
     errorMessage: 'Shipping address is required'
   },
@@ -60,11 +59,9 @@ const initialValidators: Validator<Cart>[] = [
      * @returns {boolean}
      */
     func: (cart: Cart) => {
-      if (!cart.getData('shipping_method')) {
-        return false;
-      } else {
-        return true;
-      }
+      const shippingAddress = cart.getData('shipping_address_id');
+      if (!shippingAddress) return true;
+      return !!cart.getData('shipping_method');
     },
     errorMessage: 'Shipping method is required'
   }
