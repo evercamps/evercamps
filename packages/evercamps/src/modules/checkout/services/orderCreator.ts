@@ -5,6 +5,7 @@ import {
   PoolClient,
   rollback,
   select,
+  sql,
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
@@ -148,7 +149,15 @@ async function saveOrderItems(
             last_name: reg.lastName,
             registration_id: registrationId
           })
-          .execute(connection);        
+          .execute(connection);   
+        const customerId = cart.getData('customer_id');          
+        if (customerId) {
+          await update('participant')
+            .given({ customer_id: customerId })
+            .where('participant_id', '=', participantId)
+            .and('customer_id', 'IS', sql('NULL'))
+            .execute(connection);
+        }     
       }
 
       return orderItem;
