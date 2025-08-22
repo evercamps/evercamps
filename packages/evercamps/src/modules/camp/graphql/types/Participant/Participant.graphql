@@ -10,6 +10,7 @@ type Participant {
   registrations(filters: [FilterInput]): RegistrationCollection
   customer: Customer
   addCustomerUrl: String!
+  removeCustomerUrl: String!
 }
 
 type ParticipantCollection {

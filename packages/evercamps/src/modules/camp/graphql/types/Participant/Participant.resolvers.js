@@ -26,6 +26,7 @@ export default {
     updateApi: (participant) => buildUrl('updateParticipant', { id: participant.uuid }),
     deleteApi: (participant) => buildUrl('deleteParticipant', { id: participant.uuid }),
     addCustomerUrl: (participant) => buildUrl('addCustomer', { participantId: participant.uuid }),
+    removeCustomerUrl: (participant) => buildUrl('removeCustomer', { participantId: participant.uuid }),
 
     registrations: async (participant, { filters = [] }, { user }) => {
           const query = await getRegistrationsByParticipantBaseQuery(

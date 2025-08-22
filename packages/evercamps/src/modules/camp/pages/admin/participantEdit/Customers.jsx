@@ -107,7 +107,7 @@ export default function Customer({ participant }) {
                       href="#"
                       onClick={async (e) => {
                         e.preventDefault();
-                        await removeCustomer(customer.deleteApi);
+                        await removeCustomer(participant.removeCustomerUrl);
                       }}
                       className="text-critical"
                     >
@@ -131,7 +131,8 @@ export default function Customer({ participant }) {
 Customer.propTypes = {
   participant: PropTypes.shape({
     participantId: PropTypes.number.isRequired,
-    addCustomerUrl: PropTypes.string.isRequired
+    addCustomerUrl: PropTypes.string.isRequired,
+    removeCustomerUrl: PropTypes.string.isRequired
   }),  
 };
 
@@ -146,6 +147,7 @@ export const query = `
       participantId
       uuid
       addCustomerUrl
+      removeCustomerUrl
     }    
   }
 `;

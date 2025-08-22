@@ -9,20 +9,19 @@ import {
 } from '@evershop/postgres-query-builder';
 import { getConnection, pool } from '../../../../lib/postgres/connection.js';
 
-async function addCustomer(
+async function removeCustomer(
   participantId: string,
-  customerId: number,
   context: Record<string, unknown> = {}
 ) {
   if (typeof context !== 'object' || context === null) {
     throw new Error('Context must be an object');
   }
-  
+
   const connection = await getConnection();
   await startTransaction(connection);
 
-  try {        
-    
+  try {
+    // Fetch the participant
     const existingParticipant = await select()
       .from('participant')
       .where('uuid', '=', participantId)
@@ -32,18 +31,18 @@ async function addCustomer(
       throw new Error('Participant not found');
     }
 
-    if (existingParticipant.customer_id) {
-      throw new Error('This participant already has a customer assigned');
+    if (!existingParticipant.customer_id) {
+      throw new Error('This participant does not have a customer assigned');
     }
     
-    const customer = await update('participant')
-      .given({ customer_id: customerId })
+    const result = await update('participant')
+      .given({ customer_id: null })
       .where('uuid', '=', participantId)
       .execute(connection);
 
     await commit(connection);
 
-    return customer;
+    return result;
   } catch (error) {
     await rollback(connection);
     throw error;
@@ -51,20 +50,14 @@ async function addCustomer(
 }
 
 /**
- * Add customer service: Assign a customer to a participant.
- * @param {string} participantId - The participant ID
- * @param {number} customerId - The customer ID
- * @param {Record<string, unknown>} context
- * @returns {Promise<Record<string, any>>}
+ * Remove customer service: Unassign a customer from a participant.
+ * @param participantId - The participant ID
+ * @param context - Optional context for hooks
+ * @returns Promise of DB result
  */
 export default async (
   participantId: string,
-  customerId: number,
   context: Record<string, unknown>
 ): Promise<Record<string, any>> => {
-  return await hookable(addCustomer, context)(
-    participantId,
-    customerId,
-    context
-  );
+  return await hookable(removeCustomer, context)(participantId, context);
 };
