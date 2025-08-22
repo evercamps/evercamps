@@ -11,8 +11,15 @@ export default function RegisterForm({ action, homeUrl, loginApi, loginUrl }) {
   const [error, setError] = React.useState(null);
   const [email, setEmail] = React.useState(null);
   const [password, setPassword] = React.useState(null);
-  const params = new URLSearchParams(window.location.search);
-  const redirectUrl = params.get("redirect"); 
+  const [redirectUrl, setRedirectUrl] = React.useState(null);
+    
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    setRedirectUrl(redirect);
+  }
+  }, [])
 
   return (
     <div className="flex justify-center items-center">
