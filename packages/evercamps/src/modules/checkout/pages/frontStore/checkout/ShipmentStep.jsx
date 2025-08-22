@@ -13,7 +13,8 @@ export default function ShipmentStep({
     shippingAddress,
     shippingMethod,
     addShippingMethodApi,
-    addShippingAddressApi
+    addShippingAddressApi,
+    items
   },
   setting: { customerAddressSchema }
 }) {
@@ -25,25 +26,33 @@ export default function ShipmentStep({
   const [display, setDisplay] = React.useState(false);
   const { canStepDisplay, addStep } = useCheckoutStepsDispatch();
 
-  React.useEffect(() => {
-    addStep({
-      id: 'shipment',
-      title: _('Shipment'),
-      previewTitle: _('Ship to'),
-      isCompleted: !!(shippingAddress && shippingMethod),
-      preview: shippingAddress
-        ? `${shippingAddress.address1}, ${shippingAddress.city}, ${shippingAddress.country.name}`
-        : '',
-      sortOrder: 10,
-      editable: true
-    });
-  }, []);
+  const allRegistrations = items?.length > 0 && items.every(
+    (item) => item.manageRegistrations === 1
+  );
 
   React.useEffect(() => {
-    setDisplay(canStepDisplay(step, steps));
+    if (!allRegistrations) {
+      addStep({
+        id: 'shipment',
+        title: _('Shipment'),
+        previewTitle: _('Ship to'),
+        isCompleted: !!(shippingAddress && shippingMethod),
+        preview: shippingAddress
+          ? `${shippingAddress.address1}, ${shippingAddress.city}, ${shippingAddress.country.name}`
+          : '',
+        sortOrder: 10,
+        editable: true
+      });
+    }
+  }, [allRegistrations]);
+
+  React.useEffect(() => {
+    if (!allRegistrations) {
+      setDisplay(canStepDisplay(step, steps));
+    }
   });
 
-  if (display === false) {
+  if (display === false || allRegistrations) {
     return null;
   }
 
@@ -157,7 +166,10 @@ export const query = `
       }
       addShippingAddressApi: addAddressApi
       addShippingMethodApi
-    }
+      items {
+        manageRegistrations
+      }
+    }      
     setting {
       customerAddressSchema
     }

@@ -25,7 +25,8 @@ async function disableCart(cartId: number, connection: PoolClient) {
   return cart;
 }
 
-async function saveOrder(cart, connection) {
+async function saveOrder(cart, connection, context: { skipShippingValidation?: boolean } = {}) {
+  const { skipShippingValidation } = context;
   const shipmentStatusList = getConfig(
     'oms.order.shipmentStatus',
     {}
@@ -48,14 +49,18 @@ async function saveOrder(cart, connection) {
     }
   });
   // Save the shipping address
-  const cartShippingAddress = await select()
+  let shipAddrId = null;
+  if (!skipShippingValidation) {
+    const cartShippingAddress = await select()
     .from('cart_address')
     .where('cart_address_id', '=', cart.getData('shipping_address_id'))
     .load(connection);
-  delete cartShippingAddress.uuid;
-  const shipAddr = await insert('order_address')
-    .given(cartShippingAddress)
-    .execute(connection);
+    delete cartShippingAddress.uuid;
+    const shipAddr = await insert('order_address')
+      .given(cartShippingAddress)
+      .execute(connection);
+    shipAddrId = shipAddr.insertId;
+  }  
   // Save the billing address
   const cartBillingAddress = await select()
     .from('cart_address')
@@ -85,7 +90,7 @@ async function saveOrder(cart, connection) {
       order_number:
         10000 + parseInt(previous[0] ? previous[0].order_id : 0, 10) + 1,
       // FIXME: Must be structured
-      shipping_address_id: shipAddr.insertId,
+      shipping_address_id: shipAddrId,
       billing_address_id: billAddr.insertId,
       status: orderStatus,
       payment_status: defaultPaymentStatus,
@@ -168,12 +173,16 @@ async function saveOrderActivity(orderID: number, connection: PoolClient) {
     .execute(connection);
 }
 
+function allItemsManagedByRegistration(cart: Cart): boolean {
+  return cart.getItems().every(item => !!item.getData('manageRegistrations'));
+}
+
 async function createOrderFunc(cart: Cart) {
   // Start creating order
   const connection = await getConnection(pool);
   try {
     await startTransaction(connection);
-
+    const skipShippingValidation = allItemsManagedByRegistration(cart);    
     // Validate the cart
     const validateResult = await validateBeforeCreateOrder(cart);
     if (!validateResult.valid) {
@@ -182,7 +191,7 @@ async function createOrderFunc(cart: Cart) {
       );
     }
     // Save order to DB
-    const order = await hookable(saveOrder, { cart })(cart, connection);
+    const order = await hookable(saveOrder, { cart })(cart, connection, { skipShippingValidation });
 
     // Save order items
     await hookable(saveOrderItems, { cart })(cart, order.insertId, connection);

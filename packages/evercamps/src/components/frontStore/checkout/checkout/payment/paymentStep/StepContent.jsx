@@ -16,6 +16,9 @@ import { _ } from '../../../../../../lib/locale/translate/_.js';
 const QUERY = `
   query Query($cartId: String) {
     cart(id: $cartId) {
+      items {
+          manageRegistrations
+        }
       shippingAddress {
         id: cartAddressId
         fullName
@@ -41,7 +44,6 @@ export function StepContent({
   customerAddressSchema
 }) {
   const { completeStep } = useCheckoutStepsDispatch();
-  const [useShippingAddress, setUseShippingAddress] = useState(!billingAddress);
   const { cartId, error, paymentMethods, getPaymentMethods } = useCheckout();
   const [loading, setLoading] = useState(false);
 
@@ -71,7 +73,7 @@ export function StepContent({
       setLoading(false);
       toast.error(e.message);
     }
-  };
+  };  
 
   useEffect(() => {
     getPaymentMethods();
@@ -92,6 +94,14 @@ export function StepContent({
   });
   const { data, fetching, error: queryError } = result;
 
+  const items = data?.cart?.items || [];
+  const allRegistrations = items.length > 0 && items.every(
+    (item) => item.manageRegistrations === 1
+  );  
+  const [useShippingAddress, setUseShippingAddress] = useState(
+    !billingAddress && !allRegistrations
+  );
+
   if (fetching) {
     return (
       <div className="flex justify-center items-center p-3">
@@ -101,7 +111,8 @@ export function StepContent({
   }
   if (queryError) {
     return <div className="p-8 text-critical">{error.message}</div>;
-  }
+  } 
+
   return (
     <div>
       <Form
@@ -117,8 +128,9 @@ export function StepContent({
         <BillingAddress
           useShippingAddress={useShippingAddress}
           setUseShippingAddress={setUseShippingAddress}
+          hideCheckbox={allRegistrations}
         />
-        {useShippingAddress === false && (
+        {(useShippingAddress === false || allRegistrations) && (
           <div style={{ display: 'block' }}>
             <CustomerAddressForm
               areaId="checkoutBillingAddressForm"
@@ -128,7 +140,7 @@ export function StepContent({
           </div>
         )}
 
-        {useShippingAddress === true && (
+        {useShippingAddress === true && !allRegistrations && (
           <div style={{ display: 'none' }}>
             <CustomerAddressForm
               areaId="checkoutBillingAddressForm"
