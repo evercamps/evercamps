@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { error } from '../../lib/log/logger.js';
+import { error, debug } from '../../lib/log/logger.js';
 
 async function loadModuleSubscribers(modulePath) {
   const subscribers = [];
@@ -30,6 +30,7 @@ async function loadModuleSubscribers(modulePath) {
         files.map(async (file) => {
           const subscriberPath = path.join(eventSubscribersDir, file);
           const module = await import(pathToFileURL(subscriberPath));
+          debug(`adding event subscriber for event ${eventName}`)
           subscribers.push({
             event: eventName,
             subscriber: module.default
@@ -56,5 +57,6 @@ export async function loadSubscribers(modules) {
       }
     })
   );
+  debug(`subscribers ${JSON.stringify(subscribers)}`);
   return subscribers;
 }

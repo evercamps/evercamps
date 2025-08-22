@@ -36,6 +36,8 @@ const init = async () => {
   setInterval(async () => {
     // Load events
     const newEvents = await loadEvents(maxEvents);
+    
+    debug(`loading new events ${JSON.stringify(newEvents)}, exisintg events: ${JSON.stringify(events)}`);
     // Append the new events to the existing events
     events = [...events, ...newEvents];
 
@@ -44,6 +46,7 @@ const init = async () => {
 
     // Call subscribers for each event
     events.forEach((event) => {
+      debug(`event status: ${event.status}`);
       if (event.status !== 'done' && event.status !== 'processing') {
         executeSubscribers(event);
       }
@@ -57,6 +60,7 @@ setInterval(async () => {
 }, syncEventInterval);
 
 async function loadEvents(count) {
+  debug(`into loading events: count: ${count}, event length: ${events.length}, max events: ${maxEvents}`)
   // Only load events if the current events are less than the max events
   if (events.length >= maxEvents) {
     return [];
@@ -81,6 +85,7 @@ async function loadEvents(count) {
   query.limit(0, count);
 
   const results = await query.execute(pool);
+  debug(`results: ${JSON.stringify(results)}`);
   return results;
 }
 
@@ -89,6 +94,7 @@ async function syncEvents() {
   const completedEvents = events
     .filter((event) => event.status === 'done')
     .map((event) => event.uuid);
+  debug(`Completed events ${JSON.stringify(completedEvents)}`);
   if (completedEvents.length > 0) {
     await del('event').where('uuid', 'IN', completedEvents).execute(pool);
     // Remove the events from the events array
@@ -97,12 +103,16 @@ async function syncEvents() {
 }
 
 async function executeSubscribers(event) {
+  debug(`received event ${JSON.stringify(event)} for all subscribers ${JSON.stringify(subscribers)}`)
   event.status = 'processing';
   const eventData = event.data;
   // get subscribers for the event
   const matchingSubscribers = subscribers
     .filter((subscriber) => subscriber.event === event.name)
     .map((subscriber) => subscriber.subscriber);
+
+  debug(`received event ${JSON.stringify(event)} for all matched subscribers ${JSON.stringify(subscribers
+    .filter((subscriber) => subscriber.event === event.name))}`)
   // Call subscribers
   await callSubscribers(matchingSubscribers, eventData);
 

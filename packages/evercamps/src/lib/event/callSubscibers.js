@@ -1,6 +1,8 @@
-import { error } from '../../lib/log/logger.js';
+import { error, debug } from '../../lib/log/logger.js';
 
 export async function callSubscribers(subscribers, eventData) {
+  debug(`Calling Subscribers ${JSON.stringify(subscribers)}`);
+  debug(`Eventdata ${JSON.stringify(eventData)}`);
   const promises = subscribers.map(
     (subscriber) =>
       new Promise((resolve) => {
