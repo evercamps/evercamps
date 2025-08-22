@@ -26,7 +26,7 @@ export default {
         })
       }));
     },
-    participants: async ({ customer }, _, { pool }) => {
+    participants: async ( customer , args, { pool }) => {
     const participants = await select()
       .from('participant')
       .where('customer_id', '=', customer.customerId)
