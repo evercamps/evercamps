@@ -101,6 +101,10 @@
       "import": "./dist/modules/camp/services/index.js",
       "types": "./dist/modules/camp/services/index.d.ts"
     },
+    "./cms/services": {
+      "import": "./dist/modules/cms/services/index.js",
+      "types": "./dist/modules/cms/services/index.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -153,6 +157,7 @@
     "ajv": "^8.12.0",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^2.1.1",
+    "append-field": "^2.0.0",
     "autoprefixer": "^10.4.13",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
@@ -224,6 +229,7 @@
     "@parcel/watcher": "^2.5.1",
     "@types/config": "^3.3.5",
     "@types/express": "^5.0.1",
+    "@types/multer": "^2.0.0",
     "@types/node": "^22.14.1",
     "@types/pg": "^8.15.2",
     "@types/react": "^19.1.2",

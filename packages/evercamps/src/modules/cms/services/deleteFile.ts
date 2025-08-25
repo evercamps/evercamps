@@ -7,7 +7,7 @@ import { getValueSync } from '../../../lib/util/registry.js';
 /**
  * @param {String} path the file path
  */
-export const deleteFile = async (path) => {
+export const deleteFile = async (path: string): Promise<void> => {
   /**
    * @type {Object} uploader
    * @property {Function} upload
@@ -23,12 +23,11 @@ export const deleteFile = async (path) => {
       value && typeof value.delete === 'function'
   );
 
-  const results = await fileDeleter.delete(path);
-  return results;
+  await fileDeleter.delete(path);
 };
 
 const localFileDeleter = {
-  delete: async (path) => {
+  delete: async (path: string): Promise<void> => {
     const mediaPath = CONSTANTS.MEDIAPATH;
     const destination = join(mediaPath, path);
     if (!existsSync(destination)) {

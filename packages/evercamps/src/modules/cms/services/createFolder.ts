@@ -8,7 +8,9 @@ import { getValueSync } from '../../../lib/util/registry.js';
 /**
  * @param {String} destinationPath the destination path
  */
-export const createFolder = async (destinationPath) => {
+export const createFolder = async (
+  destinationPath: string
+): Promise<string> => {
   /**
    * @type {Object} uploader
    * @property {Function} create
@@ -29,7 +31,7 @@ export const createFolder = async (destinationPath) => {
 };
 
 const localFolderCreator = {
-  create: async (destinationPath) => {
+  create: async (destinationPath: string): Promise<string> => {
     const mediaPath = CONSTANTS.MEDIAPATH;
     const destination = path.join(mediaPath, destinationPath);
     // Check if the folder already exists
