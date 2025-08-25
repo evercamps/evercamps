@@ -54,6 +54,7 @@ const init = async () => {
 };
 
 setInterval(async () => {
+  debug('Set interval');
   // Sync events
   await syncEvents();
 }, syncEventInterval);
