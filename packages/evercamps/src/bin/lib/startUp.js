@@ -69,6 +69,7 @@ export const start = async function start(context, cb) {
   server.listen(port);
 
   // Spawn the child process to manage events
+  debug('Starting subscriber process');
   let subscriberChild = startSubscriberProcess(context);
   let jobChild = startCronProcess(context);
 
@@ -81,7 +82,7 @@ export const start = async function start(context, cb) {
       jobChild.kill('SIGTERM');
     }
     if (code === 100) {
-      debug('Restarting the sever');
+      debug('Restarting the server');
       process.send('RESTART_ME');
     }
   });

@@ -16,30 +16,35 @@ async function loadModuleSubscribers(modulePath) {
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-  await Promise.all(
-    eventDirs.map(async (eventName) => {
-      const eventSubscribersDir = path.join(subscribersDir, eventName);
+  let files = [];
+  for (const eventName of eventDirs) {
+    const eventSubscribersDir = path.join(subscribersDir, eventName);
 
-      // get only .js files
-      const files = fs
-        .readdirSync(eventSubscribersDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.js'))
-        .map((dirent) => dirent.name);
+    // get only .js files
+    files = files.concat(fs
+      .readdirSync(eventSubscribersDir, { withFileTypes: true })
+      .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.js'))
+      .map((dirent) => { return { eventName, subscriberPath: path.join(eventSubscribersDir, dirent.name) } }));
+  }
 
-      await Promise.all(
-        files.map(async (file) => {
-          const subscriberPath = path.join(eventSubscribersDir, file);
-          const module = await import(pathToFileURL(subscriberPath));
-          debug(`adding event subscriber for event ${eventName}`)
-          subscribers.push({
-            event: eventName,
-            subscriber: module.default
-          });
-        })
-      );
-    })
-  );
-
+  debug(`files: ${JSON.stringify(files)}`);
+  for (const file of files) {
+    try {
+      // if(file.subscriberPath.indexOf("localGenerateProductImageVariant") === -1) {
+        debug(`adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}`);
+        const module = await import(pathToFileURL(file.subscriberPath));
+        
+        subscribers.push({
+          event: file.eventName,
+          subscriber: module.default
+        });
+    }
+    catch (e) {
+      debug(`Error adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}, error: ${JSON.stringify(e)}`);
+      error(e);
+    }
+  }
+  debug(`All subscribers added without errors`);
   return subscribers;
 }
 
@@ -50,13 +55,13 @@ export async function loadSubscribers(modules) {
     modules.map(async (module) => {
       try {
         // Load subscribers
-        subscribers.push(...(await loadModuleSubscribers(module.path)));
+        const subs = await loadModuleSubscribers(module.path);
+        subscribers.push(...subs);
       } catch (e) {
         error(e);
         process.exit(0);
       }
     })
   );
-  debug(`subscribers ${JSON.stringify(subscribers)}`);
   return subscribers;
 }
