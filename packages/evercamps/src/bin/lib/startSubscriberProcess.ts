@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import spawn from 'cross-spawn';
-import { error } from '../../lib/log/logger.js';
+import { error, debug } from '../../lib/log/logger.js';
 import isDevelopmentMode from '../../lib/util/isDevelopmentMode.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +11,7 @@ export function startSubscriberProcess(context) {
   if (isDevelopmentMode() || process.argv.includes('--debug')) {
     args.push('--debug');
   }
+  debug(`resolving path: ${JSON.stringify(args)}`);
   const child = spawn('node', args, {
     stdio: 'inherit',
     env: {

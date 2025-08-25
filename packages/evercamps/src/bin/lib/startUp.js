@@ -82,7 +82,7 @@ export const start = async function start(context, cb) {
       jobChild.kill('SIGTERM');
     }
     if (code === 100) {
-      debug('Restarting the sever');
+      debug('Restarting the server');
       process.send('RESTART_ME');
     }
   });
