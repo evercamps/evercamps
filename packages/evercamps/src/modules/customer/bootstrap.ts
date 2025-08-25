@@ -1,6 +1,6 @@
 import config from 'config';
 import { request } from 'express';
-import type { EvershopRequest } from 'src/types/request.js';
+import type { EvercampsRequest } from 'src/types/request.js';
 import { translate } from '../../lib/locale/translate/translate.js';
 import { defaultPaginationFilters } from '../../lib/util/defaultPaginationFilters.js';
 import { hookable } from '../../lib/util/hookable.js';
@@ -70,7 +70,7 @@ export default () => {
    * @param {*} password
    * @param {*} callback
    */
-  (request as EvershopRequest).loginCustomerWithEmail = async function login(
+  (request as EvercampsRequest).loginCustomerWithEmail = async function login(
     email,
     password,
     callback
@@ -79,17 +79,17 @@ export default () => {
     this.session.save(callback);
   };
 
-  (request as EvershopRequest).logoutCustomer = function logout(callback) {
+  (request as EvercampsRequest).logoutCustomer = function logout(callback) {
     hookable(logoutCustomer.bind(this))();
     this.session.save(callback);
   };
 
-  (request as EvershopRequest).isCustomerLoggedIn =
+  (request as EvercampsRequest).isCustomerLoggedIn =
     function isCustomerLoggedIn() {
       return !!this.session?.customerID;
     };
 
-  (request as EvershopRequest).getCurrentCustomer =
+  (request as EvercampsRequest).getCurrentCustomer =
     function getCurrentCustomer() {
       return this.locals?.customer;
     };

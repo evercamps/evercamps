@@ -1,6 +1,6 @@
-import { EvershopRequest, EvershopResponse } from '@evershop/evershop';
+import { EvercampsRequest, EvercampsResponse } from '@evercamps/evercamps';
 
-export default (request: EvershopRequest, response: EvershopResponse, next) => {
+export default (request: EvercampsRequest, response: EvercampsResponse, next) => {
   const { name, description } = request.body;
 
   if (!name || !description) {

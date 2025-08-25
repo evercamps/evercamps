@@ -1,4 +1,4 @@
-import { EvershopRequest } from '../../types/request.js';
+import { EvercampsRequest } from '../../types/request.js';
 
 function createWriteOnceMap<K, V>() {
   const _map = new Map<K, V>();
@@ -47,7 +47,7 @@ function createWriteOnceMap<K, V>() {
  * @template T The type of the delegate.
  * @returns The delegate manager.
  */
-export function getDelegateManager(request: EvershopRequest) {
+export function getDelegateManager(request: EvercampsRequest) {
   return request?.locals?.delegates || createWriteOnceMap();
 }
 
@@ -58,7 +58,7 @@ export function getDelegateManager(request: EvershopRequest) {
  * @param request The request object.
  * @returns True if the delegate exists, false otherwise.
  */
-export function hasDelegate(id: string, request: EvershopRequest): boolean {
+export function hasDelegate(id: string, request: EvercampsRequest): boolean {
   return getDelegateManager(request).has(id);
 }
 
@@ -71,12 +71,12 @@ export function hasDelegate(id: string, request: EvershopRequest): boolean {
  */
 export function getDelegate<T>(
   id: string,
-  request: EvershopRequest
+  request: EvercampsRequest
 ): T | undefined {
   return getDelegateManager(request).get(id) as T | undefined;
 }
 
-export function getDelegates(request: EvershopRequest): Record<string, any> {
+export function getDelegates(request: EvercampsRequest): Record<string, any> {
   return getDelegateManager(request).getAll();
 }
 
@@ -89,7 +89,7 @@ export function getDelegates(request: EvershopRequest): Record<string, any> {
 export function setDelegate<T>(
   id: string,
   value: T,
-  request: EvershopRequest
+  request: EvercampsRequest
 ): void {
   if (!request.locals) {
     request.locals = {};
