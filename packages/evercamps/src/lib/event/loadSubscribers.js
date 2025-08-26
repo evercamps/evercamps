@@ -16,30 +16,52 @@ async function loadModuleSubscribers(modulePath) {
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-  await Promise.all(
-    eventDirs.map(async (eventName) => {
-      const eventSubscribersDir = path.join(subscribersDir, eventName);
+  let files = [];
+  for (const eventName of eventDirs) {
+    debug(`${JSON.stringify(eventName)}`);
+    const eventSubscribersDir = path.join(subscribersDir, eventName);
 
-      // get only .js files
-      const files = fs
-        .readdirSync(eventSubscribersDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.js'))
-        .map((dirent) => dirent.name);
+    // get only .js files
+    files = files.concat(fs
+      .readdirSync(eventSubscribersDir, { withFileTypes: true })
+      .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.js'))
+      .map((dirent) => {return { eventName, subscriberPath: path.join(eventSubscribersDir, dirent.name)}}));
+  }
 
-      await Promise.all(
-        files.map(async (file) => {
-          const subscriberPath = path.join(eventSubscribersDir, file);
-          const module = await import(pathToFileURL(subscriberPath));
-          debug(`adding event subscriber for event ${eventName}`)
-          subscribers.push({
-            event: eventName,
-            subscriber: module.default
-          });
-        })
-      );
-    })
-  );
+  debug(`files: ${JSON.stringify(files)}`);
+  for (const file of files) {
+    const module = await import(pathToFileURL(file.subscriberPath));
+    debug(`adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}`);
+    subscribers.push({
+      event: file.eventName,
+      subscriber: module.default
+    });
+  }
 
+  // await Promise.all(
+  //   eventDirs.map(async (eventName) => {
+  //     const eventSubscribersDir = path.join(subscribersDir, eventName);
+
+  //     // get only .js files
+  //     const files = fs
+  //       .readdirSync(eventSubscribersDir, { withFileTypes: true })
+  //       .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.js'))
+  //       .map((dirent) => dirent.name);
+
+  //     await Promise.all(
+  //       files.map(async (file) => {
+  //         const subscriberPath = path.join(eventSubscribersDir, file);
+  //         const module = await import(pathToFileURL(subscriberPath));
+  //         debug(`adding event subscriber for event ${eventName}`)
+  //         subscribers.push({
+  //           event: eventName,
+  //           subscriber: module.default
+  //         });
+  //       })
+  //     );
+  //   })
+  // );
+  debug(`All subscribers added without errors`);
   return subscribers;
 }
 
