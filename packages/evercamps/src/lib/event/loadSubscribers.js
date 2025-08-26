@@ -25,17 +25,24 @@ async function loadModuleSubscribers(modulePath) {
     files = files.concat(fs
       .readdirSync(eventSubscribersDir, { withFileTypes: true })
       .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.js'))
-      .map((dirent) => {return { eventName, subscriberPath: path.join(eventSubscribersDir, dirent.name)}}));
+      .map((dirent) => { return { eventName, subscriberPath: path.join(eventSubscribersDir, dirent.name) } }));
   }
 
   debug(`files: ${JSON.stringify(files)}`);
   for (const file of files) {
-    const module = await import(pathToFileURL(file.subscriberPath));
-    debug(`adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}`);
-    subscribers.push({
-      event: file.eventName,
-      subscriber: module.default
-    });
+    try {
+      debug(`adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}`);
+      const module = await import(pathToFileURL(file.subscriberPath));
+
+      subscribers.push({
+        event: file.eventName,
+        subscriber: module.default
+      });
+    }
+    catch (e) {
+      debug(`Error adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}, error: ${JSON.stringify(e)}`);
+      error(e);
+    }
   }
 
   // await Promise.all(
