@@ -43,10 +43,10 @@ async function loadModuleSubscribers(modulePath) {
       }
       else {
         debug(`adding event subscriber for event ${file.eventName}, from static import`);
-        subscribers.push({
-          event: file.eventName,
-          subscriber: ProductImageTransformer.default
-        })
+        // subscribers.push({
+        //   event: file.eventName,
+        //   subscriber: ProductImageTransformer.default
+        // })
       }
     }
     catch (e) {
@@ -89,7 +89,11 @@ export async function loadSubscribers(modules) {
     modules.map(async (module) => {
       try {
         // Load subscribers
-        subscribers.push(...(await loadModuleSubscribers(module.path)));
+        debug(`Load subscribers`);
+        const subs = await loadModuleSubscribers(module.path);
+        debug(`Load subscribers result: ${JSON.stringify(subs)}`);
+
+        subscribers.push(...subs);
       } catch (e) {
         error(e);
         process.exit(0);

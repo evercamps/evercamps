@@ -8,7 +8,7 @@ import { pool } from '../../../../lib/postgres/connection.js';
 import { getConfig } from '../../../../lib/util/getConfig.js';
 
 export default async function localGenerateProductImageVariant(data) {
-  debug(`into localGEnerateProductImageVariant`);
+  debug(`into localGenerateProductImageVariant`);
   if (getConfig('system.file_storage') === 'local') {
     debug(`into local file storage`);
     try {
