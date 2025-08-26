@@ -8,10 +8,14 @@ import { pool } from '../../../../lib/postgres/connection.js';
 import { getConfig } from '../../../../lib/util/getConfig.js';
 
 export default async function localGenerateProductImageVariant(data) {
+  debug(`into localGEnerateProductImageVariant`);
   if (getConfig('system.file_storage') === 'local') {
+    debug(`into local file storage`);
     try {
       const imagePath = data.origin_image.replace('/assets', '');
+      debug(`image path: ${imagePath}`);
       const mediaPath = path.join(CONSTANTS.MEDIAPATH, imagePath);
+       debug(`media path: ${mediaPath}`);
       const ext = path.extname(path.resolve(CONSTANTS.MEDIAPATH, imagePath));
       const singlePath = imagePath.replace(ext, `-single${ext}`);
       const listingPath = imagePath.replace(ext, `-listing${ext}`);
