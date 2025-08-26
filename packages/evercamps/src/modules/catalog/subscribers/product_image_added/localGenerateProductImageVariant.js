@@ -3,7 +3,7 @@ import path from 'path';
 import { update } from '@evershop/postgres-query-builder';
 import sharp from 'sharp';
 import { CONSTANTS } from '../../../../lib/helpers.js';
-import { error } from '../../../../lib/log/logger.js';
+import { error, debug } from '../../../../lib/log/logger.js';
 import { pool } from '../../../../lib/postgres/connection.js';
 import { getConfig } from '../../../../lib/util/getConfig.js';
 
