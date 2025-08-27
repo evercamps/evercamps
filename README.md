@@ -16,7 +16,6 @@ The primary goal of EverCamps is to fill a gap in the sports registration space 
 
 * **Flexible**: Easily customizable to meet the needs of different types of sports camps.
 * **User-friendly**: Providing a seamless experience for camp organizers and participants alike.
-* **Scalable**: Whether you're running a local camp or managing multiple locations, EverCamps scales to fit your needs.
 * **Open-Source**: Freely available to use, modify, and distribute, EverCamps fosters collaboration and innovation within the open-source community.
 
 
@@ -48,8 +47,6 @@ The primary goal of EverCamps is to fill a gap in the sports registration space 
 
 * **Registration Forms**: Customize fields based on camp-specific needs (e.g., skill level, preferences).
 * **Automated Confirmation Emails**: After registration, participants automatically receive confirmation with relevant details.
-* **Session Management**: Allow multiple camp sessions, enabling participants to sign up for different time slots or activities.
-* **Reports & Analytics**: Real-time reports on registrations, payments, and participant information.
 * **Multi-Language Support**: Future enhancements will allow the platform to support multiple languages to cater to diverse audiences.
 
 ## Contributing to EverCamps**
