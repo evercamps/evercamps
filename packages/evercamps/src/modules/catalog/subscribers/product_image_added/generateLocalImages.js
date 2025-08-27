@@ -9,8 +9,9 @@ import { getConfig } from '../../../../lib/util/getConfig.js';
 
 export default async function generateLocalImages(data) {
   debug(`into generateLocalImages`);
-  // if (getConfig('system.file_storage') === 'local') {
-  //   debug(`into local file storage`);
+  if (getConfig('system.file_storage') === 'local') {
+    debug(`into local file storage: get config ${JSON.stringify(getConfig('system.file_storage'))}`);
+  }
   //   try {
   const imagePath = data.origin_image.replace('/assets', '');
   debug(`image path: ${imagePath}`);
