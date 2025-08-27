@@ -183,6 +183,7 @@
     "html-entities": "^2.3.3",
     "html-webpack-plugin": "^5.5.0",
     "immer": "^9.0.3",
+    "jimp": "^1.6.0",
     "jsesc": "^3.0.2",
     "json5": "^2.2.1",
     "kleur": "3.0.3",
