@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { error, debug } from '../../lib/log/logger.js';
-import * as ProductImageTransformer from '../../modules/catalog/subscribers/product_image_added/generateLocalImages.js';
 
 async function loadModuleSubscribers(modulePath) {
   const subscribers = [];
