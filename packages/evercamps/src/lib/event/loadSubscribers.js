@@ -89,10 +89,7 @@ export async function loadSubscribers(modules) {
     modules.map(async (module) => {
       try {
         // Load subscribers
-        debug(`Load subscribers`);
         const subs = await loadModuleSubscribers(module.path);
-        debug(`Load subscribers result: ${JSON.stringify(subs)}`);
-
         subscribers.push(...subs);
       } catch (e) {
         error(e);
