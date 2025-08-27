@@ -1,21 +1,21 @@
 // import { existsSync } from 'fs';
-// import path from 'path';
+import path from 'path';
 // import { update } from '@evershop/postgres-query-builder';
 // import sharp from 'sharp';
-// import { CONSTANTS } from '../../../../lib/helpers.js';
+import { CONSTANTS } from '../../../../lib/helpers.js';
 import { error, debug } from '../../../../lib/log/logger.js';
 // import { pool } from '../../../../lib/postgres/connection.js';
-// import { getConfig } from '../../../../lib/util/getConfig.js';
+import { getConfig } from '../../../../lib/util/getConfig.js';
 
 export default async function generateLocalImages(data) {
   debug(`into generateLocalImages`);
   // if (getConfig('system.file_storage') === 'local') {
   //   debug(`into local file storage`);
   //   try {
-  //     const imagePath = data.origin_image.replace('/assets', '');
-  //     debug(`image path: ${imagePath}`);
-  //     const mediaPath = path.join(CONSTANTS.MEDIAPATH, imagePath);
-  //      debug(`media path: ${mediaPath}`);
+  const imagePath = data.origin_image.replace('/assets', '');
+  debug(`image path: ${imagePath}`);
+  const mediaPath = path.join(CONSTANTS.MEDIAPATH, imagePath);
+  debug(`media path: ${mediaPath}`);
   //     const ext = path.extname(path.resolve(CONSTANTS.MEDIAPATH, imagePath));
   //     const singlePath = imagePath.replace(ext, `-single${ext}`);
   //     const listingPath = imagePath.replace(ext, `-listing${ext}`);
