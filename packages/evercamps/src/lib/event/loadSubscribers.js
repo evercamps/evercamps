@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { error, debug } from '../../lib/log/logger.js';
-import * as ProductImageTransformer from '../../modules/catalog/subscribers/product_image_added/localGenerateProductImageVariant.js';
+import * as ProductImageTransformer from '../../modules/catalog/subscribers/product_image_added/generateLocalImages.js';
 
 async function loadModuleSubscribers(modulePath) {
   const subscribers = [];
@@ -32,7 +32,7 @@ async function loadModuleSubscribers(modulePath) {
   debug(`files: ${JSON.stringify(files)}`);
   for (const file of files) {
     try {
-      if(file.subscriberPath.indexOf("localGenerateProductImageVariant") === -1) {
+      // if(file.subscriberPath.indexOf("localGenerateProductImageVariant") === -1) {
         debug(`adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}`);
         const module = await import(pathToFileURL(file.subscriberPath));
         
@@ -40,14 +40,14 @@ async function loadModuleSubscribers(modulePath) {
           event: file.eventName,
           subscriber: module.default
         });
-      }
-      else {
-        debug(`adding event subscriber for event ${file.eventName}, from static import`);
-        // subscribers.push({
-        //   event: file.eventName,
-        //   subscriber: ProductImageTransformer.default
-        // })
-      }
+      // }
+      // else {
+      //   debug(`adding event subscriber for event ${file.eventName}, from static import`);
+      //   // subscribers.push({
+      //   //   event: file.eventName,
+      //   //   subscriber: ProductImageTransformer.default
+      //   // })
+      // }
     }
     catch (e) {
       debug(`Error adding event subscriber for event ${file.eventName}, path to file: ${pathToFileURL(file.subscriberPath)}, error: ${JSON.stringify(e)}`);
