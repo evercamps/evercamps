@@ -18,28 +18,22 @@ export default async function generateLocalImages(data) {
       const thumbnailPath = imagePath.replace(ext, `-thumb${ext}`);
       if (existsSync(mediaPath)) {
         // Generate thumbnail
-        const image = await Jimp.read(mediaPath);
-        await image.resize({
-          w: getConfig('catalog.product.image.thumbnail.width', 100),
-          h: getConfig('catalog.product.image.thumbnail.height', 100)
-        });
-        await image.write(path.join(CONSTANTS.MEDIAPATH, thumbnailPath));
+        await generateImage(mediaPath, thumbnailPath,
+          getConfig('catalog.product.image.thumbnail.width', 100),
+          getConfig('catalog.product.image.thumbnail.height', 100)
+        );
 
         // Generate listing
-        await image
-          .resize({
-            w: getConfig('catalog.product.image.listing.width', 250),
-            h: getConfig('catalog.product.image.listing.height', 250)
-          });
-        await image.write(path.join(CONSTANTS.MEDIAPATH, listingPath));
+        await generateImage(mediaPath, listingPath,
+          getConfig('catalog.product.image.listing.width', 250),
+          getConfig('catalog.product.image.listing.height', 250)
+        );
 
         // Generate single
-        await image
-          .resize({
-            w: getConfig('catalog.product.image.single.width', 500),
-            h: getConfig('catalog.product.image.single.height', 500)
-      });
-        await image.write(path.join(CONSTANTS.MEDIAPATH, singlePath));
+        await generateImage(mediaPath, singlePath,
+          getConfig('catalog.product.image.single.width', 500),
+          getConfig('catalog.product.image.single.height', 500)
+        );
       }
 
       // Update the record in the database with the new URLs in the variant columns
@@ -57,4 +51,20 @@ export default async function generateLocalImages(data) {
       error(e);
     }
   }
+}
+
+async function generateImage(mediaPath, imagePath, maxWidth, maxHeight) {
+  const image = await Jimp.read(mediaPath);
+  const { width, height } = image.bitmap;
+
+  const widthRatio = maxWidth / width;
+  const heightRatio = maxHeight / height;
+
+  const scale = Math.min(widthRatio, heightRatio);
+
+  await image.resize({
+    w: Math.floor(width * scale),
+    h: Math.floor(height * scale)
+  });
+  await image.write(path.join(CONSTANTS.MEDIAPATH, imagePath));
 }
