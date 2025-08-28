@@ -37,7 +37,6 @@ const init = async () => {
     // Load events
     const newEvents = await loadEvents(maxEvents);
     
-    debug(`loading new events ${JSON.stringify(newEvents)}, exisintg events: ${JSON.stringify(events)}`);
     // Append the new events to the existing events
     events = [...events, ...newEvents];
 
@@ -54,13 +53,11 @@ const init = async () => {
 };
 
 setInterval(async () => {
-  debug('Set interval');
   // Sync events
   await syncEvents();
 }, syncEventInterval);
 
 async function loadEvents(count) {
-  debug(`into loading events: count: ${count}, event length: ${events.length}, max events: ${maxEvents}`)
   // Only load events if the current events are less than the max events
   if (events.length >= maxEvents) {
     return [];

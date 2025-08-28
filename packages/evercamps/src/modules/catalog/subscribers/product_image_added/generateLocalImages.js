@@ -8,20 +8,15 @@ import { getConnection } from '../../../../lib/postgres/connection.js';
 import { Jimp } from 'jimp';
 
 export default async function generateLocalImages(data) {
-  debug(`into generateLocalImages`);
   if (getConfig('system.file_storage') === 'local') {
-    debug(`into local file storage: get config ${JSON.stringify(getConfig('system.file_storage'))}`);
     try {
       const imagePath = data.origin_image.replace('/assets', '');
-      debug(`image path: ${imagePath}`);
       const mediaPath = path.join(CONSTANTS.MEDIAPATH, imagePath);
-      debug(`media path: ${mediaPath}`);
       const ext = path.extname(path.resolve(CONSTANTS.MEDIAPATH, imagePath));
       const singlePath = imagePath.replace(ext, `-single${ext}`);
       const listingPath = imagePath.replace(ext, `-listing${ext}`);
       const thumbnailPath = imagePath.replace(ext, `-thumb${ext}`);
       if (existsSync(mediaPath)) {
-        debug(`Media path does exist`);
         // Generate thumbnail
         const image = await Jimp.read(mediaPath);
         await image.resize({
