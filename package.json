@@ -47,5 +47,8 @@
   },
   "optionalDependencies": {
     "@swc/core-linux-x64-gnu": "^1.2.160"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
   }
 }
