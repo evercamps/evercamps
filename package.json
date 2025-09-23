@@ -47,5 +47,9 @@
   },
   "optionalDependencies": {
     "@swc/core-linux-x64-gnu": "^1.2.160"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0"
   }
 }
