@@ -15,8 +15,10 @@ export default {
       const query = select().from('admin_user');
       const currentFilters = [];
 
+      const userFilters = Array.isArray(filters) ? filters : [];
+
       // Attribute filters
-      filters.forEach((filter) => {
+      userFilters.forEach((filter) => {
         if (filter.key === 'full_name') {
           query.andWhere('admin_user.full_name', 'LIKE', `%${filter.value}%`);
           currentFilters.push({
@@ -35,8 +37,8 @@ export default {
         }
       });
 
-      const sortBy = filters.find((f) => f.key === 'sortBy');
-      const sortOrder = filters.find(
+      const sortBy = userFilters.find((f) => f.key === 'sortBy');
+      const sortOrder = userFilters.find(
         (f) => f.key === 'sortOrder' && ['ASC', 'DESC'].includes(f.value)
       ) || { value: 'ASC' };
       if (sortBy && sortBy.value === 'full_name') {
@@ -62,8 +64,8 @@ export default {
       cloneQuery.select('COUNT(admin_user.admin_user_id)', 'total');
       cloneQuery.removeOrderBy();
       // Paging
-      const page = filters.find((f) => f.key === 'page') || { value: 1 };
-      const limit = filters.find((f) => f.key === 'limit' && f.value > 0) || {
+      const page = userFilters.find((f) => f.key === 'page') || { value: 1 };
+      const limit = userFilters.find((f) => f.key === 'limit' && f.value > 0) || {
         value: 20
       }; // TODO: Get from the config
       currentFilters.push({
