@@ -80,7 +80,7 @@ export default function AdminOverview({
                   <tr key={user.uuid}>
                     <td>{user.fullName}</td>
                     <td>{user.email}</td>
-                    <td>Not implemented yet</td>
+                    <td>{user.twofaEnabled === 1 ? 'Enabled' : 'Disabled'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -121,6 +121,7 @@ export const query = `
       fullName
       email
       status
+      twofaEnabled
     }
     currentFilters {
       key
