@@ -1,0 +1,5 @@
+{
+  "methods": ["POST"],
+  "path": "/admin/2fa/setup",
+  "access": "private"
+}

@@ -20,14 +20,8 @@ type AdminUserCollection {
   currentFilters: [Filter]
 }
 
-type AdminUser2FASetup {
-  qrCodeDataURL: String!
-}
-
 extend type Query {
   adminUser(id: Int): AdminUser
   currentAdminUser: AdminUser
   adminUsers(filters: [FilterInput]): AdminUserCollection
-  adminUser2FASetup(adminUserId: Int!): AdminUser2FASetup
-  verifyAdminUser2FA(adminUserId: Int!, token: String!): Boolean!
 }

@@ -88,17 +88,6 @@ export default {
         total: (await cloneQuery.load(pool)).total,
         currentFilters
       };
-    },
-    adminUser2FASetup: async (_, { adminUserId }, { pool }) => {      
-      const { qrCodeDataURL } = await get2FASetup(adminUserId, pool);      
-      await pool.query(
-        'UPDATE admin_user SET twofa_secret = ? WHERE admin_user_id = ?',
-        [secret, adminUserId]
-      );
-      return { qrCodeDataURL };
-    },
-    verifyAdminUser2FA: async (_, { adminUserId, token }, { pool }) => {
-      return await verify2FA(adminUserId, token, pool);
     }
   }
 };
