@@ -12,6 +12,7 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import * as XLSX from "xlsx";
 
 export const query = `
   query Query($filters: [FilterInput]) {
@@ -214,6 +215,13 @@ export default function RegistrationGrid({
         actions={[
           {
             variant: 'interactive',
+            name: 'Export to Excel',
+            onAction: () => {
+              exportToExcel(registrations);
+            }
+          },
+          {
+            variant: 'interactive',
             name: 'Clear filter',
             onAction: () => {
               // Just get the url and remove all query params
@@ -292,4 +300,25 @@ export default function RegistrationGrid({
       <Pagination total={total} limit={limit} page={page} />
     </Card>
   );
+}
+
+function exportToExcel(registrations) {
+  if (!registrations || registrations.length === 0) {
+    alert("No registrations to export");
+    return;
+  }
+  
+  const worksheet = XLSX.utils.json_to_sheet(
+    registrations.map((r) => ({
+      ID: r.registrationId,
+      "First Name": r.participant.firstName,
+      "Last Name": r.participant.lastName,
+      "Product": r.name,
+    }))
+  );
+  
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
+  
+  XLSX.writeFile(workbook, "registrations.xlsx");
 }
