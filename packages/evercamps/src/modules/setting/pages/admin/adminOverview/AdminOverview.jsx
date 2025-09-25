@@ -2,9 +2,11 @@ import SettingMenu from '@components/admin/setting/SettingMenu';
 import { Card } from '@components/admin/cms/Card';
 import { Form } from '@components/common/form/Form';
 import { Field } from '@components/common/form/Field';
+import Button from '@components/common/form/Button';
 import Pagination from '@components/common/grid/Pagination';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { toast } from 'react-toastify';
 
 export default function AdminOverview({
   users: { items: users, total, currentFilters = [] },
@@ -19,6 +21,46 @@ export default function AdminOverview({
       )
     : 20;
   const currentSearch = currentFilters.find((f) => f.key === 'full_name')?.value || '';
+
+  const handleEnable2FA = async (url) => {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.reload();
+      } else {
+        toast.error('Failed to enable 2FA');
+      }
+    } catch (err) {
+      toast.error('Something went wrong while enabling 2FA');
+      console.error(err);
+    }
+  };
+
+  const handleExtend2FA = async (url) => {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.reload();
+      } else {
+        toast.error('Failed to extend 2FA');
+      }
+    } catch (err) {
+      toast.error('Something went wrong while extending 2FA');
+      console.error(err);
+    }
+  };
 
   return (
     <div className="main-content-inner">
@@ -73,6 +115,8 @@ export default function AdminOverview({
                   <th>Full Name</th>
                   <th>Email</th>
                   <th>2FA Status</th>
+                  <th>2FA Deadline</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,6 +125,23 @@ export default function AdminOverview({
                     <td>{user.fullName}</td>
                     <td>{user.email}</td>
                     <td>{user.twofaEnabled === 1 ? 'Enabled' : 'Disabled'}</td>
+                    <td>{user.twofaDeadline ? new Date(parseInt(user.twofaDeadline, 10)).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                    {!user.twofaEnabled && (
+                      <>
+                        {!user.twofaDeadline ? (
+                          <Button
+                            title="Enable"
+                            onAction={() => handleEnable2FA(user.twofaEnableUrl)}
+                          />
+                        ) : (
+                          <Button
+                            title="Extend"
+                            onAction={() => handleExtend2FA(user.twofaExtendUrl)} />
+                        )}
+                      </>
+                    )}
+                  </td>
                   </tr>
                 ))}
               </tbody>
@@ -122,12 +183,15 @@ export const query = `
       email
       status
       twofaEnabled
+      twofaDeadline
+      twofaEnableUrl
+      twofaExtendUrl
     }
     currentFilters {
       key
       operation
       value
-    }
+    }    
   }
 }
 `;

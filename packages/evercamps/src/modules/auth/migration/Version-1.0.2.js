@@ -6,6 +6,7 @@ export default async (connection) => {
     connection,
     `ALTER TABLE admin_user 
     ADD COLUMN IF NOT EXISTS twofa_enabled boolean NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS twofa_secret varchar NULL`
+    ADD COLUMN IF NOT EXISTS twofa_secret varchar NULL,
+    ADD COLUMN IF NOT EXISTS twofa_deadline timestamp NULL`
   );
 };

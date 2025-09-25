@@ -1,6 +1,6 @@
 import { select } from '@evershop/postgres-query-builder';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
-import { get2FASetup, verify2FA } from '../../../services/admin2FA.js';
+import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 
 export default {
   Query: {
@@ -89,5 +89,9 @@ export default {
         currentFilters
       };
     }
+  },
+  AdminUser: {
+    twofaEnableUrl: (user) => buildUrl('enableTwoFa', { userId: user.uuid }),
+    twofaExtendUrl: (user) => buildUrl('extendTwoFa', { userId: user.uuid })
   }
 };
