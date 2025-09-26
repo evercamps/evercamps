@@ -170,7 +170,7 @@ AdminOverview.propTypes = {
       })
     ).isRequired,
   }).isRequired,
-  total: PropTypes.number.isRequired,
+  total: PropTypes.number,
   currentFilters: PropTypes.array,
 };
 
