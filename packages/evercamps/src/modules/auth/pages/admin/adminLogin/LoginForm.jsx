@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import './LoginForm.scss';
 import Area from '@components/common/Area';
 
-export default function LoginForm({ authUrl, dashboardUrl }) {
+export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
   const [error, setError] = React.useState(null);
   const [twofaRequired, setTwofaRequired] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -19,8 +19,10 @@ export default function LoginForm({ authUrl, dashboardUrl }) {
         password: response.password || credentials.password
       });
       setError(null);
-      console.log(twofaRequired);
-    } else if (!response.error) {      
+    } else if (response.data?.twofaSetupRequired) {
+      window.location.href = setupTwoFaUrl;
+    }
+    else if (!response.error) {      
       window.location.href = dashboardUrl;
     } else {
       setError(response.error.message);
@@ -95,8 +97,8 @@ export default function LoginForm({ authUrl, dashboardUrl }) {
               props: {
                 name: 'token',
                 type: 'text',
-                label: '2FA Code',
-                placeholder: 'Enter 6-digit code',
+                label: '2FA Code or recovery code',
+                placeholder: 'Enter 6-digit code or recovery code',
                 validationRules: ['notEmpty'],
                 autoFocus: true
               },
@@ -130,5 +132,6 @@ export const query = `
   query Query {
     authUrl: url(routeId: "adminLoginJson")
     dashboardUrl: url(routeId: "dashboard")
+    setupTwoFaUrl: url(routeId: "adminSetupTwoFa")
   }
 `;

@@ -11,6 +11,13 @@ export async function checkAdminUser2FA(email, password, token) {
 
   if (!dbUser || !comparePassword(password, dbUser.password)) {
     return { exists: false };
+  }  
+  if (dbUser.twofa_deadline && !dbUser.twofa_enabled) {
+    return {
+      exists: true,
+      twofaSetupRequired: true,
+      adminUserId: dbUser.admin_user_id
+    };
   }
 
   if (dbUser.twofa_enabled) {
@@ -18,8 +25,8 @@ export async function checkAdminUser2FA(email, password, token) {
       return { twofaRequired: true, adminUserId: dbUser.admin_user_id, exists: true };
     }
 
-    const valid = await verify2FA(dbUser.admin_user_id, token, pool);
-    if (!valid) {
+    const result = await verify2FA(email, token, pool);
+    if (!result.verified) {
       return { twofaRequired: true, valid: false, exists: true };
     }
   }

@@ -34,8 +34,12 @@ export default async (request, response, next) => {
     }
     
     await request.loginUserWithEmail(email, password);
-    
-    response.status(OK).json({ data: { sid: request.sessionID } });
+
+    const data = { sid: request.sessionID };    
+    if (result.twofaSetupRequired) {
+      data.twofaSetupRequired = true;
+    }
+    response.status(OK).json({ data });
   } catch (error) {
     response.status(INVALID_PAYLOAD).json({
       error: {
