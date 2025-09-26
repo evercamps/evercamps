@@ -14,6 +14,7 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import * as XLSX from "xlsx";
 
 export const query = `
   query Query($filters: [FilterInput]) {
@@ -168,6 +169,13 @@ export default function ParticipantGrid({
         actions={[
           {
             variant: 'interactive',
+            name: 'Export to Excel',
+            onAction: () => {
+              exportToExcel(participants);
+            }
+          },
+          {
+            variant: 'interactive',
             name: 'Clear filter',
             onAction: () => {
               // Just get the url and remove all query params
@@ -175,7 +183,7 @@ export default function ParticipantGrid({
               url.search = '';
               window.location.href = url.href;
             }
-          }
+          }          
         ]}
       />
       <table className="listing sticky">
@@ -258,3 +266,24 @@ export default function ParticipantGrid({
     </Card>
   );
 }
+
+function exportToExcel(participants) {
+  if (!participants || participants.length === 0) {
+    alert("No participants to export");
+    return;
+  }
+  
+  const worksheet = XLSX.utils.json_to_sheet(
+    participants.map((p) => ({
+      ID: p.participantId,
+      "First Name": p.firstName,
+      "Last Name": p.lastName,
+    }))
+  );
+  
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Participants");
+  
+  XLSX.writeFile(workbook, "participants.xlsx");
+}
+
