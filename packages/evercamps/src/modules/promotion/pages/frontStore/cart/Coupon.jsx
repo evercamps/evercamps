@@ -1,5 +1,5 @@
 import { useAppDispatch } from '@components/common/context/app';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import PropTypes from 'prop-types';

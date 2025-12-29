@@ -1,7 +1,7 @@
 import PriceBasedPrice from '@components/admin/checkout/shippingSetting/PriceBasedPrice';
 import WeightBasedPrice from '@components/admin/checkout/shippingSetting/WeightBasedPrice';
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { Field } from '@components/common/form/Field';
 import { Input } from '@components/common/form/fields/Input';
 import { Radio } from '@components/common/form/fields/Radio';

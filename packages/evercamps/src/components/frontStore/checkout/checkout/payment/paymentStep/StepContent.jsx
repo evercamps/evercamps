@@ -1,7 +1,7 @@
 import Area from '@components/common/Area';
 import { useCheckout } from '@components/common/context/checkout';
 import { useCheckoutStepsDispatch } from '@components/common/context/checkoutSteps';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import Spinner from '@components/common/Spinner';

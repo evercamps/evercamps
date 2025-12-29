@@ -1,5 +1,5 @@
 
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import produce from 'immer';
 import PropTypes from 'prop-types';
 import React, { useReducer } from 'react';

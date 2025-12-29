@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
+import Button from '@components/common/Button.js';
+import { SelectField } from '@components/common/form/SelectField.js';
+import { InputField, TextField } from '@components/common/form/InputField.js';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export default function ParticipantForm({
@@ -47,7 +48,7 @@ export default function ParticipantForm({
           )}
           {customer && customer.participants && customer.participants.length > 0 && (
           <div className="mb-4">
-            <Field
+            <SelectField
               id="participant"
               name="participant"
               type="select"
@@ -74,7 +75,7 @@ export default function ParticipantForm({
         )}         
           <label className="block mb-2 font-medium">First Name</label>
           <div className="mb-8">
-            <Field
+            <InputField
             id="first_name"
             name="first_name"
             value={firstName}
@@ -87,7 +88,7 @@ export default function ParticipantForm({
           
           <label className="block mb-2 font-medium">Last Name</label>
           <div className="mb-2">
-          <Field
+          <InputField
           id="last_name"
           name="last_name"
           value={lastName}

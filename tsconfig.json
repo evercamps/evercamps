@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "target": "ES2018",
     "lib": ["dom", "dom.iterable", "esnext"],
     "esModuleInterop": true,
@@ -21,6 +20,5 @@
     "paths": {
       "@components/*": ["packages/evercamps/src/components/*"]
     }
-  },
-  "include": ["./packages/evercamps/src"]
+  }
 }

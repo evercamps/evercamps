@@ -1,5 +1,5 @@
 import WidgetTypes from '@components/admin/cms/widget/WidgetTypes';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { useAlertContext } from '@components/common/modal/Alert';
 import PropTypes from 'prop-types';
 import React from 'react';

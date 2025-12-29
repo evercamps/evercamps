@@ -1,4 +1,4 @@
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { Field } from '@components/common/form/Field';
 import { useModal } from '@components/common/modal/useModal';
 import Spinner from '@components/common/Spinner';

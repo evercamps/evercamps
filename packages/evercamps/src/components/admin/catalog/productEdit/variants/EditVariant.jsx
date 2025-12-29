@@ -1,6 +1,6 @@
 import { VariantModal } from '@components/admin/catalog/productEdit/variants/VariantModal';
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { Form } from '@components/common/form/Form';
 import { useAlertContext } from '@components/common/modal/Alert';
 import PropTypes from 'prop-types';

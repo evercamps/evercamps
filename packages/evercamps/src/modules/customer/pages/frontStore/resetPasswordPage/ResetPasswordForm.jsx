@@ -5,7 +5,7 @@ import React from 'react';
 
 import './ResetPasswordForm.scss';
 import { _ } from '../../../../../lib/locale/translate/_.js';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 
 function Success() {
   return (

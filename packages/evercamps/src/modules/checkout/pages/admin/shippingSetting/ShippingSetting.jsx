@@ -2,7 +2,7 @@ import ZoneForm from '@components/admin/checkout/shippingSetting/ZoneForm';
 import { Zones } from '@components/admin/checkout/shippingSetting/Zones';
 import { Card } from '@components/admin/cms/Card';
 import SettingMenu from '@components/admin/setting/SettingMenu';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { useModal } from '@components/common/modal/useModal';
 import Spinner from '@components/common/Spinner';
 import PropTypes from 'prop-types';

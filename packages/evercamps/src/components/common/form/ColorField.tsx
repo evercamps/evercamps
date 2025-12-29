@@ -1,6 +1,6 @@
 import { Tooltip } from '@components/common/form/Tooltip.js';
 import { getNestedError } from '@components/common/form/utils/getNestedError.js';
-import { _ } from '@evercamps/lib/locale/translate/_.js';
+import { _ } from '../../../lib/locale/translate/_.js';
 import React from 'react';
 import {
   useFormContext,

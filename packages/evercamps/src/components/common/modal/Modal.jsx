@@ -1,5 +1,5 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import PropTypes from 'prop-types';
 import React from 'react';
 import './Alert.scss';

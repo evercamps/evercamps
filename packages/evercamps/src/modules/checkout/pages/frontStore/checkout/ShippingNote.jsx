@@ -1,5 +1,5 @@
 import { useAppDispatch } from '@components/common/context/app';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

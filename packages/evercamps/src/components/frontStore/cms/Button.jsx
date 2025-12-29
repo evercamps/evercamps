@@ -1,4 +1,4 @@
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import '@components/frontStore/cms/Button.scss';
 
 export default Button;

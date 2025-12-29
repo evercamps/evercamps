@@ -1,5 +1,5 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import RenderIfTrue from '@components/common/RenderIfTrue';
 import axios from 'axios';
 import PropTypes from 'prop-types';

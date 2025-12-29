@@ -1,5 +1,5 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
+import Button from '@components/common/Button.js';
 import { SimplePageination } from '@components/common/SimplePagination';
 import Spinner from '@components/common/Spinner';
 import CheckIcon from '@heroicons/react/outline/CheckIcon';
