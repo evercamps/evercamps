@@ -1,6 +1,6 @@
 
 import Button from '@components/common/Button.js';
-import produce from 'immer';
+import { produce } from 'immer';
 import PropTypes from 'prop-types';
 import React, { useReducer } from 'react';
 import ReactDOM from 'react-dom';

@@ -2,7 +2,7 @@ import { useCheckout } from '@components/common/context/checkout';
 import { AddressSummary } from '@components/common/customer/address/AddressSummary';
 import { Form } from '@components/common/form/Form';
 import CustomerAddressForm from '@components/frontStore/customer/address/addressForm/Index';
-import produce from 'immer';
+import { produce } from 'immer';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

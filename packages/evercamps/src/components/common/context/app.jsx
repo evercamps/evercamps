@@ -1,5 +1,5 @@
 
-import produce from 'immer';
+import { produce } from 'immer';
 import PropTypes from 'prop-types';
 import React, { useMemo } from 'react';
 

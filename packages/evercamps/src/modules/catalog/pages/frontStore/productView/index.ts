@@ -1,10 +1,13 @@
 import { node, select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../../../lib/postgres/connection.js';
 import { get } from '../../../../../lib/util/get.js';
+import { getBaseUrl } from '../../../../../lib/util/getBaseUrl.js';
 import { getConfig } from '../../../../../lib/util/getConfig.js';
+import { setPageMetaInfo } from '../../../../cms/services/pageMetaInfo.js';
 import { setContextValue } from '../../../../graphql/services/contextHelper.js';
 
 export default async (request, response, next) => {
+  let currentProduct;
   try {
     const query = select();
     query
@@ -35,11 +38,7 @@ export default async (request, response, next) => {
         !get(product, 'variant_group_id') ||
         Object.values(queries).length === 0
       ) {
-        setContextValue(request, 'productId', product.product_id);
-        setContextValue(request, 'pageInfo', {
-          title: product.meta_title || product.name,
-          description: product.meta_description || product.short_description
-        });
+        currentProduct = product;
       } else {
         const group = await select()
           .from('variant_group')
@@ -129,25 +128,32 @@ export default async (request, response, next) => {
               );
             variantQuery.where('product_id', '=', variants[0].product_id);
             const pv = await variantQuery.load(pool);
-            setContextValue(request, 'productId', pv.product_id);
-            setContextValue(request, 'pageInfo', {
-              title: pv.meta_title || pv.name,
-              description: pv.meta_description || pv.short_description
-            });
+            currentProduct = pv;
           } else {
-            setContextValue(request, 'productId', product.product_id);
-            setContextValue(request, 'pageInfo', {
-              title: product.meta_title || product.name,
-              description: product.meta_description || product.short_description
-            });
+            currentProduct = product;
           }
         } else {
-          setContextValue(request, 'productId', product.product_id);
-          setContextValue(request, 'pageInfo', {
-            title: product.meta_title || product.name,
-            description: product.meta_description || product.short_description
-          });
+          currentProduct = product;
         }
+      }
+      setContextValue(request, 'productId', currentProduct.product_id);
+      setContextValue(request, 'currentProductId', currentProduct.product_id);
+      setPageMetaInfo(request, {
+        title: currentProduct.meta_title || currentProduct.name,
+        description: currentProduct.meta_description || currentProduct.name
+      });
+      const productImage = await select()
+        .from('product_image')
+        .where('product_image_product_id', '=', currentProduct.product_id)
+        .and('is_main', '=', true)
+        .load(pool);
+      if (productImage) {
+        const baseUrl = getBaseUrl();
+        setPageMetaInfo(request, {
+          ogInfo: {
+            image: `${baseUrl}/images?src=${baseUrl}${productImage.origin_image}&w=1200&q=80&h=675&f=png`
+          }
+        });
       }
       next();
     }
