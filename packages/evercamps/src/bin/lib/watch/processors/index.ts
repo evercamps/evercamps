@@ -29,12 +29,15 @@ export const processors: Processor = {
   remove_front_store_route: deleteARoute,
   add_middleware: addMiddleware,
   remove_middleware: removeMiddleware,
-  update_middleware: () => {},
+  update_middleware: () => { },
   update_component: () => {
     // No operation for update_component, as it is handled by the compiler}
   },
+  remove_component: () => {
+    // No operation for update_component, as it is handled by the compiler}
+  },
   add_component: addComponent,
-  update_graphql: () => {},
+  update_graphql: () => { },
   restart_cronjob: () => {
     restartCronJob();
   },

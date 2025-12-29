@@ -19,7 +19,7 @@
     "allowArbitraryExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "@components/*": ["./packages/evercamps/src/components/*"]
+      "@components/*": ["packages/evercamps/src/components/*"]
     }
   },
   "include": ["./packages/evercamps/src"]

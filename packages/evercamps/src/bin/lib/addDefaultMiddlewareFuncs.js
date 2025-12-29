@@ -1,3 +1,4 @@
+import path from 'path';
 import { select } from '@evershop/postgres-query-builder';
 import sessionStorage from 'connect-pg-simple';
 import cookieParser from 'cookie-parser';
@@ -22,9 +23,13 @@ import { getCookieSecret } from '../../modules/auth/services/getCookieSecret.js'
 import { getFrontStoreSessionCookieName } from '../../modules/auth/services/getFrontStoreSessionCookieName.js';
 import { setContextValue } from '../../modules/graphql/services/contextHelper.js';
 import { findRoute } from './findRoute.js';
+import { getTailwindConfig } from '../../lib/webpack/util/getTailwindConfig.js';
+import { getEnabledExtensions } from '../extension/index.js';
+import { getEnabledTheme } from '../../lib/util/getEnabledTheme.js';
+import { CONSTANTS } from '../../lib/helpers.js';
 
 export function addDefaultMiddlewareFuncs(app) {
-  app.use((request, response, next) => {
+  app.use(async (request, response, next) => {
     response.debugMiddlewares = [];
     next();
     response.on('finish', () => {
@@ -57,8 +62,8 @@ export function addDefaultMiddlewareFuncs(app) {
       process.env.NODE_ENV === 'test'
         ? undefined
         : new (sessionStorage(session))({
-            pool
-          }),
+          pool
+        }),
     secret: cookieSecret,
     cookie: {
       maxAge: getConfig('system.session.maxAge', 24 * 60 * 60 * 1000)
@@ -172,7 +177,7 @@ export function addDefaultMiddlewareFuncs(app) {
     }
   });
 
-  app.use((request, response, next) => {
+  app.use(async (request, response, next) => {
     if (!isDevelopmentMode()) {
       return next();
     }
@@ -183,8 +188,45 @@ export function addDefaultMiddlewareFuncs(app) {
     if (!route || !isBuildRequired(route)) {
       next();
     } else {
+      const adminTailwindConfig = await getTailwindConfig(true);
+      const frontStoreTailwindConfig = await getTailwindConfig(false);
+      const enabledExtensions = getEnabledExtensions();
+      adminTailwindConfig.content = frontStoreTailwindConfig.content = [
+        // All file in packages/evershop/dist and name is capitalized
+        path.join(
+          CONSTANTS.ROOTPATH,
+          'packages',
+          'evercamps',
+          'dist',
+          '**',
+          '[A-Z]*.js'
+        ),
+        // All file in node_modules/@evercamps/evercamps/dist and name is capitalized
+        path.join(
+          CONSTANTS.ROOTPATH,
+          'node_modules',
+          '@evercamps',
+          'evercamps',
+          'dist',
+          '**',
+          '[A-Z]*.js'
+        ),
+        ...enabledExtensions.map((extension) =>
+          path.join(extension.path, 'dist', '**', '[A-Z]*.js')
+        )
+      ];
+      const theme = getEnabledTheme();
+      if (theme) {
+        frontStoreTailwindConfig.content.push(
+          path.join(theme.path, 'dist', '**', '[A-Z]*.js')
+        );
+      }
       if (!route.webpackCompiler) {
-        route.webpackCompiler = webpack(createConfigClient(route));
+        route.webpackCompiler = webpack(
+          createConfigClient(
+            route,
+            route.isAdmin ? adminTailwindConfig : frontStoreTailwindConfig
+          ));
       }
       const { webpackCompiler } = route;
       let middlewareFunc;
@@ -194,7 +236,7 @@ export function addDefaultMiddlewareFuncs(app) {
           publicPath: '/',
           stats: 'none'
         });
-        middlewareFunc.context.logger.info = () => {};
+        middlewareFunc.context.logger.info = () => { };
       } else {
         middlewareFunc = route.webpackMiddleware;
       }
@@ -207,7 +249,7 @@ export function addDefaultMiddlewareFuncs(app) {
       const notFoundRoute = routes.find((r) => r.id === 'notFound');
       if (!notFoundRoute.webpackCompiler) {
         notFoundRoute.webpackCompiler = webpack(
-          createConfigClient(notFoundRoute)
+          createConfigClient(notFoundRoute, frontStoreTailwindConfig)
         );
       }
       const notFoundWebpackCompiler = notFoundRoute.webpackCompiler;
@@ -221,7 +263,7 @@ export function addDefaultMiddlewareFuncs(app) {
             stats: 'none'
           }
         );
-        notFoundMiddlewareFunc.context.logger.info = () => {};
+        notFoundMiddlewareFunc.context.logger.info = () => { };
       } else {
         notFoundMiddlewareFunc = notFoundRoute.webpackMiddleware;
       }
@@ -230,7 +272,7 @@ export function addDefaultMiddlewareFuncs(app) {
       const adminNotFoundRoute = routes.find((r) => r.id === 'adminNotFound');
       if (!adminNotFoundRoute.webpackCompiler) {
         adminNotFoundRoute.webpackCompiler = webpack(
-          createConfigClient(adminNotFoundRoute)
+          createConfigClient(adminNotFoundRoute, adminTailwindConfig)
         );
       }
       const adminNotFoundWebpackCompiler = adminNotFoundRoute.webpackCompiler;
@@ -242,7 +284,7 @@ export function addDefaultMiddlewareFuncs(app) {
             publicPath: '/',
             stats: 'none'
           });
-        adminNotFoundMiddlewareFunc.context.logger.info = () => {};
+        adminNotFoundMiddlewareFunc.context.logger.info = () => { };
       } else {
         adminNotFoundMiddlewareFunc = adminNotFoundRoute.webpackMiddleware;
       }
