@@ -3,6 +3,7 @@ import { pool } from '../../../../../lib/postgres/connection.js';
 import { getBaseUrl } from '../../../../../lib/util/getBaseUrl.js';
 import { setPageMetaInfo } from '../../../../cms/services/pageMetaInfo.js';
 import { setContextValue } from '../../../../graphql/services/contextHelper.js';
+import { debug } from '@evercamps/evercamps/lib/log/logger.js';
 
 export default async (request, response, next) => {
   try {
@@ -18,6 +19,7 @@ export default async (request, response, next) => {
 
     query.where('category.uuid', '=', request.params.uuid);
     const category = await query.load(pool);
+    debug(category);
     if (category === null) {
       response.status(404);
       next();
