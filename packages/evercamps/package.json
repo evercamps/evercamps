@@ -1,8 +1,8 @@
 {
   "name": "@evercamps/evercamps",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
-  "description": "The React Ecommerce platform. Built with Typescript, React and Postgres. Open-source and free. Fast and customizable.",
+  "description": "A sports camp platform with Express, React and Postgres",
   "files": [
     "dist",
     ".swcrc"
