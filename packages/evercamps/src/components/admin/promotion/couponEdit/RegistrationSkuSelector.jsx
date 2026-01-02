@@ -47,10 +47,10 @@ function RegistrationSkuSelector({
     variables: {
       filters: inputValue
         ? [
-            { key: 'keyword', operation: 'eq', value: inputValue },
+            { key: 'name', operation: 'like', value: inputValue },
             { key: 'page', operation: 'eq', value: page.toString() },
             { key: 'limit', operation: 'eq', value: limit.toString() },
-            { key: 'manageRegistrations', operation: 'eq', value: '1' }
+            { key: 'manage_registrations', operation: 'eq', value: '1' }
           ]
         : [
             { key: 'limit', operation: 'eq', value: limit.toString() },
