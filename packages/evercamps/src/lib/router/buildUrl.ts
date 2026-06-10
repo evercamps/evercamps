@@ -1,5 +1,6 @@
 import { compile } from '../pathToRegexp.js';
 import { getRoutes } from './Router.js';
+import type { Route } from '../../types/route.js';
 
 /**
  * This function take a route ID, list of params and return the url
@@ -14,7 +15,7 @@ export const buildUrl = (
   params: Record<string, any> = {}
 ): string => {
   const routes = getRoutes();
-  const route = routes.find((r) => r.id === routeId);
+  const route = routes.find((r: Route) => r.id === routeId);
   if (route === undefined) {
     throw new Error(`Route ${routeId} is not existed`);
   }

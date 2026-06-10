@@ -21,11 +21,11 @@ function validateStatus(paymentStatus: string, shipmentStatus: string) {
   const shipmentStatusList = getConfig(
     'oms.order.shipmentStatus',
     {}
-  ) as ShipmentStatus[];
+  ) as Record<string, ShipmentStatus>;
   const paymentStatusList = getConfig(
     'oms.order.paymentStatus',
     {}
-  ) as PaymentStatus[];
+  ) as Record<string, PaymentStatus>;
 
   const paymentStatusConfig = paymentStatusList[paymentStatus];
   const shipmentStatusConfig = shipmentStatusList[shipmentStatus];

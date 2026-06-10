@@ -6,7 +6,7 @@ import isDevelopmentMode from '../../lib/util/isDevelopmentMode.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function startCronProcess(context) {
+export function startCronProcess(context: Record<string, unknown>) {
   // Spawn the child process to manage scheduled jobs
   const jobArgs = [path.resolve(__dirname, '../../lib/cronjob/cronjob.js')];
   if (isDevelopmentMode() || process.argv.includes('--debug')) {
@@ -17,7 +17,7 @@ export function startCronProcess(context) {
     env: {
       ...process.env,
       bootstrapContext: JSON.stringify(context),
-      ALLOW_CONFIG_MUTATIONS: true
+      ALLOW_CONFIG_MUTATIONS: 'true'
     }
   });
   jobChild.on('error', (err) => {

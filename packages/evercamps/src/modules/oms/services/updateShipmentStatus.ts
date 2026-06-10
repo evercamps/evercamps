@@ -16,7 +16,7 @@ function validateShipmentStatusBeforeUpdate(status: string): boolean {
   const shipmentStatusList = getConfig(
     'oms.order.shipmentStatus',
     {}
-  ) as ShipmentStatus;
+  ) as Record<string, ShipmentStatus>;
   if (!shipmentStatusList[status]) {
     throw new Error('Invalid status');
   }

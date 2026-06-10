@@ -13,7 +13,7 @@ export function addApiRoute(app: Application, event: Event) {
       warning(`Route ${route?.id} already exists. Skipping adding new route.`);
     } else {
       addRoute(route);
-      for (const method of route.methods) {
+      for (const method of [route.method].flat()) {
         switch (method.toUpperCase()) {
           case 'GET':
             app.get(route.path, Handler.middleware());

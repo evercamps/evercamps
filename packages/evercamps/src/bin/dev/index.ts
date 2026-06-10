@@ -12,7 +12,7 @@ function startDev() {
     stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
     env: {
       ...process.env,
-      ALLOW_CONFIG_MUTATIONS: true
+      ALLOW_CONFIG_MUTATIONS: 'true'
     }
   });
 

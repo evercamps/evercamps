@@ -26,16 +26,16 @@ async function disableCart(cartId: number, connection: PoolClient) {
   return cart;
 }
 
-async function saveOrder(cart, connection, context: { skipShippingValidation?: boolean } = {}) {
+async function saveOrder(cart: Cart, connection: PoolClient, context: { skipShippingValidation?: boolean } = {}) {
   const { skipShippingValidation } = context;
   const shipmentStatusList = getConfig(
     'oms.order.shipmentStatus',
     {}
-  ) as ShipmentStatus[];
+  ) as Record<string, ShipmentStatus>;
   const paymentStatusList = getConfig(
     'oms.order.paymentStatus',
     {}
-  ) as PaymentStatus[];
+  ) as Record<string, PaymentStatus>;
   let defaultShipmentStatus;
   Object.keys(shipmentStatusList).forEach((key) => {
     if (shipmentStatusList[key].isDefault) {
@@ -79,8 +79,8 @@ async function saveOrder(cart, connection, context: { skipShippingValidation?: b
     .execute(connection);
 
   const orderStatus = resolveOrderStatus(
-    defaultPaymentStatus,
-    defaultShipmentStatus
+    defaultPaymentStatus ?? '',
+    defaultShipmentStatus ?? ''
   );
 
   // Save order to DB

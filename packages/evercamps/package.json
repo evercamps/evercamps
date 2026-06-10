@@ -229,12 +229,17 @@
   },
   "devDependencies": {
     "@parcel/watcher": "^2.5.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/config": "^3.3.5",
+    "@types/cross-spawn": "^6.0.6",
     "@types/express": "^5.0.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.14.1",
+    "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.15.2",
+    "@types/prop-types": "^15.7.15",
     "@types/react": "^19.1.2",
+    "@types/uuid": "^10.0.0",
     "copyfiles": "^2.4.1",
     "execa": "^9.6.0",
     "typescript": "^5.8.3"

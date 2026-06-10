@@ -20,7 +20,7 @@ import { PaymentStatus, ShipmentStatus } from '../../../types/order.js';
 
 function getOrderStatusFlow() {
   try {
-    const orderStatusList = getConfig('oms.order.status', {});
+    const orderStatusList = getConfig('oms.order.status', {}) as Record<string, any>;
     const orderStatuses = new Topo.Sorter();
     Object.keys(orderStatusList).forEach((status) => {
       orderStatuses.add(status, {
@@ -41,16 +41,16 @@ export function resolveOrderStatus(
   paymentStatus: string,
   shipmentStatus: string
 ): string {
-  const orderStatusList = getConfig('oms.order.status', {});
+  const orderStatusList = getConfig('oms.order.status', {}) as Record<string, any>;
   const shipmentStatusList = getConfig(
     'oms.order.shipmentStatus',
     {}
-  ) as ShipmentStatus[];
+  ) as Record<string, ShipmentStatus>;
   const paymentStatusList = getConfig(
     'oms.order.paymentStatus',
     {}
-  ) as PaymentStatus[];
-  const psoMapping = getConfig('oms.order.psoMapping', {});
+  ) as Record<string, PaymentStatus>;
+  const psoMapping = getConfig('oms.order.psoMapping', {}) as Record<string, string>;
   const shipmentStatusDefination = shipmentStatusList[shipmentStatus];
   const paymentStatusDefination = paymentStatusList[paymentStatus];
   if (!shipmentStatusDefination || !paymentStatusDefination) {

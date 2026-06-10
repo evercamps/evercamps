@@ -16,7 +16,7 @@ function validatePaymentStatusBeforeUpdate(status: string): boolean {
   const paymentStatusList = getConfig(
     'oms.order.paymentStatus',
     {}
-  ) as PaymentStatus[];
+  ) as Record<string, PaymentStatus>;
   if (!paymentStatusList[status]) {
     throw new Error('Invalid status');
   }
