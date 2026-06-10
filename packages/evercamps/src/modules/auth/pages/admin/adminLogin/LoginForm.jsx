@@ -1,15 +1,28 @@
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useState } from 'react';
 import './LoginForm.scss';
 import Area from '@components/common/Area';
 
-export default function LoginForm({ authUrl, dashboardUrl }) {
+export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
   const [error, setError] = React.useState(null);
+  const [twofaRequired, setTwofaRequired] = useState(false);
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
 
   const onSuccess = (response) => {
-    if (!response.error) {
+    console.log(response);
+    if (response.data?.twofaRequired) {
+      setTwofaRequired(true);
+      setCredentials({
+        email: response.email || credentials.email,
+        password: response.password || credentials.password
+      });
+      setError(null);
+    } else if (response.data?.twofaSetupRequired) {
+      window.location.href = setupTwoFaUrl;
+    }
+    else if (!response.error) {      
       window.location.href = dashboardUrl;
     } else {
       setError(response.error.message);
@@ -46,40 +59,60 @@ export default function LoginForm({ authUrl, dashboardUrl }) {
         id="adminLoginForm"
         isJSON
         onSuccess={onSuccess}
-        btnText="SIGN IN"
+        btnText={twofaRequired ? 'VERIFY 2FA' : 'SIGN IN'}
       >
         <Area
           id="adminLoginForm"
           coreComponents={[
-            {
-              component: {
-                default: Field
-              },
-              props: {
-                name: 'email',
-                type: 'email',
-                label: 'Email',
-                placeholder: 'Email',
-                validationRules: ['notEmpty', 'email']
-              },
+            !twofaRequired && {
+            component: { default: Field },
+            props: {
+              name: 'email',
+              type: 'email',
+              label: 'Email',
+              placeholder: 'Email',
+              validationRules: ['notEmpty', 'email'],
+              value: credentials.email,
+              onChange: (e) =>
+                setCredentials({ ...credentials, email: e.target.value })
+            },
               sortOrder: 10
             },
-            {
-              component: {
-                default: Field
-              },
-              props: {
-                name: 'password',
-                type: 'password',
-                label: 'Password',
-                placeholder: 'Password',
-                validationRules: ['notEmpty']
-              },
+            !twofaRequired && {
+            component: { default: Field },
+            props: {
+              name: 'password',
+              type: 'password',
+              label: 'Password',
+              placeholder: 'Password',
+              validationRules: ['notEmpty'],
+              value: credentials.password,
+              onChange: (e) =>
+                setCredentials({ ...credentials, password: e.target.value })
+            },
               sortOrder: 20
+            },
+            twofaRequired && {
+              component: { default: Field },
+              props: {
+                name: 'token',
+                type: 'text',
+                label: '2FA Code or recovery code',
+                placeholder: 'Enter 6-digit code or recovery code',
+                validationRules: ['notEmpty'],
+                autoFocus: true
+              },
+              sortOrder: 30
             }
-          ]}
+          ].filter(Boolean)}
           noOuter
         />
+        {twofaRequired && (
+          <input type="hidden" name="email" value={credentials.email} />
+        )}
+        {twofaRequired && (
+          <input type="hidden" name="password" value={credentials.password} />
+        )}
       </Form>
     </div>
   );
@@ -99,5 +132,6 @@ export const query = `
   query Query {
     authUrl: url(routeId: "adminLoginJson")
     dashboardUrl: url(routeId: "dashboard")
+    setupTwoFaUrl: url(routeId: "adminSetupTwoFa")
   }
 `;

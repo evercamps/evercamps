@@ -7,6 +7,10 @@ type AdminUser {
   status: Int!
   email: String!
   fullName: String!
+  twofaEnabled: Int!
+  twofaDeadline: String
+  twofaEnableUrl: String!
+  twofaExtendUrl: String!
 }
 
 """
