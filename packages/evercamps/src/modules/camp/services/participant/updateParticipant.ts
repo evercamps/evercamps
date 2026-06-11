@@ -6,11 +6,8 @@ import {
   select,
   startTransaction
 } from '@evershop/postgres-query-builder';
-import { JSONSchemaType } from 'ajv';
-import { emit } from '../../../../lib/event/emitter.js';
 import {
-  getConnection,
-  pool
+  getConnection
 } from '../../../../lib/postgres/connection.js';
 import { hookable } from '../../../../lib/util/hookable.js';
 import {
@@ -36,7 +33,7 @@ function validateParticipantDataBeforeInsert(data: ParticipantData) {
   if (valid) {    
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate.errors?.[0]?.message ?? 'Validation failed');
   }
 }
 
@@ -53,7 +50,7 @@ async function updateParticipantData(uuid: string, data: ParticipantData, connec
       .execute(connection);
     Object.assign(participant, newParticipant);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }

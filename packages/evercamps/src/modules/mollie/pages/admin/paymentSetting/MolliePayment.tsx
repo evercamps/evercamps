@@ -1,8 +1,19 @@
 import { Card } from '@components/admin/cms/Card';
 import { Field } from '@components/common/form/Field';
 import { Toggle } from '@components/common/form/fields/Toggle';
-import PropTypes from 'prop-types';
 import React from 'react';
+
+interface MollieSettings {
+  molliePaymentStatus?: number;
+  mollieDisplayName?: string;
+  molliePaymentMode?: number;
+  mollieLiveApiKey?: string;
+  mollieTestApiKey?: string;
+}
+
+interface MolliePaymentProps {
+  setting: MollieSettings;
+}
 
 export default function MolliePayment({
   setting: {
@@ -10,9 +21,9 @@ export default function MolliePayment({
     mollieDisplayName,
     molliePaymentMode,
     mollieTestApiKey,
-    mollieLiveApiKey,
+    mollieLiveApiKey
   }
-}) {
+}: MolliePaymentProps) {
   return (
     <Card title="Mollie Payment">
       <Card.Session>
@@ -84,16 +95,6 @@ export default function MolliePayment({
     </Card>
   );
 }
-
-MolliePayment.propTypes = {
-  setting: PropTypes.shape({
-    molliePaymentStatus: PropTypes.number,
-    mollieDisplayName: PropTypes.string,
-    molliePaymentMode: PropTypes.number,
-    mollieLiveApiKey: PropTypes.string,
-    mollieTestApiKey: PropTypes.string,
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'paymentSetting',

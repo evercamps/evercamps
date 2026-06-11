@@ -46,7 +46,7 @@ function validateAttributeDataBeforeInsert(data: AttributeData) {
   if (valid) {
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate?.errors?.[0].message);
   }
 }
 

@@ -39,7 +39,7 @@ function validateParticipantDataBeforeInsert(data: ParticipantData) {
   if (valid) {    
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate.errors?.[0]?.message ?? 'Validation failed');
   }
 }
 

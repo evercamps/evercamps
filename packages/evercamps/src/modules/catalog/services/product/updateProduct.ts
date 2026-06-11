@@ -34,7 +34,7 @@ function validateProductDataBeforeUpdate(data: ProductData) {
   if (valid) {
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate?.errors?.[0].message);
   }
 }
 
@@ -47,7 +47,7 @@ async function updateProductInventory(inventoryData: ProductInventoryData, produ
       .where('product_inventory_product_id', '=', productId)
       .execute(connection);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }
@@ -297,7 +297,7 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
       .where('uuid', '=', uuid)
       .execute(connection);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }
@@ -309,7 +309,7 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
       .execute(connection);
     Object.assign(product, description);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }

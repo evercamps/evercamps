@@ -1,18 +1,21 @@
 import { useCheckout, useCheckoutDispatch } from '@components/common/context/checkout';
-import MollieLogo from '@components/frontStore/mollie/MollieLogo.jsx';
-import CheckoutForm from '@components/frontStore/mollie/checkout/CheckoutForm';
-import PropTypes from 'prop-types';
-import React, { useState } from 'react';
-import smallUnit from 'zero-decimal-currencies';
+import MollieLogo from '@components/frontStore/mollie/MollieLogo';
 import RenderIfTrue from '@components/common/RenderIfTrue';
+import React, { useState } from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
-export function Mollie({ createPaymentApi, orderId, orderPlaced }) {
+interface MollieProps {
+  createPaymentApi: string;
+  orderId?: string;
+  orderPlaced: boolean;
+}
+
+export function Mollie({ createPaymentApi, orderId, orderPlaced }: MollieProps) {
   const [error, setError] = useState('');
 
   React.useEffect(() => {
     const createPayment = async () => {
-      const response = await fetch(createPaymentApi, {
+      const result = await fetch(createPaymentApi, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -21,13 +24,14 @@ export function Mollie({ createPaymentApi, orderId, orderPlaced }) {
           order_id: orderId
         })
       });
-      const data = await response.json();
-      if (!response.error) {
-        const { returnUrl } = data.data;
-        // Redirect to Mollie for payment approval
-        window.location.href = returnUrl;
+      const data = await result.json() as { data?: { returnUrl: string }; error?: { message: string } };
+      if (!result.ok || !data.error) {
+        const returnUrl = data.data?.returnUrl;
+        if (returnUrl) {
+          window.location.href = returnUrl;
+        }
       } else {
-        setError(response.error.message);
+        setError(data.error.message);
       }
     };
 
@@ -35,43 +39,36 @@ export function Mollie({ createPaymentApi, orderId, orderPlaced }) {
       createPayment();
     }
   }, [orderPlaced, orderId]);
+
   return (
     <div>
       {error && <div className="text-critical mb-4">{error}</div>}
       <div className="p-8 text-center border rounded mt-4 border-divider">
-        {_('You will be redirected to Mollie')}
+        {_('You will be redirected to Mollie', {})}
       </div>
     </div>
   );
 }
 
-Mollie.propTypes = {
-  createPaymentApi: PropTypes.string.isRequired,
-  orderId: PropTypes.string,
-  orderPlaced: PropTypes.bool.isRequired
-};
+interface MollieMethodProps {
+  createPaymentApi: string;
+}
 
-Mollie.defaultProps = {
-  orderId: undefined
-};
-
-export default function MollieMethod({ createPaymentApi }) {
+export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
   const checkout = useCheckout();
   const { placeOrder } = useCheckoutDispatch();
 
   const { steps, paymentMethods, setPaymentMethods, orderPlaced, orderId } = checkout;
 
-  const selectedPaymentMethod = paymentMethods ?
-    paymentMethods.find(paymentMethod => paymentMethod.selected) : undefined;
+  const selectedPaymentMethod = paymentMethods
+    ? paymentMethods.find((paymentMethod: { selected: boolean }) => paymentMethod.selected)
+    : undefined;
 
   React.useEffect(() => {
-    const selectedPaymentMethod = paymentMethods.find(
-      (paymentMethod) => paymentMethod.selected
+    const selected = paymentMethods.find(
+      (paymentMethod: { selected: boolean }) => paymentMethod.selected
     );
-    if (
-      steps.every((step) => step.isCompleted) &&
-      selectedPaymentMethod.code === 'mollie'
-    ) {
+    if (steps.every((step: { isCompleted: boolean }) => step.isCompleted) && selected?.code === 'mollie') {
       placeOrder();
     }
   }, [steps]);
@@ -80,27 +77,15 @@ export default function MollieMethod({ createPaymentApi }) {
     <div>
       <div className="flex justify-start items-center gap-4">
         <RenderIfTrue
-          condition={
-            !selectedPaymentMethod || selectedPaymentMethod.code !== 'mollie'
-          }
+          condition={!selectedPaymentMethod || selectedPaymentMethod.code !== 'mollie'}
         >
-
           <a href="#" onClick={(e) => {
             e.preventDefault();
-            setPaymentMethods((previous) =>
-              previous.map((paymentMethod) => {
-                if (paymentMethod.code === 'mollie') {
-                  return {
-                    ...paymentMethod,
-                    selected: true
-                  };
-                } else {
-                  return {
-                    ...paymentMethod,
-                    selected: false
-                  };
-                }
-              })
+            setPaymentMethods((previous: { code: string; selected: boolean }[]) =>
+              previous.map((paymentMethod) => ({
+                ...paymentMethod,
+                selected: paymentMethod.code === 'mollie'
+              }))
             );
           }}>
             <svg
@@ -150,16 +135,12 @@ export default function MollieMethod({ createPaymentApi }) {
             createPaymentApi={createPaymentApi}
             orderPlaced={orderPlaced}
             orderId={orderId}
-          ></Mollie>
+          />
         </RenderIfTrue>
       </div>
     </div>
   );
 }
-
-MollieMethod.propTypes = {
-  createPaymentApi: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'checkoutPaymentMethodmollie',

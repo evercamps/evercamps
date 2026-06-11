@@ -1,8 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
+interface MollieLogoProps {
+  width?: number;
+  height?: number;
+}
 
-export default function MollieLogo({ width = 100, height = 30 }) {
+export default function MollieLogo({ width = 100, height = 30 }: MollieLogoProps) {
   return (
     <img
       width={width}
@@ -13,13 +16,3 @@ export default function MollieLogo({ width = 100, height = 30 }) {
     />
   );
 }
-
-MollieLogo.propTypes = {
-  height: PropTypes.number,
-  width: PropTypes.number
-};
-
-MollieLogo.defaultProps = {
-  height: 24,
-  width: 24
-};

@@ -49,7 +49,7 @@ function validateCustomerDataBeforeInsert(data: CustomerData) {
     verifyPassword(password || '');
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate?.errors?.[0].message);
   }
 }
 

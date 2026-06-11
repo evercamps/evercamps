@@ -1,21 +1,18 @@
 import { select, insert } from '@evershop/postgres-query-builder';
 import { createMollieClient } from '@mollie/api-client';
-import smallestUnit from 'zero-decimal-currencies';
 import { pool } from '../../../../lib/postgres/connection.js';
-import { getConfig } from '../../../../lib/util/getConfig.js';
 import { OK, INVALID_PAYLOAD } from '../../../../lib/util/httpStatus.js';
-import { getSetting } from '../../../setting/services/setting.js';
 import { debug, error } from '../../../../lib/log/logger.js';
-import { buildUrl } from '../../../../lib/router/buildUrl.js';
-
-import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
-import { getContextValue } from '../../../graphql/services/contextHelper.js';
 import { buildAbsoluteUrl } from '../../../../lib/router/buildAbsoluteUrl.js';
+import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
 import { getMollieApiKey } from '../../services/getMollieApiKey.js';
+import type { EvercampsRequest } from '../../../../types/request.js';
+import type { EvercampsResponse } from '../../../../types/response.js';
+import type { ENext } from '../../../../types/middleware.js';
 
-export default async (request, response, next) => {
+export default async (request: EvercampsRequest, response: EvercampsResponse, next: ENext) => {
   try {
-    const { order_id } = request.body;
+    const { order_id } = request.body as { order_id: string };
     debug(`Mollie create payment from order ${order_id}`);
 
     const order = await select()
@@ -38,7 +35,7 @@ export default async (request, response, next) => {
 
     const apiKey = await getMollieApiKey();
     debug(`getMollie Api key ${apiKey}`);
-    
+
     if (!apiKey) {
       response.status(INVALID_PAYLOAD);
       response.json({
@@ -47,30 +44,28 @@ export default async (request, response, next) => {
           message: 'Invalid apikey'
         }
       });
+      return;
     }
 
     debug(`Mollie create client with apikey ${apiKey}`);
 
-    const mollieClient = createMollieClient({ apiKey: apiKey });
+    const mollieClient = createMollieClient({ apiKey });
 
-    debug(`Create Mollie payment with total amount ${new Intl.NumberFormat('en-US', {
+    const formattedAmount = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }).format(order.grand_total)}`);
+    }).format(order.grand_total);
 
+    debug(`Create Mollie payment with total amount ${formattedAmount}`);
 
-    // Create a Payment with the order amount and currency
     const payment = await mollieClient.payments.create({
       amount: {
-        value: new Intl.NumberFormat('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).format(order.grand_total),
+        value: formattedAmount,
         currency: order.currency
       },
       description: `Payment for order #${order.order_number}`,
-      redirectUrl: buildAbsoluteUrl("checkoutSuccess", { orderId: order_id }),
-      webhookUrl: buildAbsoluteUrl("mollieWebhook"),
+      redirectUrl: `${buildAbsoluteUrl('mollieReturn')}?order_id=${order_id}`,
+      webhookUrl: buildAbsoluteUrl('mollieWebhook'),
       metadata: {
         order_id
       }
@@ -78,7 +73,6 @@ export default async (request, response, next) => {
 
     await updatePaymentStatus(order.order_id, 'pending');
 
-    // Add transaction data to database
     await insert('payment_transaction')
       .given({
         payment_transaction_order_id: order.order_id,
@@ -101,13 +95,11 @@ export default async (request, response, next) => {
     response.status(OK);
     response.json({
       data: {
-        // clientSecret: payment.getCheckoutUrl()
         returnUrl: payment.getCheckoutUrl()
       }
     });
-  }
-  catch (err) {
+  } catch (err) {
     error(err);
-    return next(err);
+    return next(err as Error);
   }
 };
