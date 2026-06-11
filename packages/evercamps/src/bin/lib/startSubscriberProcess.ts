@@ -6,7 +6,7 @@ import isDevelopmentMode from '../../lib/util/isDevelopmentMode.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function startSubscriberProcess(context) {
+export function startSubscriberProcess(context: Record<string, unknown>) {
   const args = [path.resolve(__dirname, '../../lib/event/event-manager.js')];
   if (isDevelopmentMode() || process.argv.includes('--debug')) {
     args.push('--debug');
@@ -17,7 +17,7 @@ export function startSubscriberProcess(context) {
     env: {
       ...process.env,
       bootstrapContext: JSON.stringify(context),
-      ALLOW_CONFIG_MUTATIONS: true
+      ALLOW_CONFIG_MUTATIONS: 'true'
     }
   });
 

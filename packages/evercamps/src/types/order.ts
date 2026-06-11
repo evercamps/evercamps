@@ -4,6 +4,7 @@ export type PaymentStatus = {
   progress: string;
   isDefault: boolean;
   next: string[];
+  isCancelable?: boolean;
 };
 
 export type ShipmentStatus = {

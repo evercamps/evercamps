@@ -1,6 +1,6 @@
 import config from 'config';
 import { request } from 'express';
-import type { EvercampsRequest } from 'src/types/request.js';
+import type { EvercampsRequest } from '../../types/request.js';
 import { translate } from '../../lib/locale/translate/translate.js';
 import { defaultPaginationFilters } from '../../lib/util/defaultPaginationFilters.js';
 import { hookable } from '../../lib/util/hookable.js';
@@ -71,15 +71,15 @@ export default () => {
    * @param {*} callback
    */
   (request as EvercampsRequest).loginCustomerWithEmail = async function login(
-    email,
-    password,
-    callback
+    email: string,
+    password: string,
+    callback: (err: Error | null, customer?: any) => void
   ) {
     await hookable(loginCustomerWithEmail.bind(this))(email, password);
     this.session.save(callback);
   };
 
-  (request as EvercampsRequest).logoutCustomer = function logout(callback) {
+  (request as EvercampsRequest).logoutCustomer = function logout(callback: (err: Error | null) => void) {
     hookable(logoutCustomer.bind(this))();
     this.session.save(callback);
   };
@@ -94,7 +94,7 @@ export default () => {
       return this.locals?.customer;
     };
 
-  addProcessor('configurationSchema', (schema) => {
+  addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {
       properties: {
         customer: {

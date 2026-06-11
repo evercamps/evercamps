@@ -11,7 +11,7 @@ async function removeCartItemRegistration(cart: Cart, itemUuid: string, registra
   const registrations = item.getData('registrations') || [];
 
   const newRegs = registrations.filter(
-    (r) => r.cartItemRegistrationId !== Number(registrationId)
+    (r: Record<string, any>) => r.cartItemRegistrationId !== Number(registrationId)
   );  
 
   if (newRegs.length === registrations.length) {

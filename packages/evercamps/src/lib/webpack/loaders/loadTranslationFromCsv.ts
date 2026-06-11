@@ -21,7 +21,7 @@ export async function loadCsvTranslationFiles(): Promise<
       return {};
     }
 
-    const results = {};
+    const results: Record<string, string> = {};
 
     const files = await fs.promises.readdir(folderPath);
     const csvFiles = files.filter((file) => path.extname(file) === '.csv');
@@ -34,7 +34,7 @@ export async function loadCsvTranslationFiles(): Promise<
 
     for (const fileData of fileDataList) {
       for (const [key, value] of Object.entries(fileData)) {
-        results[key] = value;
+        results[key] = value as string;
       }
     }
 

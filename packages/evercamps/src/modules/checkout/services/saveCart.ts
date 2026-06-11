@@ -20,7 +20,7 @@ export const saveCart = async (cart: Cart) => {
   await startTransaction(connection);
   try {
     const items = cart.getItems();
-    let cartId;
+    let cartId: number | undefined;
     if (items.length === 0) {
       // Delete cart if existed
       if (cart.getData('cart_id')) {
@@ -90,8 +90,8 @@ export const saveCart = async (cart: Cart) => {
           const newRegs = item.getData('registrations') || [];
 
           // Map by ID for easier comparison
-          const currentById = new Map(currentRegs.map(r => [r.cart_item_registration_id, r]));
-          const newById = new Map(newRegs.map(r => [r.cartItemRegistrationId, r]));
+          const currentById = new Map(currentRegs.map((r: Record<string, any>) => [r.cart_item_registration_id, r]));
+          const newById = new Map(newRegs.map((r: Record<string, any>) => [r.cartItemRegistrationId, r]));
 
           // Delete regs that are in DB but not in new list
           for (const r of currentRegs) {
@@ -119,7 +119,7 @@ export const saveCart = async (cart: Cart) => {
           for (const r of newRegs) {
             if (r.cartItemRegistrationId && currentById.has(r.cartItemRegistrationId)) {
               const existing = currentById.get(r.cartItemRegistrationId);
-              if (existing.first_name !== r.firstName || existing.last_name !== r.lastName) {
+              if (existing && (existing.first_name !== r.firstName || existing.last_name !== r.lastName)) {
                 await update('cart_item_registration')
                   .given({
                     first_name: r.firstName,

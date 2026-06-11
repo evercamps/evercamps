@@ -173,10 +173,10 @@ async function saveProductAttributes(productId: number, attributes: ProductAttri
 }
 
 async function updateProductAttributes(
-  attributes,
-  productId,
-  variantGroupId,
-  connection
+  attributes: ProductAttributeData[],
+  productId: number,
+  variantGroupId: number | null | undefined,
+  connection: PoolClient
 ) {
   if (!variantGroupId) {
     await saveProductAttributes(productId, attributes, connection);
@@ -204,7 +204,7 @@ async function updateProductAttributes(
       .execute(connection);
 
     // Remove the attributes that are variant attributes
-    const filteredAttributes = attributes.filter((attr) =>
+    const filteredAttributes = attributes.filter((attr: ProductAttributeData) =>
       variantAttributes.every((v) => v.attribute_code !== attr.attribute_code)
     );
 
@@ -227,7 +227,7 @@ async function updateProductAttributes(
   }
 }
 
-async function updateProductImages(images, productId, connection) {
+async function updateProductImages(images: Record<string, any>[] | string[] | undefined, productId: number, connection: PoolClient) {
   if (Array.isArray(images) && images.length === 0) {
     // Delete all images
     await del('product_image')
@@ -290,7 +290,7 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
     throw new Error('Requested product not found');
   }
 
-  let newProduct;
+  let newProduct: Record<string, any> = {};
   try {
     newProduct = await update('product')
       .given(data)

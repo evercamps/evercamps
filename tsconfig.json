@@ -17,6 +17,8 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "allowArbitraryExtensions": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
     "baseUrl": ".",
     "paths": {
       "@components/*": ["./packages/evercamps/src/components/*"]

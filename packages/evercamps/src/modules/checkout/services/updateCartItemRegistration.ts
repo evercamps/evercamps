@@ -13,7 +13,7 @@ async function updateCartItemRegistration(cart: Cart, itemUuid: string, registra
     const registrations = item.getData("registrations") || [];
     
     const regIndex = registrations.findIndex(
-      (r) => Number(r.cartItemRegistrationId) === Number(registrationId)
+      (r: Record<string, any>) => Number(r.cartItemRegistrationId) === Number(registrationId)
     );
 
     if (regIndex === -1) {

@@ -17,8 +17,8 @@
     "allowArbitraryExtensions": true,
     "strictNullChecks": true,
     "isolatedModules": false,
-    "baseUrl": ".",
     "rootDir": "./src",
+    "noImplicitAny": true,
     "paths": {
       "@components/*": ["./src/components/*"]
     }
