@@ -1,7 +1,7 @@
 import { getSetting } from '../../setting/services/setting.js';
 import { getConfig } from '../../../lib/util/getConfig.js';
 import { debug } from '../../../lib/log/logger.js';
-import { MollieConfig } from '../types/mollieConfig';
+import { MollieConfig } from '../types/mollieConfig.js';
 
 export async function getMollieApiKey(): Promise<string | null> {
   const mollieConfig = getConfig<MollieConfig>('system.mollie', {});

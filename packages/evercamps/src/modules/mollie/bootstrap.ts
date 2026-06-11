@@ -1,9 +1,9 @@
-import { getConfig } from '../../lib/util/getConfig';
-import { hookAfter } from '../../lib/util/hookable';
-import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentMethos';
-import { getSetting } from '../setting/services/setting';
-import { cancelPaymentIntent } from './services/cancelPayment';
-import { MollieConfig } from './types/mollieConfig';
+import { getConfig } from '../../lib/util/getConfig.js';
+import { hookAfter } from '../../lib/util/hookable.js';
+import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentMethos.js';
+import { getSetting } from '../setting/services/setting.js';
+import { cancelPaymentIntent } from './services/cancelPayment.js';
+import { MollieConfig } from './types/mollieConfig.js';
 
 type Order = {
   payment_method: string;
