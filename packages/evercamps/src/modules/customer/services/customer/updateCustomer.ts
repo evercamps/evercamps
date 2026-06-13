@@ -30,7 +30,7 @@ function validateCustomerDataBeforeInsert(data: CustomerData) {
   if (valid) {
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate.errors?.[0]?.message ?? 'Validation failed');
   }
 }
 
@@ -48,7 +48,7 @@ async function updateCustomerData(uuid: string, data: CustomerData, connection: 
       .execute(connection);
     Object.assign(customer, newCustomer);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }

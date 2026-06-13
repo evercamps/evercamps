@@ -8,24 +8,24 @@ import {
 } from '@evershop/postgres-query-builder';
 import { error, debug } from '../../../../lib/log/logger.js';
 import { pool } from '../../../../lib/postgres/connection.js';
-import { getConfig } from '../../../../lib/util/getConfig.js';
 import {
   OK,
   INVALID_PAYLOAD,
   INTERNAL_SERVER_ERROR
 } from '../../../../lib/util/httpStatus.js';
-import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.js';
-import { getSetting } from '../../../setting/services/setting.js';
 import { getMollieApiKey } from '../../services/getMollieApiKey.js';
 import { createMollieClient } from '@mollie/api-client';
+import type { EvercampsRequest } from '../../../../types/request.js';
+import type { EvercampsResponse } from '../../../../types/response.js';
+import type { ENext } from '../../../../types/middleware.js';
 
-export default async (request, response, next) => {
+export default async (request: EvercampsRequest, response: EvercampsResponse, next: ENext) => {
   const connection = await getConnection(pool);
   try {
     await startTransaction(connection);
 
-    const { order_id, amount } = request.body;
-    // Load the order
+    const { order_id, amount } = request.body as { order_id: number; amount: number };
+
     const order = await select()
       .from('order')
       .where('order_id', '=', order_id)
@@ -42,7 +42,6 @@ export default async (request, response, next) => {
       return;
     }
 
-    // Get the payment transaction
     const paymentTransaction = await select()
       .from('payment_transaction')
       .where('payment_transaction_order_id', '=', order.order_id)
@@ -60,13 +59,24 @@ export default async (request, response, next) => {
     }
 
     const apiKey = await getMollieApiKey();
+    if (!apiKey) {
+      response.status(INVALID_PAYLOAD);
+      response.json({
+        error: {
+          status: INVALID_PAYLOAD,
+          message: 'Invalid apikey'
+        }
+      });
+      return;
+    }
+
     const mollieClient = createMollieClient({ apiKey });
+
     debug(`We want to refund amount: ${new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount)}`);
 
-    // Refund
     const refund = await mollieClient.paymentRefunds.create({
       paymentId: paymentTransaction.transaction_id,
       amount: {
@@ -81,7 +91,6 @@ export default async (request, response, next) => {
       }
     });
 
-    // Add transaction data to database
     await insert('payment_transaction')
       .given({
         payment_transaction_order_id: order.order_id,
@@ -115,7 +124,7 @@ export default async (request, response, next) => {
     response.json({
       error: {
         status: INTERNAL_SERVER_ERROR,
-        message: err.message
+        message: (err as Error).message
       }
     });
   }

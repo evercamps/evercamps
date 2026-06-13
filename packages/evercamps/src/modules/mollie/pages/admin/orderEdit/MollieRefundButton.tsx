@@ -4,14 +4,34 @@ import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import { useAlertContext } from '@components/common/modal/Alert';
 import RenderIfTrue from '@components/common/RenderIfTrue';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
+
+interface PaymentStatus {
+  code: string;
+}
+
+interface GrandTotal {
+  value: number;
+  currency: string;
+}
+
+interface RefundOrder {
+  paymentStatus: PaymentStatus;
+  orderId: string;
+  paymentMethod: string;
+  grandTotal: GrandTotal;
+}
+
+interface MollieRefundButtonProps {
+  refundAPI: string;
+  order: RefundOrder;
+}
 
 export default function MollieRefundButton({
   refundAPI,
   order: { paymentStatus, orderId, paymentMethod, grandTotal }
-}) {
+}: MollieRefundButtonProps) {
   const { openAlert, closeAlert, dispatchAlert } = useAlertContext();
   return (
     <RenderIfTrue
@@ -36,15 +56,14 @@ export default function MollieRefundButton({
                       action={refundAPI}
                       submitBtn={false}
                       isJSON
-                      onSuccess={(response) => {
-                        if (response.error) {
-                          toast.error(response.error.message);
+                      onSuccess={(result: { error?: { message: string } }) => {
+                        if (result.error) {
+                          toast.error(result.error.message);
                           dispatchAlert({
                             type: 'update',
                             payload: { secondaryAction: { isLoading: false } }
                           });
                         } else {
-                          // Reload the page
                           window.location.reload();
                         }
                       }}
@@ -85,7 +104,7 @@ export default function MollieRefundButton({
                     });
                     document
                       .getElementById('mollieRefund')
-                      .dispatchEvent(
+                      ?.dispatchEvent(
                         new Event('submit', { cancelable: true, bubbles: true })
                       );
                   },
@@ -100,21 +119,6 @@ export default function MollieRefundButton({
     </RenderIfTrue>
   );
 }
-
-MollieRefundButton.propTypes = {
-  refundAPI: PropTypes.string.isRequired,
-  order: PropTypes.shape({
-    paymentStatus: PropTypes.shape({
-      code: PropTypes.string.isRequired
-    }).isRequired,
-    orderId: PropTypes.string.isRequired,
-    paymentMethod: PropTypes.string.isRequired,
-    grandTotal: PropTypes.shape({
-      value: PropTypes.number.isRequired,
-      currency: PropTypes.string.isRequired
-    }).isRequired
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'orderPaymentActions',

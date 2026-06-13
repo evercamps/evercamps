@@ -3,9 +3,9 @@ import {
   startTransaction,
   commit,
   rollback,
-  select,
-  insertOnUpdate
+  select
 } from '@evershop/postgres-query-builder';
+import type { PoolClient } from '@evershop/postgres-query-builder';
 import { emit } from '../../../../lib/event/emitter.js';
 import { debug, error } from '../../../../lib/log/logger.js';
 import { getConnection } from '../../../../lib/postgres/connection.js';
@@ -13,27 +13,38 @@ import { updatePaymentStatus } from '../../../oms/services/updatePaymentStatus.j
 import { getMollieApiKey } from '../../services/getMollieApiKey.js';
 import { createMollieClient } from '@mollie/api-client';
 import { INVALID_PAYLOAD } from '../../../../lib/util/httpStatus.js';
+import type { EvercampsRequest } from '../../../../types/request.js';
+import type { EvercampsResponse } from '../../../../types/response.js';
+import type { ENext } from '../../../../types/middleware.js';
 
-export default async (request, response, next) => {
+type MollieRefundsResponse = {
+  _embedded: {
+    refunds: Array<{
+      id: string;
+      amount: { value: string; currency: string };
+      status: string;
+    }>;
+  };
+};
 
-  const paymentId = request.body.id;
+export default async (request: EvercampsRequest, response: EvercampsResponse, next: ENext) => {
+  const paymentId = (request.body as { id: string }).id;
 
   debug(`Received webhook call with payment id: ${paymentId}`);
 
-  const connection = await getConnection();
+  const connection: PoolClient = await getConnection();
 
   try {
-
     await startTransaction(connection);
     const transaction = await select()
       .from('payment_transaction')
       .where('transaction_id', '=', paymentId)
       .load(connection);
 
-
     if (!transaction) {
-      error("transaction id not found");
+      error('transaction id not found');
       response.status(200).send();
+      return;
     }
 
     const order = await select()
@@ -51,15 +62,16 @@ export default async (request, response, next) => {
           message: 'Invalid apikey'
         }
       });
+      return;
     }
 
     debug(`Mollie create client with apikey ${apiKey}`);
-    const mollieClient = createMollieClient({ apiKey: apiKey });
+    const mollieClient = createMollieClient({ apiKey });
 
     const payment = await mollieClient.payments.get(paymentId);
 
     if (!payment) {
-      error("no payment found");
+      error('no payment found');
       response.json({ received: true });
       return;
     }
@@ -67,50 +79,51 @@ export default async (request, response, next) => {
     debug(JSON.stringify(payment));
 
     switch (payment.status) {
-      case "paid":
+      case 'paid':
         debug(`payment status paid received: ${paymentId}`);
 
-        if (order.payment_status === 'paid' || order.payment_status === 'refunded' || order.payment_status === 'partial_refunded') {
+        if (
+          order.payment_status === 'paid' ||
+          order.payment_status === 'refunded' ||
+          order.payment_status === 'partial_refunded'
+        ) {
           debug(`${JSON.stringify(payment.amountRefunded)}`);
           if (payment.amountRefunded && Number(payment.amountRefunded.value) > 0) {
-            // if the order was already in the paid status, then there was a possible refund happening
-
-            // // Update the order status
-            const status = payment.amountRemaing <= 0 ? 'refunded' : 'partial_refunded';
+            const amountRemaining = payment.amountRemaining;
+            const status =
+              !amountRemaining || Number(amountRemaining.value) <= 0
+                ? 'refunded'
+                : 'partial_refunded';
             await updatePaymentStatus(order.order_id, status, connection);
 
-            // using fetch-API as mollieClient is not working
-            const response = await fetch(`https://api.mollie.com/v2/payments/${paymentId}/refunds`, {
-              headers: {
-                method: "GET", 
-                'Authorization': `Bearer ${apiKey}`
+            const refundsResponse = await fetch(
+              `https://api.mollie.com/v2/payments/${paymentId}/refunds`,
+              {
+                headers: {
+                  method: 'GET',
+                  Authorization: `Bearer ${apiKey}`
+                }
               }
-            }
             );
-            const refunds = await response.json();
+            const refunds = (await refundsResponse.json()) as MollieRefundsResponse;
 
-            let comment = "";
-            for(const refund of refunds._embedded.refunds) {
+            let comment = '';
+            for (const refund of refunds._embedded.refunds) {
               comment += `Refund with id ${refund.id} - amount: ${refund.amount.value} ${refund.amount.currency} - status: ${refund.status}\n`;
             }
 
-            // const comment = `Refunded ${payment.amountRefunded.value} ${payment.amountRefunded.currency}, remaining: ${payment.amountRemaining.value} ${payment.amountRemaining.currency}`
             await insert('order_activity')
               .given({
                 order_activity_order_id: order.order_id,
                 comment
               })
               .execute(connection);
+          } else {
+            debug(`nothing happened ${JSON.stringify(payment.amountRefunded)}`);
           }
-          else {
-            debug(`nogthing happend ${JSON.stringify(payment.amountRefunded)}`)
-          }
-        }
-        else {
-          // Update the order
+        } else {
           await updatePaymentStatus(order.order_id, 'paid', connection);
 
-          // Add an activity log
           await insert('order_activity')
             .given({
               order_activity_order_id: order.order_id,
@@ -118,15 +131,13 @@ export default async (request, response, next) => {
             })
             .execute(connection);
 
-          // Emit event to add order placed event // do I need to do this?
           await emit('order_placed', { ...order });
         }
         break;
-      case "expired":
-      case "failed":
+      case 'expired':
+      case 'failed':
         debug('payment expired or failed status received');
         await updatePaymentStatus(order.order_id, 'canceled', connection);
-        // Add an activity log
         await insert('order_activity')
           .given({
             order_activity_order_id: order.order_id,
@@ -134,12 +145,11 @@ export default async (request, response, next) => {
           })
           .execute(connection);
         break;
-      case "authorized":
+      case 'authorized':
         break;
-      case "canceled":
+      case 'canceled':
         debug('payment canceled status received');
         await updatePaymentStatus(order.order_id, 'canceled', connection);
-        // Add an activity log
         await insert('order_activity')
           .given({
             order_activity_order_id: order.order_id,
@@ -147,18 +157,15 @@ export default async (request, response, next) => {
           })
           .execute(connection);
         break;
-      default: {
+      default:
         debug(`Unhandled mollie status type ${payment.status}`);
-      }
     }
 
     await commit(connection);
-    // Return a response to acknowledge receipt of the event
     response.json({ received: true });
-
   } catch (err) {
     error(err);
     await rollback(connection);
-    response.status(400).send(`Webhook Error: ${err.message}`);
+    response.status(400).send(`Webhook Error: ${(err as Error).message}`);
   }
 };

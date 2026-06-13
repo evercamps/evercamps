@@ -31,7 +31,7 @@ function validateCategoryDataBeforeInsert(data: CategoryData) {
   if (valid) {
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate?.errors?.[0]?.message ?? 'Validation failed');
   }
 }
 
@@ -56,7 +56,7 @@ async function updateCategoryData(uuid: string, data: CategoryData, connection: 
       .execute(connection);
     Object.assign(category, newCategory);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }
@@ -67,7 +67,7 @@ async function updateCategoryData(uuid: string, data: CategoryData, connection: 
       .execute(connection);
     Object.assign(category, description);
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     }
   }

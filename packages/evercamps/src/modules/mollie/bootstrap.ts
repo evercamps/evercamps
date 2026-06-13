@@ -1,13 +1,16 @@
-import config from 'config';
 import { getConfig } from '../../lib/util/getConfig.js';
 import { hookAfter } from '../../lib/util/hookable.js';
-import { addProcessor } from '../../lib/util/registry.js';
 import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentMethos.js';
 import { getSetting } from '../setting/services/setting.js';
 import { cancelPaymentIntent } from './services/cancelPayment.js';
+import { MollieConfig } from './types/mollieConfig.js';
+
+type Order = {
+  payment_method: string;
+};
 
 export default async () => {
-  hookAfter('changePaymentStatus', async (order, orderID, status) => {
+  hookAfter('changePaymentStatus', async (order: Order, orderID: number, status: string) => {
     if (status !== 'canceled') {
       return;
     }
@@ -23,18 +26,14 @@ export default async () => {
       methodName: await getSetting('mollieDisplayName', 'Mollie')
     }),
     validator: async () => {
-      const mollieConfig = getConfig('system.mollie', {});
-      let mollieStatus;
+      const mollieConfig = getConfig<MollieConfig>('system.mollie', {});
+      let mollieStatus: string | number;
       if (mollieConfig.molliePaymentStatus) {
         mollieStatus = mollieConfig.molliePaymentStatus;
       } else {
         mollieStatus = await getSetting('molliePaymentStatus', 0);
       }
-      if (parseInt(mollieStatus, 10) === 1) {
-        return true;
-      } else {
-        return false;
-      }
+      return parseInt(String(mollieStatus), 10) === 1;
     }
   });
 };

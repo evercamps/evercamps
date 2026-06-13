@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "target": "ES2018",
     "lib": ["dom", "dom.iterable", "esnext"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "declaration": true,
+    "rootDir": "./packages/evercamps",
     "declarationDir": "./dist/types",
     "sourceMap": true,
     "allowJs": true,

@@ -36,7 +36,7 @@ function validateAttributeDataBeforeInsert(data: AttributeData) {
   if (valid) {
     return data;
   } else {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate?.errors?.[0].message);
   }
 }
 
@@ -158,7 +158,7 @@ async function updateAttributeData(uuid: string, data: AttributeData, connection
       .execute(connection);
     return attribute;
   } catch (e) {
-    if (!e.message.includes('No data was provided')) {
+    if (!(e instanceof Error) || !e.message.includes('No data was provided')) {
       throw e;
     } else {
       return attribute;

@@ -27,7 +27,7 @@ export const validateAddress = <T extends Address>(address: T) => {
   const validate = ajv.compile(jsonSchema);
   const valid = validate(address);
   if (!valid) {
-    throw new Error(validate.errors[0].message);
+    throw new Error(validate?.errors?.[0].message);
   } else {
     return true;
   }
