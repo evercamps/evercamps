@@ -3,4 +3,5 @@ export interface MollieConfig {
   molliePaymentMode?: string;
   mollieTestApiKey?: string;
   mollieLiveApiKey?: string;
+  mollieDisplayName?: string;
 }

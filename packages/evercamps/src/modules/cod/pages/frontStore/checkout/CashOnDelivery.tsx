@@ -8,9 +8,10 @@ import React, { useEffect } from 'react';
 interface CODProps {
   orderId?: string;
   checkoutSuccessUrl: string;
+  orderPlaced: any;
 }
 
-export function COD({ orderId, checkoutSuccessUrl }: CODProps) {
+export function COD({ orderId, checkoutSuccessUrl, orderPlaced }: CODProps) {
   React.useEffect(() => {
     if (orderId) {
       window.location.href = `${checkoutSuccessUrl}/${orderId}`;

@@ -2,17 +2,10 @@ import { Card } from '@components/admin/cms/Card';
 import { Field } from '@components/common/form/Field';
 import { Toggle } from '@components/common/form/fields/Toggle';
 import React from 'react';
-
-interface MollieSettings {
-  molliePaymentStatus?: number;
-  mollieDisplayName?: string;
-  molliePaymentMode?: number;
-  mollieLiveApiKey?: string;
-  mollieTestApiKey?: string;
-}
+import { MollieConfig } from '../../../types/mollieConfig';
 
 interface MolliePaymentProps {
-  setting: MollieSettings;
+  setting: MollieConfig;
 }
 
 export default function MolliePayment({

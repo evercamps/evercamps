@@ -10,6 +10,10 @@ interface MollieProps {
   orderPlaced: boolean;
 }
 
+interface MollieMethodProps {
+  createPaymentApi: string;
+}
+
 export function Mollie({ createPaymentApi, orderId, orderPlaced }: MollieProps) {
   const [error, setError] = useState('');
 
@@ -48,10 +52,6 @@ export function Mollie({ createPaymentApi, orderId, orderPlaced }: MollieProps) 
       </div>
     </div>
   );
-}
-
-interface MollieMethodProps {
-  createPaymentApi: string;
 }
 
 export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
