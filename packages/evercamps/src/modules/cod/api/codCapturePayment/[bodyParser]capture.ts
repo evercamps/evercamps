@@ -25,7 +25,7 @@ export default async (request: EvercampsRequest, response: EvercampsResponse, ne
       }
     });
   } else {
-    await updatePaymentStatus(order.order_id, 'paid');
+    await updatePaymentStatus(order.order_id as number, 'paid');
 
     await insert('payment_transaction')
       .given({

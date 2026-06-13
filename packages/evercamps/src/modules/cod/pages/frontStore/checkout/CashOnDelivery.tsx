@@ -8,10 +8,9 @@ import React, { useEffect } from 'react';
 interface CODProps {
   orderId?: string;
   checkoutSuccessUrl: string;
-  orderPlaced: any;
 }
 
-export function COD({ orderId, checkoutSuccessUrl, orderPlaced }: CODProps) {
+export function COD({ orderId, checkoutSuccessUrl }: CODProps) {
   React.useEffect(() => {
     if (orderId) {
       window.location.href = `${checkoutSuccessUrl}/${orderId}`;
@@ -43,7 +42,7 @@ export default function CashOnDeliveryMethod() {
     );
     if (
       steps.every((step: { isCompleted: boolean }) => step.isCompleted) &&
-      selectedPaymentMethod.code === 'cod'
+      selectedPaymentMethod?.code === 'cod'
     ) {
       placeOrder();
     }
@@ -106,7 +105,6 @@ export default function CashOnDeliveryMethod() {
         {selectedPaymentMethod && selectedPaymentMethod.code === 'cod' && (
           <div>
             <COD
-              orderPlaced={orderPlaced}
               orderId={orderId}
               checkoutSuccessUrl={checkoutSuccessUrl}
             />
