@@ -1,8 +1,9 @@
+import type { Request, Response, NextFunction } from 'express';
 import { getEnv } from '../../../../lib/util/getEnv.js';
 import { UNAUTHORIZED } from '../../../../lib/util/httpStatus.js';
 
-export default (request, response, next) => {
-  const { currentRoute } = request;
+export default (request: Request, response: Response, next: NextFunction) => {
+  const currentRoute = (request as any).currentRoute;
   if (
     request.method === 'GET' ||
     currentRoute?.id === 'adminGraphql' ||

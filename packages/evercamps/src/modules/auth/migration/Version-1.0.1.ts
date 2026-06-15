@@ -1,10 +1,8 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
-  // Remove user_token_secret table
+export default async (connection: any) => {
   await execute(connection, `DROP TABLE IF EXISTS user_token_secret;`);
 
-  // Create a session table following the `connect-pg-simple` package
   await execute(
     connection,
     `CREATE TABLE IF NOT EXISTS session (

@@ -1,6 +1,6 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   await execute(
     connection,
     `CREATE TABLE IF NOT EXISTS "admin_user" (

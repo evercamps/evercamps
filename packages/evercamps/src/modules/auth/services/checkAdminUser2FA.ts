@@ -2,16 +2,22 @@ import { select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../lib/postgres/connection.js';
 import { verify2FA } from './admin2FA.js';
 import { comparePassword } from '../../../lib/util/passwordHelper.js';
+import type { AdminUserRow, CheckAdminUser2FAResult } from '../types/index.js';
 
-export async function checkAdminUser2FA(email, password, token) {
-  const dbUser = await select()
+export async function checkAdminUser2FA(
+  email: string,
+  password: string,
+  token: string
+): Promise<CheckAdminUser2FAResult> {
+  const dbUser: AdminUserRow | null = await select()
     .from('admin_user')
     .where('email', '=', email)
-    .load(pool);  
+    .load(pool);
 
-  if (!dbUser || !comparePassword(password, dbUser.password)) {
+  if (!dbUser || !comparePassword(password, dbUser.password!)) {
     return { exists: false };
-  }  
+  }
+
   if (dbUser.twofa_deadline && !dbUser.twofa_enabled) {
     return {
       exists: true,
@@ -25,7 +31,7 @@ export async function checkAdminUser2FA(email, password, token) {
       return { twofaRequired: true, adminUserId: dbUser.admin_user_id, exists: true };
     }
 
-    const result = await verify2FA(email, token, pool);
+    const result = await verify2FA(email, token);
     if (!result.verified) {
       return { twofaRequired: true, valid: false, exists: true };
     }
