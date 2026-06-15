@@ -11,12 +11,6 @@ export interface AdminUserRow {
   twofa_deadline: string | null;
 }
 
-export interface Filter {
-  key: string;
-  value: any;
-  operation?: string;
-}
-
 export interface TwoFASetupResult {
   secret: string;
   qrCodeDataUrl: string;
