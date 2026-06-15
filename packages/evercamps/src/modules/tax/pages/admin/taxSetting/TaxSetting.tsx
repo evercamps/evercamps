@@ -7,7 +7,6 @@ import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import { useModal } from '@components/common/modal/useModal';
 import Spinner from '@components/common/Spinner';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 import { useQuery } from 'urql';
@@ -51,19 +50,22 @@ const TaxClassesQuery = `
   }
 `;
 
-export default function TaxSetting({
-  createTaxClassApi,
-  saveSettingApi,
-  setting
-}) {
-  const modal = useModal();
-  const [countriesQueryData] = useQuery({
-    query: CountriesQuery
-  });
+interface TaxSettingShape {
+  defaultProductTaxClassId?: number;
+  defaultShippingTaxClassId?: number;
+  baseCalculationAddress?: string;
+}
 
-  const [taxClassesQueryData, reexecuteQuery] = useQuery({
-    query: TaxClassesQuery
-  });
+interface Props {
+  createTaxClassApi: string;
+  saveSettingApi: string;
+  setting: TaxSettingShape;
+}
+
+export default function TaxSetting({ createTaxClassApi, saveSettingApi, setting }: Props) {
+  const modal = useModal();
+  const [countriesQueryData] = useQuery({ query: CountriesQuery });
+  const [taxClassesQueryData, reexecuteQuery] = useQuery({ query: TaxClassesQuery });
 
   if (countriesQueryData.fetching || taxClassesQueryData.fetching) {
     return (
@@ -90,8 +92,7 @@ export default function TaxSetting({
           <Card>
             <Card.Session title="Tax">
               <div>
-                Configure the tax classes that will be available to your
-                customers at checkout.
+                Configure the tax classes that will be available to your customers at checkout.
               </div>
             </Card.Session>
             <Card.Session title="Basic configuration">
@@ -99,7 +100,7 @@ export default function TaxSetting({
                 id="taxBasicConfig"
                 method="POST"
                 action={saveSettingApi}
-                onSuccess={(response) => {
+                onSuccess={(response: any) => {
                   if (response.error) {
                     toast.error(response.error.message);
                   } else {
@@ -117,21 +118,13 @@ export default function TaxSetting({
                       placeholder="None"
                       disableDefaultOption={false}
                       options={[
-                        {
-                          value: -1,
-                          text: 'Proportional allocation based on cart items'
-                        },
-                        {
-                          value: 0,
-                          text: 'Higest tax rate based on cart items'
-                        }
+                        { value: -1, text: 'Proportional allocation based on cart items' },
+                        { value: 0, text: 'Higest tax rate based on cart items' }
                       ].concat(
-                        taxClassesQueryData.data.taxClasses.items.map(
-                          (taxClass) => ({
-                            value: taxClass.taxClassId,
-                            text: taxClass.name
-                          })
-                        ) || []
+                        taxClassesQueryData.data.taxClasses.items.map((taxClass: any) => ({
+                          value: taxClass.taxClassId,
+                          text: taxClass.name
+                        })) || []
                       )}
                     />
                   </div>
@@ -142,18 +135,9 @@ export default function TaxSetting({
                       label="Base calculation address"
                       value={setting.baseCalculationAddress || ''}
                       options={[
-                        {
-                          value: 'shippingAddress',
-                          text: 'Shipping address'
-                        },
-                        {
-                          value: 'billingAddress',
-                          text: 'Billing address'
-                        },
-                        {
-                          value: 'storeAddress',
-                          text: 'Store address'
-                        }
+                        { value: 'shippingAddress', text: 'Shipping address' },
+                        { value: 'billingAddress', text: 'Billing address' },
+                        { value: 'storeAddress', text: 'Store address' }
                       ]}
                     />
                   </div>
@@ -201,16 +185,6 @@ export default function TaxSetting({
     </div>
   );
 }
-
-TaxSetting.propTypes = {
-  createTaxClassApi: PropTypes.string.isRequired,
-  saveSettingApi: PropTypes.string.isRequired,
-  setting: PropTypes.shape({
-    defaultProductTaxClassId: PropTypes.number,
-    defaultShippingTaxClassId: PropTypes.number,
-    baseCalculationAddress: PropTypes.string
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'content',

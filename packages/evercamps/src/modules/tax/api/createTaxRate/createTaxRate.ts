@@ -5,6 +5,7 @@ import {
   select,
   startTransaction
 } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import {
   INTERNAL_SERVER_ERROR,
@@ -12,12 +13,11 @@ import {
   OK
 } from '../../../../lib/util/httpStatus.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const connection = await getConnection();
   await startTransaction(connection);
   const { class_id } = request.params;
-  const { name, country, province, postcode, rate, is_compound, priority } =
-    request.body;
+  const { name, country, province, postcode, rate, is_compound, priority } = request.body;
   try {
     const taxClass = await select()
       .from('tax_class')
@@ -26,40 +26,19 @@ export default async (request, response, next) => {
 
     if (!taxClass) {
       response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'Tax class not found'
-        }
-      });
+      response.json({ error: { status: INVALID_PAYLOAD, message: 'Tax class not found' } });
       return;
     }
 
     const taxRate = await insert('tax_rate')
-      .given({
-        name,
-        country,
-        province,
-        postcode,
-        rate,
-        is_compound,
-        priority,
-        tax_class_id: taxClass.tax_class_id
-      })
+      .given({ name, country, province, postcode, rate, is_compound, priority, tax_class_id: taxClass.tax_class_id })
       .execute(connection);
     await commit(connection);
     response.status(OK);
-    response.json({
-      data: taxRate
-    });
-  } catch (e) {
+    response.json({ data: taxRate });
+  } catch (e: any) {
     await rollback(connection);
     response.status(INTERNAL_SERVER_ERROR);
-    response.json({
-      error: {
-        status: INTERNAL_SERVER_ERROR,
-        message: e.message
-      }
-    });
+    response.json({ error: { status: INTERNAL_SERVER_ERROR, message: e.message } });
   }
 };

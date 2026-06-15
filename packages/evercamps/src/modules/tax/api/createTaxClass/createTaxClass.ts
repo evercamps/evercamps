@@ -4,32 +4,24 @@ import {
   rollback,
   startTransaction
 } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import { INTERNAL_SERVER_ERROR, OK } from '../../../../lib/util/httpStatus.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const connection = await getConnection();
   await startTransaction(connection);
   const { name } = request.body;
   try {
     const taxClass = await insert('tax_class')
-      .given({
-        name
-      })
+      .given({ name })
       .execute(connection);
     await commit(connection);
     response.status(OK);
-    response.json({
-      data: taxClass
-    });
-  } catch (e) {
+    response.json({ data: taxClass });
+  } catch (e: any) {
     await rollback(connection);
     response.status(INTERNAL_SERVER_ERROR);
-    response.json({
-      error: {
-        status: INTERNAL_SERVER_ERROR,
-        message: e.message
-      }
-    });
+    response.json({ error: { status: INTERNAL_SERVER_ERROR, message: e.message } });
   }
 };

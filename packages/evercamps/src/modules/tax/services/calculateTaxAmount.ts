@@ -1,11 +1,11 @@
 import { getConfig } from '../../../lib/util/getConfig.js';
 
 export function calculateTaxAmount(
-  taxPercentage,
-  price,
+  taxPercentage: number,
+  price: number,
   quantity = 1,
   priceIncludingTax = false
-) {
+): number {
   const rounding = getConfig('pricing.tax.rounding', 'round');
   const roundingLevel = getConfig('pricing.tax.round_level', 'unit');
   const precision = getConfig('pricing.tax.precision', '2');
@@ -15,8 +15,8 @@ export function calculateTaxAmount(
     priceIncludingTax === false
       ? (price * taxPercentage) / 100
       : (price * taxPercentage) / (100 + taxPercentage);
+
   if (roundingLevel === 'unit') {
-    // Calculate the tax amount
     let taxAmount = 0;
     switch (rounding) {
       case 'up':
@@ -25,16 +25,12 @@ export function calculateTaxAmount(
       case 'down':
         taxAmount = Math.floor(taxAmountUnit * precisionFix) / precisionFix;
         break;
-      case 'round':
-        taxAmount = Math.round(taxAmountUnit * precisionFix) / precisionFix;
-        break;
       default:
         taxAmount = Math.round(taxAmountUnit * precisionFix) / precisionFix;
         break;
     }
     return Math.round(taxAmount * precisionFix * quantity) / precisionFix;
   } else if (roundingLevel === 'line') {
-    // Calculate the tax amount
     let taxAmount = taxAmountUnit * quantity;
     switch (rounding) {
       case 'up':
@@ -43,15 +39,12 @@ export function calculateTaxAmount(
       case 'down':
         taxAmount = Math.floor(taxAmount * precisionFix) / precisionFix;
         break;
-      case 'round':
-        taxAmount = Math.round(taxAmount * precisionFix) / precisionFix;
-        break;
       default:
         taxAmount = Math.round(taxAmount * precisionFix) / precisionFix;
         break;
     }
     return taxAmount;
   } else {
-    return taxAmountUnit * quantity; // Rounding will be done in the resolver of the total tax amount in the cart
+    return taxAmountUnit * quantity;
   }
 }

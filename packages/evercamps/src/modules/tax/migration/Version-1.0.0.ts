@@ -1,6 +1,6 @@
 import { execute, insert } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   await execute(
     connection,
     `CREATE TABLE "tax_class" (
@@ -11,20 +11,15 @@ export default async (connection) => {
 )`
   );
 
-  // Create default tax class
   const taxClass = await insert('tax_class')
-    .given({
-      name: 'Taxable Goods'
-    })
+    .given({ name: 'Taxable Goods' })
     .execute(connection);
 
-  // Add a constraint to product table
   await execute(
     connection,
     `ALTER TABLE "product" ADD CONSTRAINT "FK_TAX_CLASS" FOREIGN KEY ("tax_class") REFERENCES "tax_class" ("tax_class_id") ON DELETE SET NULL`
   );
 
-  // Prevent deleting the default tax class
   await execute(
     connection,
     `CREATE OR REPLACE FUNCTION prevent_delete_default_tax_class()
@@ -40,6 +35,7 @@ export default async (connection) => {
       END;
       $$`
   );
+
   await execute(
     connection,
     `CREATE TRIGGER "PREVENT_DELETING_THE_DEFAULT_TAX_CLASS"
@@ -69,7 +65,6 @@ export default async (connection) => {
 )`
   );
 
-  // Create default tax rate for tax class
   await insert('tax_rate')
     .given({
       name: 'Tax',

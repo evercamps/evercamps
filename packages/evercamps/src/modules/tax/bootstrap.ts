@@ -7,7 +7,7 @@ import { registerDefaultTaxClassCollectionFilters } from './services/registerDef
 
 export default () => {
   addProcessor('cartItemFields', registerCartItemTaxPercentField, 0);
-  addProcessor('configurationSchema', (schema) => {
+  addProcessor('configurationSchema', (schema: any) => {
     merge(schema, {
       properties: {
         pricing: {
@@ -16,20 +16,10 @@ export default () => {
             tax: {
               type: 'object',
               properties: {
-                rounding: {
-                  type: 'string',
-                  enum: ['round', 'ceil', 'floor']
-                },
-                precision: {
-                  type: 'integer'
-                },
-                round_level: {
-                  type: 'string',
-                  enum: ['total', 'line', 'unit']
-                },
-                price_including_tax: {
-                  type: 'boolean'
-                }
+                rounding: { type: 'string', enum: ['round', 'ceil', 'floor'] },
+                precision: { type: 'integer' },
+                round_level: { type: 'string', enum: ['total', 'line', 'unit'] },
+                price_including_tax: { type: 'boolean' }
               }
             }
           }
@@ -38,7 +28,7 @@ export default () => {
     });
     return schema;
   });
-  // Default tax configuration
+
   const defaultTaxConfig = {
     tax: {
       rounding: 'round',
@@ -48,17 +38,11 @@ export default () => {
     }
   };
   config.util.setModuleDefaults('pricing', defaultTaxConfig);
-  // Getting config value like this: config.get('pricing.tax.rounding');
 
-  // Reigtering the default filters for tax class collection
+  addProcessor('taxClassCollectionFilters', registerDefaultTaxClassCollectionFilters, 1);
   addProcessor(
     'taxClassCollectionFilters',
-    registerDefaultTaxClassCollectionFilters,
-    1
-  );
-  addProcessor(
-    'taxClassCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 };
