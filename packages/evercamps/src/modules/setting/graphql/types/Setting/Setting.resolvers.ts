@@ -1,6 +1,5 @@
 import { select } from '@evershop/postgres-query-builder';
-
-type SettingRow = { name: string; value: string };
+import type { SettingRow } from '../../../types/index.js';
 
 export default {
   Query: {

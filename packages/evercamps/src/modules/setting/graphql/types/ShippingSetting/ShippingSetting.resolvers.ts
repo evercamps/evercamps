@@ -1,6 +1,5 @@
 import { getConfig } from '../../../../../lib/util/getConfig.js';
-
-type SettingRow = { name: string; value: string };
+import type { SettingRow } from '../../../types/index.js';
 
 export default {
   Setting: {

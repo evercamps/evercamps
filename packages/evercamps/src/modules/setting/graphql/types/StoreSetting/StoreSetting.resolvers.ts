@@ -1,6 +1,5 @@
 import { getConfig } from '../../../../../lib/util/getConfig.js';
-
-type SettingRow = { name: string; value: string };
+import type { SettingRow } from '../../../types/index.js';
 
 const findValue = (setting: SettingRow[], name: string) =>
   setting.find((s) => s.name === name)?.value ?? null;
