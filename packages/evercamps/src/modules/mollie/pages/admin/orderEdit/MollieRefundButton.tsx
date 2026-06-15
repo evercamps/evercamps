@@ -6,10 +6,7 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import RenderIfTrue from '@components/common/RenderIfTrue';
 import React from 'react';
 import { toast } from 'react-toastify';
-
-interface PaymentStatus {
-  code: string;
-}
+import { MolliePaymentStatus } from '../../../types/molliePaymentStatus';
 
 interface GrandTotal {
   value: number;
@@ -17,7 +14,7 @@ interface GrandTotal {
 }
 
 interface RefundOrder {
-  paymentStatus: PaymentStatus;
+  paymentStatus: MolliePaymentStatus;
   orderId: string;
   paymentMethod: string;
   grandTotal: GrandTotal;

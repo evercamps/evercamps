@@ -1,12 +1,20 @@
 import { Card } from '@components/admin/cms/Card';
 import { Field } from '@components/common/form/Field';
 import { Toggle } from '@components/common/form/fields/Toggle';
-import PropTypes from 'prop-types';
 import React from 'react';
+
+interface CODSettings {
+  codPaymentStatus?: number;
+  codDisplayName?: string;
+}
+
+interface CODPaymentProps {
+  setting: CODSettings;
+}
 
 export default function CODPayment({
   setting: { codPaymentStatus, codDisplayName }
-}) {
+}: CODPaymentProps) {
   return (
     <Card title="Cash On Delivery Payment">
       <Card.Session>
@@ -37,13 +45,6 @@ export default function CODPayment({
     </Card>
   );
 }
-
-CODPayment.propTypes = {
-  setting: PropTypes.shape({
-    codPaymentStatus: PropTypes.number,
-    codDisplayName: PropTypes.string
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'paymentSetting',

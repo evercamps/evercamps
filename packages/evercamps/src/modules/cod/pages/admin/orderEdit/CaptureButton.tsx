@@ -2,26 +2,38 @@ import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import RenderIfTrue from '@components/common/RenderIfTrue';
 import axios from 'axios';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
+
+interface PaymentStatus {
+  code: string;
+}
+
+interface CaptureOrder {
+  paymentStatus: PaymentStatus;
+  uuid: string;
+  paymentMethod: string;
+}
+
+interface CaptureButtonProps {
+  captureAPI: string;
+  order: CaptureOrder;
+}
 
 export default function CaptureButton({
   captureAPI,
   order: { paymentStatus, uuid, paymentMethod }
-}) {
+}: CaptureButtonProps) {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const onAction = async () => {
     setIsLoading(true);
-    // Use Axios to call the capture API
     const response = await axios.post(
       captureAPI,
       { order_id: uuid },
-      { validateStatus: false }
+      { validateStatus: () => true }
     );
     if (!response.data.error) {
-      // Reload the page
       window.location.reload();
     } else {
       toast.error(response.data.error.message);
@@ -41,17 +53,6 @@ export default function CaptureButton({
     </RenderIfTrue>
   );
 }
-
-CaptureButton.propTypes = {
-  captureAPI: PropTypes.string.isRequired,
-  order: PropTypes.shape({
-    paymentStatus: PropTypes.shape({
-      code: PropTypes.string.isRequired
-    }).isRequired,
-    uuid: PropTypes.string.isRequired,
-    paymentMethod: PropTypes.string.isRequired
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'orderPaymentActions',

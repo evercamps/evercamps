@@ -3,28 +3,22 @@ import {
   useCheckoutDispatch
 } from '@components/common/context/checkout';
 import CODLogo from '@components/frontStore/cod/CODLogo';
-import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 
-export function COD({ orderId, checkoutSuccessUrl }) {
+interface CODProps {
+  orderId?: string;
+  checkoutSuccessUrl: string;
+}
+
+export function COD({ orderId, checkoutSuccessUrl }: CODProps) {
   React.useEffect(() => {
     if (orderId) {
-      // Redirect customer to checkout success page
       window.location.href = `${checkoutSuccessUrl}/${orderId}`;
     }
   }, [orderId]);
 
   return null;
 }
-
-COD.propTypes = {
-  orderId: PropTypes.string,
-  checkoutSuccessUrl: PropTypes.string.isRequired
-};
-
-COD.defaultProps = {
-  orderId: undefined
-};
 
 export default function CashOnDeliveryMethod() {
   const checkout = useCheckout();
@@ -37,18 +31,18 @@ export default function CashOnDeliveryMethod() {
     checkoutSuccessUrl
   } = checkout;
   const { placeOrder } = useCheckoutDispatch();
-  // Get the selected payment method
+
   const selectedPaymentMethod = paymentMethods
-    ? paymentMethods.find((paymentMethod) => paymentMethod.selected)
+    ? paymentMethods.find((paymentMethod: { code: string; selected: boolean }) => paymentMethod.selected)
     : undefined;
 
   useEffect(() => {
     const selectedPaymentMethod = paymentMethods.find(
-      (paymentMethod) => paymentMethod.selected
+      (paymentMethod: { code: string; selected: boolean }) => paymentMethod.selected
     );
     if (
-      steps.every((step) => step.isCompleted) &&
-      selectedPaymentMethod.code === 'cod'
+      steps.every((step: { isCompleted: boolean }) => step.isCompleted) &&
+      selectedPaymentMethod?.code === 'cod'
     ) {
       placeOrder();
     }
@@ -62,20 +56,11 @@ export default function CashOnDeliveryMethod() {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              setPaymentMethods((previous) =>
-                previous.map((paymentMethod) => {
-                  if (paymentMethod.code === 'cod') {
-                    return {
-                      ...paymentMethod,
-                      selected: true
-                    };
-                  } else {
-                    return {
-                      ...paymentMethod,
-                      selected: false
-                    };
-                  }
-                })
+              setPaymentMethods((previous: { code: string; selected: boolean }[]) =>
+                previous.map((paymentMethod) => ({
+                  ...paymentMethod,
+                  selected: paymentMethod.code === 'cod'
+                }))
               );
             }}
           >
@@ -120,7 +105,6 @@ export default function CashOnDeliveryMethod() {
         {selectedPaymentMethod && selectedPaymentMethod.code === 'cod' && (
           <div>
             <COD
-              orderPlaced={orderPlaced}
               orderId={orderId}
               checkoutSuccessUrl={checkoutSuccessUrl}
             />

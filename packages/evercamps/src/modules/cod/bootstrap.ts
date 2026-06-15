@@ -1,7 +1,7 @@
 import { getConfig } from '../../lib/util/getConfig.js';
-import { addProcessor } from '../../lib/util/registry.js';
-import { getSetting } from '../../modules/setting/services/setting.js';
+import { getSetting } from '../setting/services/setting.js';
 import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentMethos.js';
+import { CodConfig } from './types/codConfig.js';
 
 export default async () => {
   registerPaymentMethod({
@@ -10,18 +10,14 @@ export default async () => {
       methodName: await getSetting('codDisplayName', 'Cash on Delivery')
     }),
     validator: async () => {
-      const codConfig = getConfig('system.cod', {});
-      let codStatus;
+      const codConfig = getConfig<CodConfig>('system.cod', {});
+      let codStatus: string | number;
       if (codConfig.status) {
         codStatus = codConfig.status;
       } else {
         codStatus = await getSetting('codPaymentStatus', 0);
       }
-      if (parseInt(codStatus, 10) === 1) {
-        return true;
-      } else {
-        return false;
-      }
+      return parseInt(String(codStatus), 10) === 1;
     }
   });
 };

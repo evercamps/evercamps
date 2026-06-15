@@ -4,13 +4,10 @@ import RenderIfTrue from '@components/common/RenderIfTrue';
 import axios from 'axios';
 import React from 'react';
 import { toast } from 'react-toastify';
-
-interface PaymentStatus {
-  code: string;
-}
+import { MolliePaymentStatus } from '../../../types/molliePaymentStatus';
 
 interface CaptureOrder {
-  paymentStatus: PaymentStatus;
+  paymentStatus: MolliePaymentStatus;
   uuid: string;
   paymentMethod: string;
 }

@@ -1,10 +1,6 @@
 import { getConfig } from '../../../../../lib/util/getConfig.js';
 import type { Setting } from '../../../../setting/services/setting.js';
-
-type MollieConfig = {
-  mollieLiveApiKey?: string;
-  mollieTestApiKey?: string;
-};
+import { MollieConfig } from '../../../types/mollieConfig.js';
 
 export default {
   Setting: {
