@@ -172,11 +172,9 @@ export default function TaxSetting({ createTaxClassApi, saveSettingApi, setting 
           >
             <div className="modal">
               <TaxClassForm
-                method="POST"
                 saveTaxClassApi={createTaxClassApi}
                 closeModal={() => modal.closeModal()}
                 getTaxClasses={reexecuteQuery}
-                class={{}}
               />
             </div>
           </div>

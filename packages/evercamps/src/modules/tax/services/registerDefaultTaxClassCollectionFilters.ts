@@ -16,9 +16,10 @@ export async function registerDefaultTaxClassCollectionFilters() {
       key: 'ob',
       operation: ['eq'],
       callback: (query: any, operation: string, value: string, currentFilters: Filter[]) => {
-        const taxClassCollectionSortBy = getValueSync('taxClassCollectionSortBy', {
-          name: (q: any) => q.orderBy('tax_class.name')
-        });
+        const taxClassCollectionSortBy = (getValueSync as any)(
+          'taxClassCollectionSortBy',
+          { name: (q: any) => q.orderBy('tax_class.name') }
+        ) as Record<string, (q: any, op: string) => void>;
 
         if (taxClassCollectionSortBy[value]) {
           taxClassCollectionSortBy[value](query, operation);

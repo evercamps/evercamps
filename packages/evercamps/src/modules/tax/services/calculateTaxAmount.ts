@@ -6,10 +6,11 @@ export function calculateTaxAmount(
   quantity = 1,
   priceIncludingTax = false
 ): number {
-  const rounding = getConfig('pricing.tax.rounding', 'round');
-  const roundingLevel = getConfig('pricing.tax.round_level', 'unit');
+  const rounding = getConfig<string>('pricing.tax.rounding', 'round');
+  const roundingLevel = getConfig<string>('pricing.tax.round_level', 'unit');
   const precision = getConfig('pricing.tax.precision', '2');
-  const precisionFix = 10 ** precision;
+  // TODO: check conversion
+  const precisionFix = 10 ** Number(precision);
 
   const taxAmountUnit =
     priceIncludingTax === false
