@@ -4,26 +4,49 @@ import { Form } from '@components/common/form/Form';
 import { Field } from '@components/common/form/Field';
 import Button from '@components/common/form/Button';
 import Pagination from '@components/common/grid/Pagination';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 
+interface Filter {
+  key: string;
+  operation: string;
+  value: string;
+}
+
+interface AdminUser {
+  uuid: string;
+  fullName: string;
+  email: string;
+  status: string;
+  twofaEnabled: number;
+  twofaDeadline: string | null;
+  twofaEnableUrl: string;
+  twofaExtendUrl: string;
+}
+
+interface Props {
+  users: {
+    items: AdminUser[];
+    total: number;
+    currentFilters?: Filter[];
+  };
+}
 
 export default function AdminOverview({
   users: { items: users, total, currentFilters = [] },
-}) {
+}: Props) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page')!.value, 10)
     : 1;
   const limit = currentFilters.find((filter) => filter.key === 'limit')
     ? parseInt(
-        currentFilters.find((filter) => filter.key === 'limit').value,
+        currentFilters.find((filter) => filter.key === 'limit')!.value,
         10
       )
     : 20;
   const currentSearch = currentFilters.find((f) => f.key === 'full_name')?.value || '';
 
-  const handleEnable2FA = async (url) => {
+  const handleEnable2FA = async (url: string) => {
     try {
       const res = await fetch(url, {
         method: 'POST',
@@ -43,7 +66,7 @@ export default function AdminOverview({
     }
   };
 
-  const handleExtend2FA = async (url) => {
+  const handleExtend2FA = async (url: string) => {
     try {
       const res = await fetch(url, {
         method: 'POST',
@@ -62,14 +85,14 @@ export default function AdminOverview({
       console.error(err);
     }
   };
-  
+
   return (
     <div className="main-content-inner">
-      <div className="grid grid-cols-6 gap-x-8 grid-flow-row">        
+      <div className="grid grid-cols-6 gap-x-8 grid-flow-row">
         <div className="col-span-2">
           <SettingMenu />
         </div>
-        
+
         <div className="col-span-4">
           <Card>
             <Card.Session title={
@@ -80,11 +103,11 @@ export default function AdminOverview({
                     name="full_name"
                     placeholder="Search by name"
                     value={currentSearch}
-                    onKeyPress={(e) => {
+                    onKeyPress={(e: React.KeyboardEvent) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        const url = new URL(document.location);
-                        const name = document.getElementById('full_name')?.value;
+                        const url = new URL(document.location.href);
+                        const name = (document.getElementById('full_name') as HTMLInputElement)?.value;
                         if (name) {
                           url.searchParams.set('full_name[operation]', 'like');
                           url.searchParams.set('full_name[value]', name);
@@ -103,12 +126,12 @@ export default function AdminOverview({
                   variant: 'interactive',
                   name: 'Clear search',
                   onAction: () => {
-                    const url = new URL(document.location);
+                    const url = new URL(document.location.href);
                     url.search = '';
                     window.location.href = url.href;
                   }
                 }
-              ]}
+              ] as any}
             />
             <table className="listing sticky">
               <thead>
@@ -160,20 +183,6 @@ export default function AdminOverview({
   );
 }
 
-AdminOverview.propTypes = {
-  users: PropTypes.shape({
-    items: PropTypes.arrayOf(
-      PropTypes.shape({
-        uuid: PropTypes.string.isRequired,
-        fullName: PropTypes.string.isRequired,
-        email: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-  }).isRequired,
-  total: PropTypes.number,
-  currentFilters: PropTypes.array,
-};
-
 export const query = `
   query Query($filters: [FilterInput]) {
   users: adminUsers(filters: $filters) {
@@ -192,7 +201,7 @@ export const query = `
       key
       operation
       value
-    }    
+    }
   }
 }
 `;

@@ -3,7 +3,6 @@ import SettingMenu from '@components/admin/setting/SettingMenu';
 import Area from '@components/common/Area';
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 import { useQuery } from 'urql';
@@ -36,12 +35,19 @@ const CurrencyQuery = `
   }
 `;
 
+interface ProvinceProps {
+  selectedCountry?: string;
+  selectedProvince?: string;
+  allowedCountries?: string[];
+  fieldName?: string;
+}
+
 function Province({
   selectedCountry = 'US',
   selectedProvince,
   allowedCountries = [],
   fieldName = 'storeProvince'
-}) {
+}: ProvinceProps) {
   const [result] = useQuery({
     query: ProvincesQuery,
     variables: { countries: allowedCountries }
@@ -58,7 +64,7 @@ function Province({
     );
   }
   const provinces = data.provinces.filter(
-    (p) => p.countryCode === selectedCountry
+    (p: any) => p.countryCode === selectedCountry
   );
   if (!provinces.length) {
     return null;
@@ -72,33 +78,26 @@ function Province({
         label="Province"
         placeholder="Province"
         validationRules={['notEmpty']}
-        options={provinces.map((p) => ({ value: p.code, text: p.name }))}
+        options={provinces.map((p: any) => ({ value: p.code, text: p.name }))}
       />
     </div>
   );
 }
 
-Province.propTypes = {
-  allowedCountries: PropTypes.arrayOf(PropTypes.string),
-  fieldName: PropTypes.string,
-  selectedCountry: PropTypes.string,
-  selectedProvince: PropTypes.string
-};
-
-Province.defaultProps = {
-  allowedCountries: [],
-  fieldName: 'storeProvince',
-  selectedCountry: 'US',
-  selectedProvince: ''
-};
+interface CountryProps {
+  selectedCountry: string;
+  setSelectedCountry: (country: string) => void;
+  allowedCountries?: string[];
+  fieldName?: string;
+}
 
 function Country({
   selectedCountry,
   setSelectedCountry,
   allowedCountries = [],
   fieldName = 'storeCountry'
-}) {
-  const onChange = (e) => {
+}: CountryProps) {
+  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCountry(e.target.value);
   };
   const [result] = useQuery({
@@ -128,25 +127,18 @@ function Country({
         placeholder="Country"
         onChange={onChange}
         validationRules={['notEmpty']}
-        options={data.countries.map((c) => ({ value: c.code, text: c.name }))}
+        options={data.countries.map((c: any) => ({ value: c.code, text: c.name }))}
       />
     </div>
   );
 }
 
-Country.propTypes = {
-  allowedCountries: PropTypes.arrayOf(PropTypes.string),
-  fieldName: PropTypes.string,
-  selectedCountry: PropTypes.string.isRequired,
-  setSelectedCountry: PropTypes.func.isRequired
-};
+interface CurrencyProps {
+  selectedCurrency: string;
+  fieldName?: string;
+}
 
-Country.defaultProps = {
-  allowedCountries: [],
-  fieldName: 'storeCountry'
-};
-
-function Currency({ selectedCurrency, fieldName = 'storeCurrency' }) {
+function Currency({ selectedCurrency, fieldName = 'storeCurrency' }: CurrencyProps) {
   const [result] = useQuery({
     query: CurrencyQuery
   });
@@ -169,21 +161,16 @@ function Currency({ selectedCurrency, fieldName = 'storeCurrency' }) {
       name={fieldName}
       label="Currency"
       placeholder="Currency"
-      options={data.currencies.map((c) => ({ value: c.code, text: c.name }))}
+      options={data.currencies.map((c: any) => ({ value: c.code, text: c.name }))}
     />
   );
 }
 
-Currency.propTypes = {
-  fieldName: PropTypes.string,
-  selectedCurrency: PropTypes.string.isRequired
-};
+interface StorePhoneNumberProps {
+  storePhoneNumber?: string;
+}
 
-Currency.defaultProps = {
-  fieldName: 'storeCurrency'
-};
-
-function StorePhoneNumber({ storePhoneNumber }) {
+function StorePhoneNumber({ storePhoneNumber = '' }: StorePhoneNumberProps) {
   return (
     <div>
       <Field
@@ -197,15 +184,11 @@ function StorePhoneNumber({ storePhoneNumber }) {
   );
 }
 
-StorePhoneNumber.propTypes = {
-  storePhoneNumber: PropTypes.string
-};
+interface StoreEmailProps {
+  storeEmail?: string;
+}
 
-StorePhoneNumber.defaultProps = {
-  storePhoneNumber: ''
-};
-
-function StoreEmail({ storeEmail }) {
+function StoreEmail({ storeEmail = '' }: StoreEmailProps) {
   return (
     <div>
       <Field
@@ -219,13 +202,23 @@ function StoreEmail({ storeEmail }) {
   );
 }
 
-StoreEmail.propTypes = {
-  storeEmail: PropTypes.string
-};
+interface StoreSetting {
+  storeName?: string;
+  storeDescription?: string;
+  storeTimeZone?: string;
+  storePhoneNumber?: string;
+  storeEmail?: string;
+  storeCountry?: string;
+  storeAddress?: string;
+  storeCity?: string;
+  storeProvince?: string;
+  storePostalCode?: string;
+}
 
-StoreEmail.defaultProps = {
-  storeEmail: ''
-};
+interface Props {
+  saveSettingApi: string;
+  setting: StoreSetting;
+}
 
 export default function StoreSetting({
   saveSettingApi,
@@ -240,14 +233,9 @@ export default function StoreSetting({
     storeProvince,
     storePostalCode
   }
-}) {
+}: Props) {
   const [selectedCountry, setSelectedCountry] = React.useState(() => {
-    const country = storeCountry;
-    if (!country) {
-      return 'US';
-    } else {
-      return country;
-    }
+    return storeCountry ?? 'US';
   });
 
   return (
@@ -332,7 +320,7 @@ export default function StoreSetting({
               </Card.Session>
               <Card.Session title="Address">
                 <Country
-                  selectedCountry={storeCountry}
+                  selectedCountry={storeCountry ?? 'US'}
                   setSelectedCountry={setSelectedCountry}
                 />
                 <Field
@@ -374,22 +362,6 @@ export default function StoreSetting({
     </div>
   );
 }
-
-StoreSetting.propTypes = {
-  saveSettingApi: PropTypes.string.isRequired,
-  setting: PropTypes.shape({
-    storeName: PropTypes.string,
-    storeDescription: PropTypes.string,
-    storeTimeZone: PropTypes.string,
-    storePhoneNumber: PropTypes.string,
-    storeEmail: PropTypes.string,
-    storeCountry: PropTypes.string,
-    storeAddress: PropTypes.string,
-    storeCity: PropTypes.string,
-    storeProvince: PropTypes.string,
-    storePostalCode: PropTypes.string
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'content',

@@ -1,9 +1,12 @@
 import { NavigationItemGroup } from '@components/admin/cms/NavigationItemGroup';
 import CogIcon from '@heroicons/react/solid/esm/CogIcon';
-import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function CmsMenuGroup({ storeSetting }) {
+interface Props {
+  storeSetting: string;
+}
+
+export default function CmsMenuGroup({ storeSetting }: Props) {
   return (
     <NavigationItemGroup
       id="settingMenuGroup"
@@ -13,10 +16,6 @@ export default function CmsMenuGroup({ storeSetting }) {
     />
   );
 }
-
-CmsMenuGroup.propTypes = {
-  storeSetting: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'adminMenu',

@@ -1,8 +1,10 @@
 import { getConfig } from '../../../../../lib/util/getConfig.js';
 
+type SettingRow = { name: string; value: string };
+
 export default {
   Setting: {
-    allowedCountries: (setting) => {
+    allowedCountries: (setting: SettingRow[]) => {
       const allowedCountries = setting.find(
         (s) => s.name === 'allowedCountries'
       );
