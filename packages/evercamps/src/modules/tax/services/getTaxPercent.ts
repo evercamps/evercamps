@@ -1,4 +1,6 @@
-export function getTaxPercent(rates) {
+import type { TaxRateRow } from '../types/index.js';
+
+export function getTaxPercent(rates: TaxRateRow[]): number {
   let taxPercent = 0;
 
   rates.forEach((rate) => {

@@ -5,6 +5,7 @@ import {
   select,
   startTransaction
 } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import {
   INTERNAL_SERVER_ERROR,
@@ -12,7 +13,7 @@ import {
   OK
 } from '../../../../lib/util/httpStatus.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const connection = await getConnection();
   await startTransaction(connection);
   const { id } = request.params;
@@ -24,29 +25,17 @@ export default async (request, response, next) => {
 
     if (!taxRate) {
       response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'Tax rate not found'
-        }
-      });
+      response.json({ error: { status: INVALID_PAYLOAD, message: 'Tax rate not found' } });
       return;
     }
 
     await del('tax_rate').where('uuid', '=', id).execute(connection);
     await commit(connection);
     response.status(OK);
-    response.json({
-      data: taxRate
-    });
-  } catch (e) {
+    response.json({ data: taxRate });
+  } catch (e: any) {
     await rollback(connection);
     response.status(INTERNAL_SERVER_ERROR);
-    response.json({
-      error: {
-        status: INTERNAL_SERVER_ERROR,
-        message: e.message
-      }
-    });
+    response.json({ error: { status: INTERNAL_SERVER_ERROR, message: e.message } });
   }
 };

@@ -5,6 +5,7 @@ import {
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import {
   INTERNAL_SERVER_ERROR,
@@ -12,12 +13,11 @@ import {
   OK
 } from '../../../../lib/util/httpStatus.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const connection = await getConnection();
   await startTransaction(connection);
   const { id } = request.params;
-  const { name, country, province, postcode, rate, is_compound, priority } =
-    request.body;
+  const { name, country, province, postcode, rate, is_compound, priority } = request.body;
   try {
     const taxRate = await select()
       .from('tax_rate')
@@ -26,40 +26,20 @@ export default async (request, response, next) => {
 
     if (!taxRate) {
       response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'Tax rate not found'
-        }
-      });
+      response.json({ error: { status: INVALID_PAYLOAD, message: 'Tax rate not found' } });
       return;
     }
 
     const newRate = await update('tax_rate')
-      .given({
-        name,
-        country,
-        province,
-        postcode,
-        rate,
-        is_compound,
-        priority
-      })
+      .given({ name, country, province, postcode, rate, is_compound, priority })
       .where('uuid', '=', id)
       .execute(connection);
     await commit(connection);
     response.status(OK);
-    response.json({
-      data: newRate
-    });
-  } catch (e) {
+    response.json({ data: newRate });
+  } catch (e: any) {
     await rollback(connection);
     response.status(INTERNAL_SERVER_ERROR);
-    response.json({
-      error: {
-        status: INTERNAL_SERVER_ERROR,
-        message: e.message
-      }
-    });
+    response.json({ error: { status: INTERNAL_SERVER_ERROR, message: e.message } });
   }
 };
