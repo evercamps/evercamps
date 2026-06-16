@@ -24,7 +24,12 @@
     "@parcel/watcher": "^2.5.1",
     "@swc/cli": "^0.7.7",
     "@swc/core": "^1.11.29",
+    "@types/bcrypt": "^6.0.0",
+    "@types/connect-pg-simple": "^7.0.3",
+    "@types/express-session": "^1.19.0",
     "@types/jest": "^29.5.14",
+    "@types/qrcode": "^1.5.6",
+    "@types/speakeasy": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "copyfiles": "^2.4.1",
@@ -47,5 +52,5 @@
   },
   "optionalDependencies": {
     "@swc/core-linux-x64-gnu": "^1.2.160"
-  }  
+  }
 }
