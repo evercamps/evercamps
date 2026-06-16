@@ -1,16 +1,21 @@
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
-import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import './LoginForm.scss';
 import Area from '@components/common/Area';
 
-export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
-  const [error, setError] = React.useState(null);
+interface Props {
+  authUrl: string;
+  dashboardUrl: string;
+  setupTwoFaUrl: string;
+}
+
+export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }: Props) {
+  const [error, setError] = React.useState<string | null>(null);
   const [twofaRequired, setTwofaRequired] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '' });
 
-  const onSuccess = (response) => {
+  const onSuccess = (response: any) => {
     console.log(response);
     if (response.data?.twofaRequired) {
       setTwofaRequired(true);
@@ -21,8 +26,7 @@ export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
       setError(null);
     } else if (response.data?.twofaSetupRequired) {
       window.location.href = setupTwoFaUrl;
-    }
-    else if (!response.error) {      
+    } else if (!response.error) {
       window.location.href = dashboardUrl;
     } else {
       setError(response.error.message);
@@ -65,31 +69,31 @@ export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
           id="adminLoginForm"
           coreComponents={[
             !twofaRequired && {
-            component: { default: Field },
-            props: {
-              name: 'email',
-              type: 'email',
-              label: 'Email',
-              placeholder: 'Email',
-              validationRules: ['notEmpty', 'email'],
-              value: credentials.email,
-              onChange: (e) =>
-                setCredentials({ ...credentials, email: e.target.value })
-            },
+              component: { default: Field },
+              props: {
+                name: 'email',
+                type: 'email',
+                label: 'Email',
+                placeholder: 'Email',
+                validationRules: ['notEmpty', 'email'],
+                value: credentials.email,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+                  setCredentials({ ...credentials, email: e.target.value })
+              },
               sortOrder: 10
             },
             !twofaRequired && {
-            component: { default: Field },
-            props: {
-              name: 'password',
-              type: 'password',
-              label: 'Password',
-              placeholder: 'Password',
-              validationRules: ['notEmpty'],
-              value: credentials.password,
-              onChange: (e) =>
-                setCredentials({ ...credentials, password: e.target.value })
-            },
+              component: { default: Field },
+              props: {
+                name: 'password',
+                type: 'password',
+                label: 'Password',
+                placeholder: 'Password',
+                validationRules: ['notEmpty'],
+                value: credentials.password,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+                  setCredentials({ ...credentials, password: e.target.value })
+              },
               sortOrder: 20
             },
             twofaRequired && {
@@ -104,7 +108,7 @@ export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
               },
               sortOrder: 30
             }
-          ].filter(Boolean)}
+          ].filter(Boolean) as any[]}
           noOuter
         />
         {twofaRequired && (
@@ -117,11 +121,6 @@ export default function LoginForm({ authUrl, dashboardUrl, setupTwoFaUrl }) {
     </div>
   );
 }
-
-LoginForm.propTypes = {
-  authUrl: PropTypes.string.isRequired,
-  dashboardUrl: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'content',

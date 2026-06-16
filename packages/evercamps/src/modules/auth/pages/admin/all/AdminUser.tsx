@@ -1,12 +1,22 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 import './AdminUser.scss';
 
-export default function AdminUser({ adminUser, logoutUrl, loginPage }) {
+interface AdminUserInfo {
+  email: string;
+  fullName: string;
+}
+
+interface Props {
+  adminUser: AdminUserInfo | null;
+  loginPage: string;
+  logoutUrl: string;
+}
+
+export default function AdminUser({ adminUser, logoutUrl, loginPage }: Props) {
   const [showLogout, setShowLogout] = React.useState(false);
 
-  const show = (e) => {
+  const show = (e: React.MouseEvent) => {
     e.preventDefault();
     setShowLogout(!showLogout);
   };
@@ -62,19 +72,6 @@ export default function AdminUser({ adminUser, logoutUrl, loginPage }) {
     </div>
   );
 }
-
-AdminUser.propTypes = {
-  adminUser: PropTypes.shape({
-    email: PropTypes.string.isRequired,
-    fullName: PropTypes.string.isRequired
-  }),
-  loginPage: PropTypes.string.isRequired,
-  logoutUrl: PropTypes.string.isRequired
-};
-
-AdminUser.defaultProps = {
-  adminUser: null
-};
 
 export const layout = {
   areaId: 'header',

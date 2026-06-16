@@ -1,10 +1,10 @@
 import { select } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { pool } from '../../../../../lib/postgres/connection.js';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 
-export default async (request, response, next) => {
-  const { userID } = request.session;
-  // Load the user from the database
+export default async (request: Request, response: Response, next: NextFunction) => {
+  const { userID } = (request as any).session;
   const user = await select()
     .from('admin_user')
     .where('admin_user_id', '=', userID)
@@ -12,13 +12,11 @@ export default async (request, response, next) => {
     .load(pool);
 
   if (!user) {
-    // The user may not be logged in, or the account may be disabled
-    // Logout the user
     request.logoutUser(() => {
-      // Check if current route is adminLogin
+      const currentRoute = (request as any).currentRoute;
       if (
-        request.currentRoute.id === 'adminLogin' ||
-        request.currentRoute.id === 'adminLoginJson'
+        currentRoute.id === 'adminLogin' ||
+        currentRoute.id === 'adminLoginJson'
       ) {
         next();
       } else {
@@ -26,9 +24,8 @@ export default async (request, response, next) => {
       }
     });
   } else {
-    // Delete the password field
     delete user.password;
-    request.locals.user = user;
+    (request as any).locals.user = user;
     next();
   }
 };

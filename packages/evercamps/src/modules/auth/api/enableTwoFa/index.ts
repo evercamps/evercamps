@@ -1,7 +1,8 @@
 import { update } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { pool } from '../../../../lib/postgres/connection.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const { userId } = request.params;
   if (!userId) return response.status(400).json({ error: 'Missing userId' });
 
@@ -10,9 +11,7 @@ export default async (request, response, next) => {
 
   try {
     await update('admin_user')
-      .given({
-        twofa_deadline: deadline.toISOString()
-      })
+      .given({ twofa_deadline: deadline.toISOString() })
       .where('uuid', '=', userId)
       .execute(pool);
 
@@ -21,5 +20,4 @@ export default async (request, response, next) => {
     console.error(err);
     return response.status(500).json({ error: 'Failed to enable 2FA' });
   }
-}
-
+};

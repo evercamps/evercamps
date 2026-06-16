@@ -1,24 +1,36 @@
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import Button from '@components/common/form/Button';
-import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import './TwoFaSetupForm.scss';
 import Area from '@components/common/Area';
 import { toast } from 'react-toastify';
+import type { TwoFASetupResult } from '../../../types/index.js';
 
-export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboardUrl, user }) {
+interface UserInfo {
+  twofaDeadline: string | null;
+}
+
+interface Props {
+  setupUrl: string;
+  verifyUrl: string;
+  skipUrl: string;
+  dashboardUrl: string;
+  user: UserInfo;
+}
+
+export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboardUrl, user }: Props) {
   const [step, setStep] = useState(1);
-  const [qrCodeData, setQrCodeData] = useState(null);
+  const [qrCodeData, setQrCodeData] = useState<TwoFASetupResult | null>(null);
   const [token, setToken] = useState('');
-  const [error, setError] = useState(null);
-  const [recoveryCodes, setRecoveryCodes] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const deadline = user?.twofaDeadline
-  ? new Date(parseInt(user.twofaDeadline, 10))
-  : null;
+    ? new Date(parseInt(user.twofaDeadline, 10))
+    : null;
   const skipAllowed = !deadline || deadline > new Date();
 
-  const onSuccess = (response) => {
+  const onSuccess = (response: any) => {
     if (!response.error) {
       if (response.data?.recoveryCodes) {
         setRecoveryCodes(response.data.recoveryCodes);
@@ -30,22 +42,20 @@ export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboard
   };
 
   const handleContinue = async () => {
-    try {      
+    try {
       const res = await fetch(setupUrl, { method: 'POST' });
       const data = await res.json();
-      console.log(data);
       if (!data.qrCode) {
         setError('Failed to retrieve 2FA setup information.');
         return;
       }
-
       setQrCodeData(data.qrCode);
       setStep(2);
     } catch (err) {
       setError('An error occurred while fetching 2FA setup.');
       console.error(err);
     }
-  };  
+  };
 
   return (
     <div className="twofa-setup-form">
@@ -74,13 +84,14 @@ export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboard
       )}
 
       {step === 2 && qrCodeData && (
-        <Form         
-        action={verifyUrl}
-        method="POST"     
-        id='verify2FaForm'  
-        isJSON 
-        onSuccess={onSuccess}         
-        submitBtn={false}>
+        <Form
+          action={verifyUrl}
+          method="POST"
+          id="verify2FaForm"
+          isJSON
+          onSuccess={onSuccess}
+          submitBtn={false}
+        >
           <h2 className="text-2xl font-semibold mb-4">Scan QR Code</h2>
           <p className="mb-4">Scan this QR code with your authenticator app or enter the secret manually.</p>
 
@@ -95,7 +106,7 @@ export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboard
               type="button"
               variant="secondary"
               onAction={() => {
-                navigator.clipboard.writeText(qrCodeData.secret);
+                navigator.clipboard.writeText(qrCodeData!.secret);
                 toast.success('Secret copied to clipboard!');
               }}
             />
@@ -115,11 +126,11 @@ export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboard
                   placeholder: 'Enter 6-digit code',
                   validationRules: ['notEmpty'],
                   value: token,
-                  onChange: (e) => setToken(e.target.value),
-                  autoFocus: true,
+                  onChange: (e: React.ChangeEvent<HTMLInputElement>) => setToken(e.target.value),
+                  autoFocus: true
                 },
-                sortOrder: 10,
-              },
+                sortOrder: 10
+              }
             ]}
             noOuter
           />
@@ -133,15 +144,15 @@ export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboard
               />
             )}
             <Button
-            onAction={() => {              
-              document
-                .getElementById('verify2FaForm')
-                .dispatchEvent(
-                  new Event('submit', { cancelable: true, bubbles: true })
-                );
-            }}
-            title='Verify'
-          />
+              onAction={() => {
+                document
+                  .getElementById('verify2FaForm')
+                  ?.dispatchEvent(
+                    new Event('submit', { cancelable: true, bubbles: true })
+                  );
+              }}
+              title="Verify"
+            />
           </div>
         </Form>
       )}
@@ -166,39 +177,33 @@ export default function TwoFaSetupForm({ setupUrl, verifyUrl, skipUrl, dashboard
             ))}
           </div>
           <div className="flex gap-4 justify-end mt-4">
-          <Button
-            title="Download Recovery Codes"
-            type="button"
-            variant="secondary"
-            onAction={() => {
-              const textContent = recoveryCodes.join('\n');
-              const blob = new Blob([textContent], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'recovery_codes.txt';
-              a.click();
-              URL.revokeObjectURL(url);
-              toast.success('Recovery codes downloaded!');
-            }}
-          />
-
-          <Button
-            title="Finish"
-            variant="primary"
-            onAction={() => window.location.href = dashboardUrl}
-          />
+            <Button
+              title="Download Recovery Codes"
+              type="button"
+              variant="secondary"
+              onAction={() => {
+                const textContent = recoveryCodes.join('\n');
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'recovery_codes.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success('Recovery codes downloaded!');
+              }}
+            />
+            <Button
+              title="Finish"
+              variant="primary"
+              onAction={() => (window.location.href = dashboardUrl)}
+            />
           </div>
         </div>
       )}
     </div>
   );
 }
-
-TwoFaSetupForm.propTypes = {
-  setupUrl: PropTypes.string.isRequired,  
-  dashboardUrl: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'content',
@@ -209,8 +214,8 @@ export const query = `
   query Query {
     setupUrl: url(routeId: "setupTwoFa")
     verifyUrl: url(routeId: "verifyTwoFa")
-    dashboardUrl: url(routeId: "dashboard")    
-    user: adminUser(id: getContextValue('adminUserId')) {      
+    dashboardUrl: url(routeId: "dashboard")
+    user: adminUser(id: getContextValue('adminUserId')) {
       twofaDeadline
     }
   }
