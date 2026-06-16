@@ -2,7 +2,7 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import bcrypt from 'bcrypt';
 import { pool } from '../../../lib/postgres/connection.js';
-import { insert, update, select, del } from '@evershop/postgres-query-builder';
+import { insert, update, select, del, PoolClient, getConnection } from '@evershop/postgres-query-builder';
 import type { AdminUserRow, TwoFASetupResult, Verify2FAResult } from '../types/index.js';
 
 export async function get2FASetup(email: string): Promise<TwoFASetupResult> {
@@ -10,10 +10,12 @@ export async function get2FASetup(email: string): Promise<TwoFASetupResult> {
     length: 20,
     name: 'EverCamps:' + email
   });
+
+  const connection: PoolClient = await getConnection(pool);
   await update('admin_user')
     .given({ twofa_secret: secret.base32 })
     .where('email', '=', email)
-    .execute(pool);
+    .execute(connection);
 
   const otpauthUrl = secret.otpauth_url;
   const qrCodeDataUrl = await qrcode.toDataURL(otpauthUrl as string);
@@ -40,11 +42,12 @@ export async function verify2FA(email: string, token: string): Promise<Verify2FA
     });
   }
 
+  const connection: PoolClient = await getConnection(pool);
   if (!verified) {
     const recoveryCodes = await select()
       .from('admin_user_recovery_codes')
       .where('admin_user_id', '=', user.admin_user_id)
-      .execute(pool);
+      .execute(connection);
 
     for (const row of recoveryCodes) {
       const match = await bcrypt.compare(token, row.code_hash);
@@ -57,7 +60,7 @@ export async function verify2FA(email: string, token: string): Promise<Verify2FA
     if (usedRecoveryCode) {
       await del('admin_user_recovery_codes')
         .where('recovery_code_id', '=', usedRecoveryCode.recovery_code_id)
-        .execute(pool);
+        .execute(connection);
     }
   }
 
@@ -65,7 +68,7 @@ export async function verify2FA(email: string, token: string): Promise<Verify2FA
     await update('admin_user')
       .given({ twofa_enabled: true })
       .where('admin_user_id', '=', user.admin_user_id)
-      .execute(pool);
+      .execute(connection);
 
     const codes = generateRecoveryCodes();
     for (const code of codes) {
@@ -74,7 +77,7 @@ export async function verify2FA(email: string, token: string): Promise<Verify2FA
           admin_user_id: user.admin_user_id,
           code_hash: await bcrypt.hash(code, 10)
         })
-        .execute(pool);
+        .execute(connection);
     }
     return { verified: true, recoveryCodes: codes };
   }

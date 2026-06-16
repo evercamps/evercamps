@@ -21,9 +21,3 @@ export interface SettingRow {
   name: string;
   value: string;
 }
-
-export interface Filter {
-  key: string;
-  value: any;
-  operation?: string;
-}

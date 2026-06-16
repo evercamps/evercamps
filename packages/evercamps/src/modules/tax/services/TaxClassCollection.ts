@@ -1,19 +1,19 @@
 import { pool } from '../../../lib/postgres/connection.js';
 import { camelCase } from '../../../lib/util/camelCase.js';
 import { getValue } from '../../../lib/util/registry.js';
-import type { Filter } from '../types/index.js';
+import { GraphQLFilter } from '../../../types/graphqlFilter.js';
 
 export class TaxClassCollection {
   private baseQuery: any;
   private totalQuery: any;
-  currentFilters: Filter[] = [];
+  currentFilters: GraphQLFilter[] = [];
 
   constructor(baseQuery: any) {
     this.baseQuery = baseQuery;
   }
 
-  async init(_args: unknown, { filters = [] }: { filters: Filter[] }) {
-    const currentFilters: Filter[] = [];
+  async init(_args: unknown, { filters = [] }: { filters: GraphQLFilter[] }) {
+    const currentFilters: GraphQLFilter[] = [];
 
     const taxClassCollectionFilters = await getValue('taxClassCollectionFilters', []);
 

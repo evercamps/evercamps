@@ -6,12 +6,7 @@ import Button from '@components/common/form/Button';
 import Pagination from '@components/common/grid/Pagination';
 import React from 'react';
 import { toast } from 'react-toastify';
-
-interface Filter {
-  key: string;
-  operation: string;
-  value: string;
-}
+import { GraphQLFilter } from '../../../../../types';
 
 interface AdminUser {
   uuid: string;
@@ -28,7 +23,7 @@ interface Props {
   users: {
     items: AdminUser[];
     total: number;
-    currentFilters?: Filter[];
+    currentFilters?: GraphQLFilter[];
   };
 }
 

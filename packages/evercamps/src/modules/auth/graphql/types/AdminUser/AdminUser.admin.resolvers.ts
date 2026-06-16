@@ -1,7 +1,7 @@
 import { select } from '@evershop/postgres-query-builder';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
-import type { Filter } from '../../../../../lib/types/graphql.js';
+import { GraphQLFilter } from '../../../../../types/graphqlFilter.js';
 
 export default {
   Query: {
@@ -13,9 +13,9 @@ export default {
     },
     currentAdminUser: (root: unknown, args: unknown, { user }: { user: any }) =>
       user ? camelCase(user) : null,
-    adminUsers: async (_: unknown, { filters = [] }: { filters: Filter[] }, { pool }: { pool: any }) => {
+    adminUsers: async (_: unknown, { filters = [] }: { filters: GraphQLFilter[] }, { pool }: { pool: any }) => {
       const query = select().from('admin_user');
-      const currentFilters: Filter[] = [];
+      const currentFilters: GraphQLFilter[] = [];
 
       const userFilters = Array.isArray(filters) ? filters : [];
 
@@ -41,7 +41,7 @@ export default {
         query.orderBy('admin_user.admin_user_id', 'DESC');
       }
 
-      if ((sortOrder as Filter).key) {
+      if ((sortOrder as GraphQLFilter).key) {
         currentFilters.push({ key: 'sortOrder', operation: 'eq', value: sortOrder.value });
       }
 
