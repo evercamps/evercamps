@@ -5,6 +5,7 @@ import {
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import {
   INTERNAL_SERVER_ERROR,
@@ -12,13 +13,12 @@ import {
   OK
 } from '../../../../lib/util/httpStatus.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const { id } = request.params;
   const connection = await getConnection();
   await startTransaction(connection);
   const { name } = request.body;
   try {
-    // Load the tax class
     const taxClass = await select()
       .from('tax_class')
       .where('uuid', '=', id)
@@ -26,34 +26,20 @@ export default async (request, response, next) => {
 
     if (!taxClass) {
       response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'Invalid class id'
-        }
-      });
+      response.json({ error: { status: INVALID_PAYLOAD, message: 'Invalid class id' } });
       return;
     }
+
     const newClass = await update('tax_class')
-      .given({
-        name
-      })
+      .given({ name })
       .where('uuid', '=', id)
       .execute(connection);
-
     await commit(connection);
     response.status(OK);
-    response.json({
-      data: newClass
-    });
-  } catch (e) {
+    response.json({ data: newClass });
+  } catch (e: any) {
     await rollback(connection);
     response.status(INTERNAL_SERVER_ERROR);
-    response.json({
-      error: {
-        status: INTERNAL_SERVER_ERROR,
-        message: e.message
-      }
-    });
+    response.json({ error: { status: INTERNAL_SERVER_ERROR, message: e.message } });
   }
 };
