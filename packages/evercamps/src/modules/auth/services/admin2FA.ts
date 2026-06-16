@@ -16,7 +16,7 @@ export async function get2FASetup(email: string): Promise<TwoFASetupResult> {
     .execute(pool);
 
   const otpauthUrl = secret.otpauth_url;
-  const qrCodeDataUrl = await qrcode.toDataURL(otpauthUrl);
+  const qrCodeDataUrl = await qrcode.toDataURL(otpauthUrl as string);
 
   return { secret: secret.base32, qrCodeDataUrl };
 }

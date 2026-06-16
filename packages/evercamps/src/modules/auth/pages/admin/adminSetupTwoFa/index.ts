@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { setContextValue } from '../../../../graphql/services/contextHelper.js';
+import { EvercampsRequest } from '../../../../../types/request.js';
 
-export default (request: Request, response: Response, next: NextFunction) => {
+export default (request: EvercampsRequest, response: Response, next: NextFunction) => {
   const user = request.getCurrentUser();
   if (user) {
     setContextValue(request, 'adminUserId', user.admin_user_id);

@@ -6,8 +6,9 @@ import type { Request, Response, NextFunction } from 'express';
 import { pool } from '../../../../lib/postgres/connection.js';
 import { setContextValue } from '../../../graphql/services/contextHelper.js';
 import { getAdminSessionCookieName } from '../../services/getAdminSessionCookieName.js';
+import { EvercampsRequest } from '../../../../types/request.js';
 
-export default async (request: Request, response: Response, next: NextFunction) => {
+export default async (request: EvercampsRequest, response: Response, next: NextFunction) => {
   let currentAdminUser = request.getCurrentUser();
   if (!currentAdminUser) {
     try {
