@@ -3,19 +3,18 @@ import {
   insertOnUpdate,
   rollback
 } from '@evershop/postgres-query-builder';
+import type { Request, Response, NextFunction } from 'express';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import { INTERNAL_SERVER_ERROR, OK } from '../../../../lib/util/httpStatus.js';
 import { refreshSetting } from '../../services/setting.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: Response, next: NextFunction) => {
   const { body } = request;
   const connection = await getConnection();
   try {
-    // Loop through the body and insert the data
-    const promises = [];
+    const promises: Promise<any>[] = [];
     Object.keys(body).forEach((key) => {
       const value = body[key];
-      // Check if the value is a object or array
       if (typeof value === 'object') {
         promises.push(
           insertOnUpdate('setting', ['name'])
@@ -40,13 +39,12 @@ export default async (request, response, next) => {
     });
     await Promise.all(promises);
     await commit(connection);
-    // Refresh the setting
     await refreshSetting();
     response.status(OK);
     response.json({
       data: {}
     });
-  } catch (error) {
+  } catch (error: any) {
     await rollback(connection);
     response.status(INTERNAL_SERVER_ERROR);
     response.json({

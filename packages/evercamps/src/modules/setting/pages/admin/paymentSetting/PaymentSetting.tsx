@@ -1,11 +1,14 @@
 import SettingMenu from '@components/admin/setting/SettingMenu';
 import Area from '@components/common/Area';
 import { Form } from '@components/common/form/Form';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 
-export default function PaymentSetting({ saveSettingApi }) {
+interface Props {
+  saveSettingApi: string;
+}
+
+export default function PaymentSetting({ saveSettingApi }: Props) {
   return (
     <div className="main-content-inner">
       <div className="grid grid-cols-6 gap-x-8 grid-flow-row ">
@@ -17,7 +20,7 @@ export default function PaymentSetting({ saveSettingApi }) {
             id="paymentSettingForm"
             method="POST"
             action={saveSettingApi}
-            onSuccess={(response) => {
+            onSuccess={(response: any) => {
               if (!response.error) {
                 toast.success('Setting saved');
               } else {
@@ -32,10 +35,6 @@ export default function PaymentSetting({ saveSettingApi }) {
     </div>
   );
 }
-
-PaymentSetting.propTypes = {
-  saveSettingApi: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'content',

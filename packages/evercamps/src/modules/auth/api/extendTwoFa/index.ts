@@ -1,4 +1,4 @@
-import { select, update } from '@evershop/postgres-query-builder';
+import { getConnection, PoolClient, select, update } from '@evershop/postgres-query-builder';
 import type { Request, Response, NextFunction } from 'express';
 import { pool } from '../../../../lib/postgres/connection.js';
 import type { AdminUserRow } from '../../types/index.js';
@@ -20,10 +20,11 @@ export default async function handler(request: Request, response: Response, next
   newDeadline.setDate(newDeadline.getDate() + 14);
 
   try {
+    const connection: PoolClient = await getConnection(pool);
     await update('admin_user')
       .given({ twofa_deadline: newDeadline.toISOString() })
       .where('uuid', '=', userId)
-      .execute(pool);
+      .execute(connection);
 
     return response.json({ success: true, deadline: newDeadline.toISOString() });
   } catch (err) {

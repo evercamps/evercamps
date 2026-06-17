@@ -1,7 +1,14 @@
-import { select, update } from '@evershop/postgres-query-builder';
+import {
+  commit,
+  PoolClient,
+  rollback,
+  select,
+  startTransaction,
+  update
+} from '@evershop/postgres-query-builder';
 import { createMollieClient } from '@mollie/api-client';
 import { error } from '../../../../../lib/log/logger.js';
-import { pool } from '../../../../../lib/postgres/connection.js';
+import { getConnection, pool } from '../../../../../lib/postgres/connection.js';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { addNotification } from '../../../../base/services/notifications.js';
 import { updatePaymentStatus } from '../../../../oms/services/updatePaymentStatus.js';
@@ -60,17 +67,26 @@ export default async (request: EvercampsRequest, response: EvercampsResponse, _n
 
       case 'failed':
       case 'canceled':
-      case 'expired':
-        await update('cart')
-          .given({ status: true })
-          .where('cart_id', '=', order.cart_id)
-          .execute(pool);
-        await updatePaymentStatus(order.order_id, 'canceled');
+      case 'expired': {
+        const connection: PoolClient = await getConnection();
+        await startTransaction(connection);
+        try {
+          await update('cart')
+            .given({ status: true })
+            .where('cart_id', '=', order.cart_id)
+            .execute(connection);
+          await updatePaymentStatus(order.order_id, 'canceled', connection);
+          await commit(connection);
+        } catch (err) {
+          await rollback(connection);
+          throw err;
+        }
         addNotification(request, 'Payment failed or was canceled', 'error');
         request.session.save(() => {
           response.redirect(buildUrl('cart'));
         });
         return;
+      }
 
       default:
         response.redirect(buildUrl('homepage'));

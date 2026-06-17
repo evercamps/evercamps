@@ -3,11 +3,11 @@ import { pool } from '../../../../../lib/postgres/connection.js';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { TaxClassCollection } from '../../../services/TaxClassCollection.js';
-import type { Filter } from '../../../types/index.js';
+import { GraphQLFilter } from '../../../../../types/graphqlFilter.js';
 
 export default {
   Query: {
-    taxClasses: async (_: unknown, { filters }: { filters: Filter[] }) => {
+    taxClasses: async (_: unknown, { filters }: { filters: GraphQLFilter[] }) => {
       const query = select().from('tax_class');
       const root = new TaxClassCollection(query);
       await root.init({}, { filters });
