@@ -9,8 +9,8 @@ import {
   resolveOrderStatus
 } from './services/updateOrderStatus.js';
 
-export default () => {
-  addProcessor('configurationSchema', (schema) => {
+export default (): void => {
+  addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {
       properties: {
         oms: {
@@ -25,21 +25,11 @@ export default () => {
                     '^[a-zA-Z_]+$': {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
-                        isDefault: {
-                          type: 'boolean'
-                        },
-                        isCancelable: {
-                          type: 'boolean'
-                        }
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
+                        isDefault: { type: 'boolean' },
+                        isCancelable: { type: 'boolean' }
                       },
                       required: ['name', 'badge', 'progress']
                     }
@@ -52,21 +42,11 @@ export default () => {
                     '^[a-zA-Z_]+$': {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
-                        isDefault: {
-                          type: 'boolean'
-                        },
-                        isCancelable: {
-                          type: 'boolean'
-                        }
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
+                        isDefault: { type: 'boolean' },
+                        isCancelable: { type: 'boolean' }
                       },
                       required: ['name', 'badge', 'progress']
                     }
@@ -79,23 +59,13 @@ export default () => {
                     new: {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
-                        isDefault: {
-                          type: 'boolean'
-                        },
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
+                        isDefault: { type: 'boolean' },
                         next: {
                           type: 'array',
-                          items: {
-                            type: 'string'
-                          }
+                          items: { type: 'string' }
                         }
                       },
                       required: ['name', 'badge', 'progress']
@@ -103,20 +73,12 @@ export default () => {
                     processing: {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
                         next: {
                           type: 'array',
-                          items: {
-                            type: 'string'
-                          }
+                          items: { type: 'string' }
                         }
                       },
                       required: ['name', 'badge', 'progress']
@@ -124,20 +86,12 @@ export default () => {
                     completed: {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
                         next: {
                           type: 'array',
-                          items: {
-                            type: 'string'
-                          }
+                          items: { type: 'string' }
                         }
                       },
                       required: ['name', 'badge', 'progress']
@@ -145,20 +99,12 @@ export default () => {
                     canceled: {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
                         next: {
                           type: 'array',
-                          items: {
-                            type: 'string'
-                          }
+                          items: { type: 'string' }
                         }
                       },
                       required: ['name', 'badge', 'progress']
@@ -166,20 +112,12 @@ export default () => {
                     closed: {
                       type: 'object',
                       properties: {
-                        name: {
-                          type: 'string'
-                        },
-                        badge: {
-                          type: 'string'
-                        },
-                        progress: {
-                          type: 'string'
-                        },
+                        name: { type: 'string' },
+                        badge: { type: 'string' },
+                        progress: { type: 'string' },
                         next: {
                           type: 'array',
-                          items: {
-                            type: 'string'
-                          }
+                          items: { type: 'string' }
                         }
                       },
                       required: ['name', 'badge', 'progress']
@@ -208,12 +146,8 @@ export default () => {
               additionalProperties: {
                 type: 'object',
                 properties: {
-                  name: {
-                    type: 'string'
-                  },
-                  trackingUrl: {
-                    type: 'string'
-                  }
+                  name: { type: 'string' },
+                  trackingUrl: { type: 'string' }
                 },
                 required: ['name']
               }
@@ -222,10 +156,10 @@ export default () => {
         }
       }
     });
+
     return schema;
   });
 
-  // Default order configuration
   const defaultOrderConfig = {
     order: {
       shipmentStatus: {
@@ -343,29 +277,31 @@ export default () => {
       }
     }
   };
+
   config.util.setModuleDefaults('oms', defaultOrderConfig);
 
-  // Reigtering the default filters for attribute collection
   addProcessor(
     'orderCollectionFilters',
     registerDefaultOrderCollectionFilters,
     1
   );
+
   addProcessor(
     'orderCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
   hookAfter(
     'changePaymentStatus',
-    async (order, orderId, status, connection) => {
+    async (order: any, orderId: any, status: any, connection: any) => {
       if (order.status === 'canceled') {
         throw new Error('Order is already canceled');
       }
       if (order.status === 'closed') {
         throw new Error('Order is already closed');
       }
+
       const orderStatus = resolveOrderStatus(status, order.shipment_status);
       await changeOrderStatus(orderId, orderStatus, connection);
     }
@@ -373,13 +309,14 @@ export default () => {
 
   hookAfter(
     'changeShipmentStatus',
-    async (order, orderId, status, connection) => {
+    async (order: any, orderId: any, status: any, connection: any) => {
       if (order.status === 'canceled') {
         throw new Error('Order is already canceled');
       }
       if (order.status === 'closed') {
         throw new Error('Order is already closed');
       }
+
       const orderStatus = resolveOrderStatus(order.payment_status, status);
       await changeOrderStatus(orderId, orderStatus, connection);
     }

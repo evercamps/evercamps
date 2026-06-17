@@ -8,32 +8,39 @@ import { registerDefaultCalculators } from './services/registerDefaultCalculator
 import { registerDefaultCouponCollectionFilters } from './services/registerDefaultCouponCollectionFilters.js';
 import { registerDefaultValidators } from './services/registerDefaultValidators.js';
 
-export default () => {
+export default (): void => {
   addProcessor(
     'couponLoaderFunction',
-    () => async (couponCode) => {
-      const coupon = await select()
-        .from('coupon')
-        .where('coupon', '=', couponCode)
-        .load(pool);
-      return coupon;
+    () => {
+      return async (couponCode: any) => {
+        const coupon = await select()
+          .from('coupon')
+          .where('coupon', '=', couponCode)
+          .load(pool);
+
+        return coupon;
+      };
     },
     0
   );
+
   addProcessor('cartFields', registerCartPromotionFields, 0);
+
   addProcessor('cartItemFields', registerCartItemPromotionFields, 11);
+
   addProcessor('couponValidatorFunctions', registerDefaultValidators);
+
   addProcessor('discountCalculatorFunctions', registerDefaultCalculators);
 
-  // Reigtering the default filters for attribute collection
   addProcessor(
     'couponCollectionFilters',
     registerDefaultCouponCollectionFilters,
     1
   );
+
   addProcessor(
     'couponCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 };
