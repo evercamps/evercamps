@@ -141,6 +141,7 @@ export default (): void => {
       CONSTANTS.LIBPATH,
       '../components/admin/widgets/BasicMenuSetting.js'
     ),
+    defaultSettings: {},
     component: path.resolve(
       CONSTANTS.LIBPATH,
       '../components/frontStore/widgets/BasicMenu.js'
