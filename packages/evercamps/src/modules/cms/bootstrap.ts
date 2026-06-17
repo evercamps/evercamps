@@ -5,11 +5,11 @@ import { defaultPaginationFilters } from '../../lib/util/defaultPaginationFilter
 import { merge } from '../../lib/util/merge.js';
 import { addProcessor } from '../../lib/util/registry.js';
 import { registerWidget } from '../../lib/widget/widgetManager.js';
-import { registerDefaultPageCollectionFilters } from '../../modules/cms/services/registerDefaultPageCollectionFilters.js';
-import { registerDefaultWidgetCollectionFilters } from '../../modules/cms/services/registerDefaultWidgetCollectionFilters.js';
+import { registerDefaultPageCollectionFilters } from './services/registerDefaultPageCollectionFilters.js';
+import { registerDefaultWidgetCollectionFilters } from './services/registerDefaultWidgetCollectionFilters.js';
 
-export default () => {
-  addProcessor('configurationSchema', (schema) => {
+export default (): void => {
+  addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {
       properties: {
         themeConfig: {
@@ -18,19 +18,10 @@ export default () => {
             logo: {
               type: 'object',
               properties: {
-                alt: {
-                  type: 'string'
-                },
-                src: {
-                  type: 'string',
-                  format: 'uri-reference'
-                },
-                width: {
-                  type: 'integer'
-                },
-                height: {
-                  type: 'integer'
-                }
+                alt: { type: 'string' },
+                src: { type: 'string', format: 'uri-reference' },
+                width: { type: 'integer' },
+                height: { type: 'integer' }
               }
             },
             headTags: {
@@ -41,13 +32,8 @@ export default () => {
                   items: {
                     type: 'object',
                     properties: {
-                      rel: {
-                        type: 'string'
-                      },
-                      href: {
-                        type: 'string',
-                        format: 'uri-reference'
-                      }
+                      rel: { type: 'string' },
+                      href: { type: 'string', format: 'uri-reference' }
                     },
                     required: ['rel', 'href']
                   }
@@ -57,12 +43,8 @@ export default () => {
                   items: {
                     type: 'object',
                     properties: {
-                      name: {
-                        type: 'string'
-                      },
-                      content: {
-                        type: 'string'
-                      }
+                      name: { type: 'string' },
+                      content: { type: 'string' }
                     },
                     required: ['name', 'content']
                   }
@@ -72,31 +54,14 @@ export default () => {
                   items: {
                     type: 'object',
                     properties: {
-                      src: {
-                        type: 'string',
-                        format: 'uri-reference'
-                      },
-                      type: {
-                        type: 'string'
-                      },
-                      async: {
-                        type: 'boolean'
-                      },
-                      defer: {
-                        type: 'boolean'
-                      },
-                      crossorigin: {
-                        type: 'string'
-                      },
-                      integrity: {
-                        type: 'string'
-                      },
-                      noModule: {
-                        type: 'string'
-                      },
-                      nonce: {
-                        type: 'string'
-                      }
+                      src: { type: 'string', format: 'uri-reference' },
+                      type: { type: 'string' },
+                      async: { type: 'boolean' },
+                      defer: { type: 'boolean' },
+                      crossorigin: { type: 'string' },
+                      integrity: { type: 'string' },
+                      noModule: { type: 'string' },
+                      nonce: { type: 'string' }
                     },
                     required: ['src']
                   }
@@ -106,10 +71,7 @@ export default () => {
                   items: {
                     type: 'object',
                     properties: {
-                      href: {
-                        type: 'string',
-                        format: 'uri-reference'
-                      }
+                      href: { type: 'string', format: 'uri-reference' }
                     },
                     required: ['href']
                   }
@@ -129,6 +91,7 @@ export default () => {
         }
       }
     });
+
     return schema;
   });
 
@@ -147,9 +110,9 @@ export default () => {
     },
     copyRight: `© 2025 EverCamps. All Rights Reserved.`
   };
+
   config.util.setModuleDefaults('themeConfig', defaultThemeConfig);
 
-  // Set the default file storage to local
   config.util.setModuleDefaults('system', {
     file_storage: 'local'
   });
@@ -187,41 +150,43 @@ export default () => {
     enabled: true
   });
 
-  // Reigtering the default filters for cms page collection
   addProcessor(
     'cmsPageCollectionFilters',
     registerDefaultPageCollectionFilters,
     1
   );
+
   addProcessor(
     'cmsPageCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
-  // Reigtering the default filters for widget collection
   addProcessor(
     'widgetCollectionFilters',
     registerDefaultWidgetCollectionFilters,
     1
   );
+
   addProcessor(
     'widgetCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
-  const parseMenus = (data) => {
+  const parseMenus = (data: any) => {
     if (data?.type !== 'basic_menu') {
       return data;
     }
 
     data.settings = data.settings || {};
+
     if (data.settings.menus) {
       data.settings.menus = JSON.parse(data.settings.menus);
     } else {
       data.settings.menus = [];
     }
+
     return data;
   };
 

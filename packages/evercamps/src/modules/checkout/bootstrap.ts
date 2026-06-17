@@ -7,12 +7,12 @@ import { registerCartBaseFields } from '../../modules/checkout/services/cart/reg
 import { registerCartItemBaseFields } from '../../modules/checkout/services/cart/registerCartItemBaseFields.js';
 import { sortFields } from '../../modules/checkout/services/cart/sortFields.js';
 
-export default () => {
+export default (): void => {
   addProcessor('cartFields', registerCartBaseFields, 0);
 
   addProcessor('cartItemFields', registerCartItemBaseFields, 0);
 
-  addFinalProcessor('cartFields', (fields) => {
+  addFinalProcessor('cartFields', (fields: any[]) => {
     try {
       const sortedFields = sortFields(fields);
       return sortedFields;
@@ -22,7 +22,7 @@ export default () => {
     }
   });
 
-  addFinalProcessor('cartItemFields', (fields) => {
+  addFinalProcessor('cartItemFields', (fields: any[]) => {
     try {
       const sortedFields = sortFields(fields);
       return sortedFields;
@@ -32,13 +32,18 @@ export default () => {
     }
   });
 
-  addProcessor('cartItemProductLoaderFunction', () => async (id) => {
-    const productQuery = getProductsBaseQuery();
-    const product = await productQuery.where('product_id', '=', id).load(pool);
-    return product;
+  addProcessor('cartItemProductLoaderFunction', () => {
+    return async (id: any) => {
+      const productQuery = getProductsBaseQuery();
+      const product = await productQuery
+        .where('product_id', '=', id)
+        .load(pool);
+
+      return product;
+    };
   });
 
-  addProcessor('configurationSchema', (schema) => {
+  addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {
       properties: {
         checkout: {
@@ -51,6 +56,7 @@ export default () => {
         }
       }
     });
+
     return schema;
   });
 };

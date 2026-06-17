@@ -2,9 +2,10 @@ import { loadCsv } from '../../lib/locale/translate/translate.js';
 import { merge } from '../../lib/util/merge.js';
 import { addProcessor } from '../../lib/util/registry.js';
 
-export default async () => {
+export default async (): Promise<void> => {
   await loadCsv();
-  addProcessor('configurationSchema', (schema) => {
+
+  addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {
       properties: {
         shop: {
@@ -80,6 +81,7 @@ export default async () => {
         }
       }
     });
+
     return schema;
   });
 };

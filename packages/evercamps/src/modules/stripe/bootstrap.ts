@@ -6,7 +6,7 @@ import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentM
 import { getSetting } from '../setting/services/setting.js';
 import { cancelPaymentIntent } from './services/cancelPayment.js';
 
-export default async () => {
+export default async (): Promise<void> => {
   const authorizedPaymentStatus = {
     order: {
       paymentStatus: {
@@ -40,36 +40,41 @@ export default async () => {
       }
     }
   };
+
   config.util.setModuleDefaults('oms', authorizedPaymentStatus);
 
-  hookAfter('changePaymentStatus', async (order, orderID, status) => {
-    if (status !== 'canceled') {
-      return;
+  hookAfter(
+    'changePaymentStatus',
+    async (order: any, orderID: any, status: any) => {
+      if (status !== 'canceled') {
+        return;
+      }
+
+      if (order.payment_method !== 'stripe') {
+        return;
+      }
+
+      await cancelPaymentIntent(orderID);
     }
-    if (order.payment_method !== 'stripe') {
-      return;
-    }
-    await cancelPaymentIntent(orderID);
-  });
+  );
 
   registerPaymentMethod({
     init: async () => ({
       methodCode: 'stripe',
       methodName: await getSetting('stripeDisplayName', 'Stripe')
     }),
+
     validator: async () => {
       const stripeConfig = getConfig('system.stripe', {});
-      let stripeStatus;
+      let stripeStatus: any;
+
       if (stripeConfig.status) {
         stripeStatus = stripeConfig.status;
       } else {
         stripeStatus = await getSetting('stripePaymentStatus', 0);
       }
-      if (parseInt(stripeStatus, 10) === 1) {
-        return true;
-      } else {
-        return false;
-      }
+
+      return parseInt(stripeStatus, 10) === 1;
     }
   });
 };
