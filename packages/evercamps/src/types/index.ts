@@ -7,3 +7,4 @@ export * from './order.js';
 export * from './cronjob.js';
 export * from './extension.js';
 export * from './graphqlFilter.js';
+export * from './collectionFilter.js';

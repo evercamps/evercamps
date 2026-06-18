@@ -8,8 +8,8 @@ import { select } from '@evershop/postgres-query-builder';
 
 export default {
   Query: {
-    participant: async (root: unknown, { id }: { id: string }, { pool }: { pool: any }) => {
-      const row = await getParticipantsBaseQuery(pool)
+    participant: async (_root: unknown, { id }: { id: string }, { pool }: { pool: any }) => {
+      const row = await getParticipantsBaseQuery()
         .where("uuid", "=", id)
         .load(pool);
       return row ? camelCase(row) : null;
@@ -30,8 +30,7 @@ export default {
 
     registrations: async (participant: { participantId: number }, { filters = [] }: { filters: any[] }, { user }: { user: any }) => {
       const query = await getRegistrationsByParticipantBaseQuery(
-        participant.participantId,
-        !user
+        participant.participantId
       );
       const root = new RegistrationCollection(query);
       await root.init(filters, !!user);

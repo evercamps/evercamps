@@ -3,9 +3,13 @@ import { getDelegate } from '../../../../lib/middleware/delegate.js';
 import { buildUrl } from '../../../../lib/router/buildUrl.js';
 import { OK } from '../../../../lib/util/httpStatus.js';
 import { EvercampsRequest } from '../../../../types/request.js';
+import { ParticipantData } from '../../services/participant/createParticipant.js';
 
-export default async (request: EvercampsRequest, response: Response, next: NextFunction) => {
-  const participant = await getDelegate('updateParticipant', request);
+export default async (request: EvercampsRequest, response: Response, _next: NextFunction) => {
+  const participant = getDelegate<ParticipantData>('updateParticipant', request);
+  if(!participant) {
+    throw new Error('Participant data not found');
+  }
   response.status(OK);
   response.json({
     data: {

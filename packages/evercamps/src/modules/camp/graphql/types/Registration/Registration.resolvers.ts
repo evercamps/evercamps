@@ -6,7 +6,7 @@ import { RegistrationCollection } from '../../../services/RegistrationCollection
 export default {
   Query: {
     registration: async (root: unknown, { id }: { id: number }, { pool }: { pool: any }) => {
-      const row = await getRegistrationsBaseQuery(pool)
+      const row = await getRegistrationsBaseQuery()
         .where("registration_id", "=", id)
         .load(pool);
       return row ? camelCase(row) : null;
@@ -21,14 +21,13 @@ export default {
   },
   Registration: {
     product: async (registration: { registrationId: number }, { filters = [] }: { filters: any[] }, { user }: { user: any }, { pool }: { pool: any }) => {
-      const row = await getRegistrationsBaseQuery(
-        registration.registrationId,
-        !user
-      ).load(pool);
+      const row = await getRegistrationsBaseQuery()
+        .where("registration_id", "=", registration.registrationId)
+        .load(pool);
       return row ? camelCase(row) : null;
     },
     participant: async (registration: { registrationId: number }, _: unknown, { pool }: { pool: any }) => {
-      const row = await getRegistrationsBaseQuery(pool)
+      const row = await getRegistrationsBaseQuery()
         .where("registration_id", "=", registration.registrationId)
         .load(pool);
       return row ? camelCase(row) : null;

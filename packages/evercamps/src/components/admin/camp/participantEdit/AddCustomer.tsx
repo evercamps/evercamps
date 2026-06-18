@@ -35,11 +35,11 @@ function AddCustomer({ addCustomerApi, currentCustomerId = null, closeModal }: P
 
   return (
     <CustomerSelector
-      onSelect={(customer: any) => {
+      onSelect={async (customer) => {
         setSelectedCustomer(customer.customerId);
-        assignCustomer(customer.customerId);
+        await assignCustomer(customer.customerId);
       }}
-      onUnSelect={() => {}}
+      onUnSelect={async () => {}}
       selectedChecker={(customer: any) => selectedCustomer === customer.customerId}
       closeModal={closeModal}
       disableSelection={Boolean(selectedCustomer)}

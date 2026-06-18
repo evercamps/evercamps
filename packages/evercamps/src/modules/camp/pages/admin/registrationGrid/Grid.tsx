@@ -10,6 +10,7 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import axios from 'axios';
 import React, { useState } from 'react';
 import * as XLSX from "xlsx";
+import { GraphQLFilter } from '../../../../../types';
 
 export const query = `
   query Query($filters: [FilterInput]) {
@@ -61,12 +62,6 @@ interface Registration {
 interface Product {
   uuid: string;
   name: string;
-}
-
-interface GridFilter {
-  key: string;
-  operation: string;
-  value: string;
 }
 
 interface ActionsProps {
@@ -146,7 +141,7 @@ interface RegistrationGridProps {
   registrations: {
     items: Registration[];
     total: number;
-    currentFilters: Filter[];
+    currentFilters: GraphQLFilter[];
   };
   products: {
     items: Product[];
@@ -229,7 +224,6 @@ export default function RegistrationGrid({
                     sortOrder: 10
                   }
                 ]}
-                currentFilters={currentFilters}
               />
             </div>
           </Form>

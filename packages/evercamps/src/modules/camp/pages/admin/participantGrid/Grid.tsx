@@ -11,6 +11,7 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import axios from 'axios';
 import React, { useState } from 'react';
 import * as XLSX from "xlsx";
+import { GraphQLFilter } from '../../../../../types';
 
 export const query = `
   query Query($filters: [FilterInput]) {
@@ -47,12 +48,6 @@ interface Participant {
   lastName: string;
   editUrl: string;
   deleteApi: string;
-}
-
-interface Filter {
-  key: string;
-  operation: string;
-  value: string;
 }
 
 interface ActionsProps {
@@ -132,7 +127,7 @@ interface ParticipantGridProps {
   participants: {
     items: Participant[];
     total: number;
-    currentFilters: Filter[];
+    currentFilters: GraphQLFilter[];
   };
 }
 
@@ -242,18 +237,17 @@ export default function ParticipantGrid({
               <Area
                 className=""
                 id="participantGridRow"
-                row={p}
                 noOuter
                 coreComponents={[
                   {
                     component: {
-                      default: () => <ParticipantFirstNameRow id="firstName" participant={p} />
+                      default: () => <ParticipantFirstNameRow participant={p} />
                     },
                     sortOrder: 10
                   },
                   {
                     component: {
-                      default: () => <ParticipantLastNameRow id="lastName" participant={p} />
+                      default: () => <ParticipantLastNameRow participant={p} />
                     },
                     sortOrder: 25
                   }

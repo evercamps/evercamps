@@ -75,14 +75,7 @@ export default function Customer({ participant }: Props) {
     return (
       <Card
         title="Customer"
-        actions={[
-          !customer && {
-            name: 'Assign Customer',
-            onAction: () => {
-              modal.openModal();
-            }
-          }
-        ].filter(Boolean)}
+        actions={customer ? [] : [{ name: 'Assign Customer', onAction: () => modal.openModal() }]}
       >
         {modal.state.showing && (
           <div className={modal.className} onAnimationEnd={modal.onAnimationEnd}>
