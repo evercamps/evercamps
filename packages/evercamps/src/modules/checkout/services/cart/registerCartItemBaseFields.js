@@ -1,4 +1,4 @@
-import { evercampsFields } from './fields/cartItem/evercamps.js';
+import { campsFields } from './fields/cartItem/camps.js';
 import { identityFields } from './fields/cartItem/identity.js';
 import { inventoryFields } from './fields/cartItem/inventory.js';
 import { linkFields } from './fields/cartItem/links.js';
@@ -14,6 +14,6 @@ export function registerCartItemBaseFields(fields) {
     ...taxFields,
     ...inventoryFields,
     ...linkFields,
-    ...evercampsFields
+    ...campsFields
   ]);
 }

@@ -1,13 +1,13 @@
 import { toPrice } from '../../../toPrice.js';
+import type { CartContext, CartField } from '../types.js';
 
-export const totalsFields = [
+export const totalsFields: CartField[] = [
   {
     key: 'sub_total',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         let total = 0;
-        const items = this.getItems();
-        items.forEach((i) => {
+        this.getItems().forEach((i) => {
           total += i.getData('line_total');
         });
         return toPrice(total);
@@ -18,10 +18,9 @@ export const totalsFields = [
   {
     key: 'sub_total_incl_tax',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         let total = 0;
-        const items = this.getItems();
-        items.forEach((i) => {
+        this.getItems().forEach((i) => {
           total += i.getData('line_total_incl_tax');
         });
         return toPrice(total);

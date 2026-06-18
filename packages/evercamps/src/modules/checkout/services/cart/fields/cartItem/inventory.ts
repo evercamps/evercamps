@@ -1,12 +1,13 @@
-export const inventoryFields = [
+import type { ItemContext, ItemField } from '../types.js';
+
+export const inventoryFields: ItemField[] = [
   {
     key: 'qty',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         const triggeredField = this.getTriggeredField();
         const requestedValue = this.getRequestedValue();
-        const qty =
-          triggeredField === 'qty' ? requestedValue : this.getData('qty');
+        const qty = triggeredField === 'qty' ? requestedValue : this.getData('qty');
         const product = await this.getProduct();
         if (product.manage_stock === true && product.qty < 1) {
           this.setError('qty', 'This item is out of stock');

@@ -1,12 +1,13 @@
 import { select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../../../../lib/postgres/connection.js';
+import type { CartContext, CartField } from '../types.js';
 
-export const billingFields = [
+export const billingFields: CartField[] = [
   {
     key: 'billing_address_id',
     resolvers: [
-      async function resolver(billingAddressId) {
-        return billingAddressId;
+      async function(value?: any) {
+        return value;
       }
     ],
     dependencies: ['cart_id']
@@ -14,7 +15,7 @@ export const billingFields = [
   {
     key: 'billingAddress',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         if (!this.getData('billing_address_id')) {
           return undefined;
         } else {

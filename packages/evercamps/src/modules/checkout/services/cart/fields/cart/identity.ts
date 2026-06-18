@@ -1,11 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from '../../../../../../lib/util/getConfig.js';
+import type { CartContext, CartField } from '../types.js';
 
-export const identityFields = [
+export const identityFields: CartField[] = [
   {
     key: 'cart_id',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         return this.getData('cart_id');
       }
     ]
@@ -13,7 +14,7 @@ export const identityFields = [
   {
     key: 'uuid',
     resolvers: [
-      function resolver() {
+      function(this: CartContext) {
         const uuid = this.getData('uuid');
         const key = uuidv4();
         return uuid || key.replace(/-/g, '');
@@ -24,7 +25,7 @@ export const identityFields = [
   {
     key: 'currency',
     resolvers: [
-      async function resolver() {
+      async function() {
         return getConfig('shop.currency', 'USD');
       }
     ]
@@ -32,23 +33,23 @@ export const identityFields = [
   {
     key: 'user_ip',
     resolvers: [
-      async function resolver(ip) {
-        return ip;
+      async function(value?: any) {
+        return value;
       }
     ]
   },
   {
     key: 'sid',
     resolvers: [
-      async function resolver(sid) {
-        return sid;
+      async function(value?: any) {
+        return value;
       }
     ]
   },
   {
     key: 'status',
     resolvers: [
-      async function resolver() {
+      async function() {
         return 1;
       }
     ]

@@ -1,8 +1,10 @@
-export const evercampsFields = [
+import type { ItemContext, ItemField } from '../types.js';
+
+export const campsFields: ItemField[] = [
   {
     key: 'registrations',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         return this.getTriggeredField() === 'registrations'
           ? this.getRequestedValue()
           : this.getData('registrations') ?? null;
@@ -12,7 +14,7 @@ export const evercampsFields = [
   {
     key: 'manageRegistrations',
     resolvers: [
-      async function resolver(value) {
+      async function(value?: any) {
         return value ?? null;
       }
     ]

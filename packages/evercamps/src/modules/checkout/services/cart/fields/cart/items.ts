@@ -1,16 +1,14 @@
-export const itemFields = [
+import type { CartContext, CartField } from '../types.js';
+
+export const itemFields: CartField[] = [
   {
     key: 'items',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         const triggeredField = this.getTriggeredField();
         const requestedValue = this.getRequestedValue();
-        const items = [];
         if (triggeredField === 'items') {
-          requestedValue.forEach((item) => {
-            items.push(item);
-          });
-          return items;
+          return [...requestedValue];
         } else {
           return this.getData('items');
         }
@@ -21,10 +19,9 @@ export const itemFields = [
   {
     key: 'total_qty',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         let count = 0;
-        const items = this.getItems();
-        items.forEach((i) => {
+        this.getItems().forEach((i) => {
           count += parseInt(i.getData('qty'), 10);
         });
         return count;
@@ -35,10 +32,9 @@ export const itemFields = [
   {
     key: 'total_weight',
     resolvers: [
-      async function resolver() {
+      async function(this: CartContext) {
         let weight = 0;
-        const items = this.getItems();
-        items.forEach((i) => {
+        this.getItems().forEach((i) => {
           weight += i.getData('product_weight') * i.getData('qty');
         });
         return weight;

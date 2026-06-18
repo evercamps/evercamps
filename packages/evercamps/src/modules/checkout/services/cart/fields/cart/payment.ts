@@ -1,21 +1,18 @@
 import { getAvailablePaymentMethods } from '../../../getAvailablePaymentMethos.js';
+import type { CartContext, CartField } from '../types.js';
 
-export const paymentFields = [
+export const paymentFields: CartField[] = [
   {
     key: 'payment_method',
     resolvers: [
-      async function resolver(paymentMethod) {
+      async function(this: CartContext, value?: any) {
+        const paymentMethod: string | null = value;
         const methods = await getAvailablePaymentMethods();
-        if (
-          paymentMethod &&
-          methods.map((m) => m.methodCode).includes(paymentMethod)
-        ) {
+        const methodCodes = methods.map((m: any) => m.methodCode);
+        if (paymentMethod && methodCodes.includes(paymentMethod)) {
           this.setError('payment_method', undefined);
           return paymentMethod;
-        } else if (
-          paymentMethod &&
-          !methods.map((m) => m.methodCode).includes(paymentMethod)
-        ) {
+        } else if (paymentMethod && !methodCodes.includes(paymentMethod)) {
           this.setError(
             'payment_method',
             `Payment method ${paymentMethod} is not available`
@@ -31,9 +28,9 @@ export const paymentFields = [
   {
     key: 'payment_method_name',
     resolvers: [
-      async function resolver(methodName) {
-        // TODO: This field should be handled by each of payment method
-        return methodName;
+      async function(value?: any) {
+        // TODO: This field should be handled by each payment method
+        return value;
       }
     ],
     dependencies: ['payment_method']

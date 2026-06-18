@@ -1,8 +1,10 @@
-export const productFields = [
+import type { ItemContext, ItemField } from '../types.js';
+
+export const productFields: ItemField[] = [
   {
     key: 'product_id',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         const product = await this.getProduct();
         if (product.status === false) {
           this.setError('product_id', 'This product is not available');
@@ -14,25 +16,23 @@ export const productFields = [
   {
     key: 'product_uuid',
     resolvers: [
-      async function resolver() {
-        const product = await this.getProduct();
-        return product.uuid;
+      async function(this: ItemContext) {
+        return (await this.getProduct()).uuid;
       }
     ]
   },
   {
     key: 'product_sku',
     resolvers: [
-      async function resolver() {
-        const product = await this.getProduct();
-        return product.sku;
+      async function(this: ItemContext) {
+        return (await this.getProduct()).sku;
       }
     ]
   },
   {
     key: 'group_id',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         const product = await this.getProduct();
         return parseInt(product.group_id, 10) ?? null;
       }
@@ -42,7 +42,7 @@ export const productFields = [
   {
     key: 'category_id',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         const product = await this.getProduct();
         return product.category_id ? parseInt(product.category_id, 10) : null;
       }
@@ -52,9 +52,8 @@ export const productFields = [
   {
     key: 'product_name',
     resolvers: [
-      async function resolver() {
-        const product = await this.getProduct();
-        return product.name ?? null;
+      async function(this: ItemContext) {
+        return (await this.getProduct()).name ?? null;
       }
     ],
     dependencies: ['product_id']
@@ -62,9 +61,8 @@ export const productFields = [
   {
     key: 'thumbnail',
     resolvers: [
-      async function resolver() {
-        const product = await this.getProduct();
-        return product.thumb_image ?? null;
+      async function(this: ItemContext) {
+        return (await this.getProduct()).thumb_image ?? null;
       }
     ],
     dependencies: ['product_id']
@@ -72,9 +70,8 @@ export const productFields = [
   {
     key: 'product_weight',
     resolvers: [
-      async function resolver() {
-        const product = await this.getProduct();
-        return parseFloat(product.weight) ?? null;
+      async function(this: ItemContext) {
+        return parseFloat((await this.getProduct()).weight) ?? null;
       }
     ],
     dependencies: ['product_id']
@@ -82,9 +79,8 @@ export const productFields = [
   {
     key: 'variant_group_id',
     resolvers: [
-      async function resolver() {
-        const product = await this.getProduct();
-        return product.variant_group_id ?? null;
+      async function(this: ItemContext) {
+        return (await this.getProduct()).variant_group_id ?? null;
       }
     ],
     dependencies: ['product_id']

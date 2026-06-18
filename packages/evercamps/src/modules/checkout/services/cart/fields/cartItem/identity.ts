@@ -1,10 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
+import type { ItemContext, ItemField } from '../types.js';
 
-export const identityFields = [
+export const identityFields: ItemField[] = [
   {
     key: 'cart_item_id',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         return this.getData('cart_item_id');
       }
     ]
@@ -12,7 +13,7 @@ export const identityFields = [
   {
     key: 'uuid',
     resolvers: [
-      async function resolver() {
+      async function(this: ItemContext) {
         return this.getData('uuid') ?? uuidv4();
       }
     ]
@@ -20,9 +21,8 @@ export const identityFields = [
   {
     key: 'cart_id',
     resolvers: [
-      async function resolver() {
-        const cart = this.getCart();
-        return cart.getData('cart_id');
+      async function(this: ItemContext) {
+        return this.getCart().getData('cart_id');
       }
     ],
     dependencies: ['cart_item_id']
