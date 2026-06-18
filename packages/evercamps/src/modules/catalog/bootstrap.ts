@@ -12,10 +12,11 @@ import registerDefaultCategoryCollectionFilters from './services/registerDefault
 import registerDefaultCollectionCollectionFilters from './services/registerDefaultCollectionCollectionFilters.js';
 import registerDefaultProductCollectionFilters from './services/registerDefaultProductCollectionFilters.js';
 
-export default () => {
+export default (): void => {
   addProcessor('cartItemFields', registerCartItemProductUrlField, 0);
   addProcessor('cartItemFields', registerCartItemVariantOptionsField, 0);
-  addProcessor('configurationSchema', (schema) => {
+
+  addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {
       properties: {
         catalog: {
@@ -30,34 +31,22 @@ export default () => {
                     thumbnail: {
                       type: 'object',
                       properties: {
-                        width: {
-                          type: 'integer'
-                        },
-                        height: {
-                          type: 'integer'
-                        }
+                        width: { type: 'integer' },
+                        height: { type: 'integer' }
                       }
                     },
                     listing: {
                       type: 'object',
                       properties: {
-                        width: {
-                          type: 'integer'
-                        },
-                        height: {
-                          type: 'integer'
-                        }
+                        width: { type: 'integer' },
+                        height: { type: 'integer' }
                       }
                     },
                     single: {
                       type: 'object',
                       properties: {
-                        width: {
-                          type: 'integer'
-                        },
-                        height: {
-                          type: 'integer'
-                        }
+                        width: { type: 'integer' },
+                        height: { type: 'integer' }
                       }
                     },
                     placeHolder: {
@@ -87,8 +76,10 @@ export default () => {
         }
       }
     });
+
     return schema;
   });
+
   const defaultCatalogConfig = {
     product: {
       image: {
@@ -109,67 +100,67 @@ export default () => {
     },
     showOutOfStockProduct: false
   };
+
   config.util.setModuleDefaults('catalog', defaultCatalogConfig);
 
-  // Default pricing configuration
   const defaultPricingConfig = {
     rounding: 'round',
     precision: 2
   };
+
   config.util.setModuleDefaults('pricing', defaultPricingConfig);
 
-  // Reigtering the default filters for product collection
   addProcessor(
     'productCollectionFilters',
     registerDefaultProductCollectionFilters,
     1
   );
+
   addProcessor(
     'productCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
-  // Reigtering the default filters for category collection
   addProcessor(
     'categoryCollectionFilters',
     registerDefaultCategoryCollectionFilters,
     1
   );
+
   addProcessor(
     'categoryCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
-  // Reigtering the default filters for collection collection
   addProcessor(
     'collectionCollectionFilters',
     registerDefaultCollectionCollectionFilters,
     1
   );
+
   addProcessor(
     'collectionCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
-  // Reigtering the default filters for attribute collection
   addProcessor(
     'attributeCollectionFilters',
     registerDefaultAttributeCollectionFilters,
     1
   );
+
   addProcessor(
     'attributeCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     2
   );
 
-  // Reigtering the default filters for attribute group collection
   addProcessor(
     'attributeGroupCollectionFilters',
-    (filters) => [...filters, ...defaultPaginationFilters],
+    (filters: any[]) => [...filters, ...defaultPaginationFilters],
     1
   );
 
@@ -192,17 +183,19 @@ export default () => {
     enabled: true
   });
 
-  const parseIntCount = (data) => {
+  const parseIntCount = (data: any) => {
     if (data.type !== 'collection_products') {
       return data;
     }
 
     data.settings = data.settings || {};
+
     if (data.settings.count) {
       data.settings.count = parseInt(data.settings.count, 10);
     } else {
       data.settings.count = 4;
     }
+
     return data;
   };
 

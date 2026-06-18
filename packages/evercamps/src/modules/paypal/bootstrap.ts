@@ -5,35 +5,40 @@ import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentM
 import { getSetting } from '../setting/services/setting.js';
 import { voidPaymentTransaction } from './services/voidPaymentTransaction.js';
 
-export default async () => {
-  hookAfter('changePaymentStatus', async (order, orderID, status) => {
-    if (status !== 'canceled') {
-      return;
+export default async (): Promise<void> => {
+  hookAfter(
+    'changePaymentStatus',
+    async (order: any, orderID: any, status: any) => {
+      if (status !== 'canceled') {
+        return;
+      }
+
+      if (order.payment_method !== 'paypal') {
+        return;
+      }
+
+      await voidPaymentTransaction(orderID);
     }
-    if (order.payment_method !== 'paypal') {
-      return;
-    }
-    await voidPaymentTransaction(orderID);
-  });
+  );
 
   registerPaymentMethod({
     init: async () => ({
       methodCode: 'paypal',
       methodName: await getSetting('paypalDisplayName', 'PayPal')
     }),
+
     validator: async () => {
-      const paypalConfig = getConfig('system.paypal', {});
-      let paypalStatus;
+      // TODO: fix any with real model
+      const paypalConfig = getConfig<any>('system.paypal', {});
+      let paypalStatus: any;
+
       if (paypalConfig.status) {
         paypalStatus = paypalConfig.status;
       } else {
         paypalStatus = await getSetting('paypalPaymentStatus', 0);
       }
-      if (parseInt(paypalStatus, 10) === 1) {
-        return true;
-      } else {
-        return false;
-      }
+
+      return parseInt(paypalStatus, 10) === 1;
     }
   });
 };
