@@ -1,8 +1,8 @@
 import { getConfig } from '../../../lib/util/getConfig.js';
 
 export type RoundType = 'up' | 'down' | 'round';
-export function toPrice(value: string, forDisplay: boolean = false) {
-  let price = parseFloat(value || '0');
+export function toPrice(value: string | number, forDisplay: boolean = false) {
+  let price: number = typeof value === "number" ? value : parseFloat(value || '0');
   if (Number.isNaN(price)) {
     throw new Error('Price is not a number');
   }

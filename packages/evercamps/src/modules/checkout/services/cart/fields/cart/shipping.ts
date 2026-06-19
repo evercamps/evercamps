@@ -330,7 +330,7 @@ export const shippingFields: CartField[] = [
     key: 'shipping_fee_incl_tax',
     resolvers: [
       async function(this: CartContext) {
-        const priceIncludingTax = getConfig('pricing.tax.price_including_tax', false);
+        const priceIncludingTax = getConfig<boolean>('pricing.tax.price_including_tax', false);
         if (this.getData('shipping_fee_draft') === 0) {
           return 0;
         }
