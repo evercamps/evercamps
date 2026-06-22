@@ -60,7 +60,7 @@ export async function buildEntry(routes, clientOnly = false) {
 
       let contentClient = `
       import React from 'react';
-      import ReactDOM from 'react-dom';
+      import { hydrateRoot } from 'react-dom/client';
       import { Area } from '@evercamps/evercamps/components/common';
       import {${
         route.isAdmin ? 'HydrateAdmin' : 'HydrateFrontStore'
@@ -91,7 +91,7 @@ export async function buildEntry(routes, clientOnly = false) {
         .replace(/'---/g, '')
         .replace(/---'/g, '')} `;
       contentClient += '\r\n';
-      contentClient += `ReactDOM.hydrate(
+      contentClient += `hydrateRoot(
         ${
           route.isAdmin
             ? 'React.createElement(HydrateAdmin, null)'
@@ -114,7 +114,7 @@ export async function buildEntry(routes, clientOnly = false) {
         // Loop through the widgets config and add the query to the widgets
         let contentServer = `import React from 'react'; `;
         contentServer += '\r\n';
-        contentServer += `import ReactDOM from 'react-dom'; `;
+        contentServer += `import { hydrateRoot } from 'react-dom/client';`;
         contentServer += '\r\n';
         contentServer += `import { Area } from '@evercamps/evercamps/components/common';`;
         contentServer += '\r\n';
