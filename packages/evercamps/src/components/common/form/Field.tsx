@@ -10,15 +10,71 @@ import { Select } from '@components/common/form/fields/Select';
 import { TextArea } from '@components/common/form/fields/Textarea';
 import { Toggle } from '@components/common/form/fields/Toggle';
 import { useFormContext } from '@components/common/form/Form';
-import PropTypes from 'prop-types';
 import PubSub from 'pubsub-js';
 import React from 'react';
 import isEqual from 'react-fast-compare';
 import './Field.scss';
 import { FORM_FIELD_UPDATED } from '../../../lib/util/events';
 
-const useMemoizeArgs = (args, equalityFunc) => {
-  const ref = React.useRef();
+type FieldType =
+  | 'text'
+  | 'select'
+  | 'multiselect'
+  | 'checkbox'
+  | 'radio'
+  | 'toggle'
+  | 'date'
+  | 'datetime'
+  | 'textarea'
+  | 'password'
+  | 'hidden';
+
+type ValidationRule = string | { rule: string; message?: string };
+
+type SelectOption = { value: string | number; text: string };
+
+export interface FieldProps {
+  name: string;
+  type: FieldType;
+  label?: string;
+  instruction?: string;
+  value?: string | number | boolean;
+  onChange?: (newValue: unknown, fieldProps?: FieldProps) => void;
+  validationRules?: ValidationRule[];
+  // shared display props
+  placeholder?: string;
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
+  // select / multiselect / radio
+  options?: SelectOption[];
+  disableDefaultOption?: boolean;
+  // checkbox
+  isChecked?: boolean;
+  // html input attributes forwarded by Input
+  id?: string;
+  disabled?: boolean;
+  readonly?: boolean;
+  maxlength?: number;
+  minlength?: number;
+  pattern?: string;
+  autocomplete?: string;
+  autofocus?: boolean;
+  dirname?: string;
+  form?: string;
+  defaultValue?: string | number;
+  enterkeyhint?: string;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onKeyPress?: React.KeyboardEventHandler<HTMLInputElement>;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+  onKeyUp?: React.KeyboardEventHandler<HTMLInputElement>;
+}
+
+const useMemoizeArgs = <T extends unknown[]>(
+  args: T,
+  equalityFunc: (a: unknown, b: unknown) => boolean
+): T => {
+  const ref = React.useRef<T>();
   const prevArgs = ref.current;
   const argsAreEqual =
     prevArgs !== undefined &&
@@ -34,14 +90,21 @@ const useMemoizeArgs = (args, equalityFunc) => {
   return argsAreEqual ? prevArgs : args;
 };
 
-export function Field(props) {
-  const { name, value, validationRules, onChange, type } = props;
-  const context = useFormContext();
-  const [fieldValue, setFieldValue] = React.useState(value || '');
-  const field = context.fields.find((f) => f.name && f.name === name);
+export function Field(props: FieldProps) {
+  const { name, validationRules, onChange, type } = props;
+  let {value} = props;
+  if(value === undefined) {
+    value = '';
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = useFormContext() as any;
+  const [fieldValue, setFieldValue] = React.useState(value ?? '');
+  const field = context.fields.find(
+    (f: { name: string }) => f.name && f.name === name
+  );
 
   React.useEffect(() => {
-    context.addField(name, value, validationRules || []);
+    context.addField(name, value, validationRules ?? []);
 
     return () => {
       context.removeField(name);
@@ -66,14 +129,18 @@ export function Field(props) {
     PubSub.publishSync(FORM_FIELD_UPDATED, { name, value: fieldValue });
   }, [fieldValue]);
 
-  const onChangeFunc = (newValue) => {
-    let fieldVal;
-    if (typeof newValue === 'object' && newValue !== null && newValue.target) {
-      fieldVal = newValue.target.value;
+  const onChangeFunc = (newValue: unknown) => {
+    let fieldVal: unknown;
+    if (
+      typeof newValue === 'object' &&
+      newValue !== null &&
+      'target' in newValue
+    ) {
+      fieldVal = (newValue as React.ChangeEvent<HTMLInputElement>).target.value;
     } else {
       fieldVal = newValue;
     }
-    setFieldValue(fieldVal);
+    setFieldValue(fieldVal as string | number | boolean);
     context.updateField(name, fieldVal, validationRules);
 
     if (onChange) {
@@ -109,45 +176,13 @@ export function Field(props) {
         return Input;
     }
   })();
+
   return (
     <F
-      {...props}
+      {...(props as any)}
       onChange={onChangeFunc}
       value={fieldValue}
       error={field ? field.error : undefined}
     />
   );
 }
-
-Field.propTypes = {
-  id: PropTypes.string,
-  name: PropTypes.string.isRequired,
-  label: PropTypes.string,
-  type: PropTypes.string.isRequired,
-  placeholder: PropTypes.string,
-  disableDefaultOption: PropTypes.bool,
-  instruction: PropTypes.string,
-  suffix: PropTypes.string,
-  onChange: PropTypes.func,
-  onKeyPress: PropTypes.func,
-  options: PropTypes.arrayOf(PropTypes.shape({
-    value: PropTypes.oneOf([PropTypes.number, PropTypes.string]),
-    text: PropTypes.string
-  })),
-  validationRules: PropTypes.arrayOf(
-    PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        rule: PropTypes.string,
-        message: PropTypes.string
-      })
-    ])
-  ),
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-};
-
-Field.defaultProps = {
-  onChange: undefined,
-  validationRules: [],
-  value: ''
-};
