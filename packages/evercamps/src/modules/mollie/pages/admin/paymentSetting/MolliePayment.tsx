@@ -25,7 +25,7 @@ export default function MolliePayment({
             <h4>Enable?</h4>
           </div>
           <div className="col-span-2">
-            <Toggle name="molliePaymentStatus" value={molliePaymentStatus} />
+            <Toggle name="molliePaymentStatus" value={molliePaymentStatus as string} />
           </div>
         </div>
       </Card.Session>
@@ -50,7 +50,7 @@ export default function MolliePayment({
             <h4>Active Live Mode?</h4>
           </div>
           <div className="col-span-2">
-            <Toggle name="molliePaymentMode" value={molliePaymentMode} />
+            <Toggle name="molliePaymentMode" value={molliePaymentMode as string} />
           </div>
         </div>
       </Card.Session>

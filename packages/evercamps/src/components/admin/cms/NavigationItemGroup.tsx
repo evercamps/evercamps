@@ -9,9 +9,9 @@ import './NavigationItemGroup.scss';
 interface NavigationItemGroupProps {
   id: string;
   name: string;
-  items: NavigationItemProps[];
-  Icon: React.ElementType | null;
-  url: string | null;
+  items?: NavigationItemProps[];
+  Icon?: React.ElementType | null;
+  url?: string | null;
 }
 
 export function NavigationItemGroup({
