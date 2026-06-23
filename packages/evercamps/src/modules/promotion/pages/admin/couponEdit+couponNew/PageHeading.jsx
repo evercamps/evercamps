@@ -2,7 +2,7 @@ import PageHeading from '@components/admin/cms/PageHeading';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function CouponEditPageHeading({ backUrl, coupon }) {
+export default function CouponEditPageHeading({ backUrl, coupon = null }) {
   return (
     <PageHeading
       backUrl={backUrl}
@@ -16,10 +16,6 @@ CouponEditPageHeading.propTypes = {
   coupon: PropTypes.shape({
     coupon: PropTypes.string
   })
-};
-
-CouponEditPageHeading.defaultProps = {
-  coupon: null
 };
 
 export const layout = {

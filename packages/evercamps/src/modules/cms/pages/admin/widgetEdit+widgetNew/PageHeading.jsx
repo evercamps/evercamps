@@ -2,7 +2,7 @@ import PageHeading from '@components/admin/cms/PageHeading';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function WidgetEditPageHeading({ backUrl, widget }) {
+export default function WidgetEditPageHeading({ backUrl, widget = null }) {
   return (
     <PageHeading
       backUrl={backUrl}
@@ -16,10 +16,6 @@ WidgetEditPageHeading.propTypes = {
   widget: PropTypes.shape({
     name: PropTypes.string.isRequired
   })
-};
-
-WidgetEditPageHeading.defaultProps = {
-  widget: null
 };
 
 export const layout = {

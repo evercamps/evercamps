@@ -10,7 +10,7 @@ import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export default function ContactInformationStep({
   cart: { customerEmail, addContactInfoApi },
-  currentCustomer,
+  currentCustomer = null,
   loginUrl
 }) {
   const steps = useCheckoutSteps();
@@ -64,10 +64,6 @@ ContactInformationStep.propTypes = {
     customerEmail: PropTypes.string,
     addContactInfoApi: PropTypes.string.isRequired
   }).isRequired
-};
-
-ContactInformationStep.defaultProps = {
-  currentCustomer: null
 };
 
 export const layout = {

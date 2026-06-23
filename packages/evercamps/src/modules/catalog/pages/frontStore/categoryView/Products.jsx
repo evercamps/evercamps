@@ -7,6 +7,11 @@ export default function Products({
   products: {
     showProducts,
     products: { items }
+  } =  {
+    showProducts: 1,
+    products: {
+      items: []
+    }
   }
 }) {
   if (!showProducts) {
@@ -49,15 +54,6 @@ Products.propTypes = {
       )
     })
   })
-};
-
-Products.defaultProps = {
-  products: {
-    showProducts: 1,
-    products: {
-      items: []
-    }
-  }
 };
 
 export const layout = {

@@ -14,7 +14,7 @@ const createOption = (label) => ({
   value: label
 });
 
-function AreaInput({ values }) {
+function AreaInput({ values = [] }) {
   const [inputValue, setInputValue] = React.useState('');
   const [value, setValue] = React.useState(values);
 
@@ -55,10 +55,6 @@ AreaInput.propTypes = {
   values: PropTypes.arrayOf(
     PropTypes.shape({ label: PropTypes.string, value: PropTypes.string })
   )
-};
-
-AreaInput.defaultProps = {
-  values: []
 };
 
 export default function General({ widget = null, routes }) {

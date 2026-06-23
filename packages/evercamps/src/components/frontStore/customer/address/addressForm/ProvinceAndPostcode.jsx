@@ -5,9 +5,9 @@ import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export function ProvinceAndPostcode({
-  address,
+  address = {},
   allowCountries,
-  selectedCountry,
+  selectedCountry = '',
   getErrorMessage,
   isFieldRequired
 }) {
@@ -67,9 +67,4 @@ ProvinceAndPostcode.propTypes = {
   selectedCountry: PropTypes.string,
   getErrorMessage: PropTypes.func.isRequired,
   isFieldRequired: PropTypes.func.isRequired
-};
-
-ProvinceAndPostcode.defaultProps = {
-  address: {},
-  selectedCountry: ''
 };

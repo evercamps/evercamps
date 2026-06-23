@@ -5,7 +5,7 @@ import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export function Country({
   allowCountries,
-  selectedCountry,
+  selectedCountry = null,
   setSelectedCountry,
   fieldName = 'country'
 }) {
@@ -44,9 +44,4 @@ Country.propTypes = {
   selectedCountry: PropTypes.string,
   setSelectedCountry: PropTypes.func.isRequired,
   fieldName: PropTypes.string
-};
-
-Country.defaultProps = {
-  fieldName: 'country',
-  selectedCountry: null
 };

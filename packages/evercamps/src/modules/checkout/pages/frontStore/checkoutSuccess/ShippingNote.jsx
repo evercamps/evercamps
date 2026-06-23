@@ -1,10 +1,13 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-
 export default function ShippingNote({
-  setting: { showShippingNote },
-  order: { shippingNote }
+  setting: { showShippingNote } = {
+    showShippingNote: false
+  },
+  order: { shippingNote } = {
+    shippingNote: ''
+  }
 }) {
   return showShippingNote ? (
     <div className="shipping-note mt-8">
@@ -20,15 +23,6 @@ ShippingNote.propTypes = {
   order: PropTypes.shape({
     shippingNote: PropTypes.string
   })
-};
-
-ShippingNote.defaultProps = {
-  setting: {
-    showShippingNote: false
-  },
-  order: {
-    shippingNote: ''
-  }
 };
 
 export const layout = {

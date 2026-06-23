@@ -2,7 +2,7 @@ import PageHeading from '@components/admin/cms/PageHeading';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function CategoryEditPageHeading({ backUrl, category }) {
+export default function CategoryEditPageHeading({ backUrl, category = {} }) {
   return (
     <PageHeading
       backUrl={backUrl}
@@ -16,10 +16,6 @@ CategoryEditPageHeading.propTypes = {
   category: PropTypes.shape({
     name: PropTypes.string
   })
-};
-
-CategoryEditPageHeading.defaultProps = {
-  category: {}
 };
 
 export const layout = {

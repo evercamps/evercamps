@@ -209,13 +209,6 @@ CategorySelect.propTypes = {
   })
 };
 
-General.defaultProps = {
-  product: undefined,
-  productTaxClasses: {
-    items: []
-  }
-};
-
 export default function General({
   product,
   browserApi,
@@ -223,7 +216,7 @@ export default function General({
   uploadApi,
   folderCreateApi,
   setting,
-  productTaxClasses: { items: taxClasses } : { items: []}
+  productTaxClasses: { items: taxClasses } = { items: []}
 }) {
   return (
     <Card title="General">

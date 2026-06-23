@@ -17,7 +17,3 @@ export function Tax({ amount }) {
 Tax.propTypes = {
   amount: PropTypes.string
 };
-
-Tax.defaultProps = {
-  amount: undefined
-};

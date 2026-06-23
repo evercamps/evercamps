@@ -4,7 +4,7 @@ import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export function NameAndTelephone({
-  address,
+  address = {},
   getErrorMessage,
   isFieldRequired
 }) {
@@ -65,8 +65,4 @@ NameAndTelephone.propTypes = {
   }),
   getErrorMessage: PropTypes.func.isRequired,
   isFieldRequired: PropTypes.func.isRequired
-};
-
-NameAndTelephone.defaultProps = {
-  address: {}
 };

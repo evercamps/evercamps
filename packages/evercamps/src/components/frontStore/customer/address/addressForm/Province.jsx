@@ -4,8 +4,8 @@ import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export function Province({
-  selectedCountry,
-  selectedProvince,
+  selectedCountry = '',
+  selectedProvince = '',
   allowCountries,
   fieldName = 'province'
 }) {
@@ -52,10 +52,4 @@ Province.propTypes = {
     })
   ).isRequired,
   fieldName: PropTypes.string
-};
-
-Province.defaultProps = {
-  selectedProvince: '',
-  selectedCountry: '',
-  fieldName: 'province'
 };

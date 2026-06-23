@@ -54,10 +54,6 @@ Paypal.propTypes = {
   orderPlaced: PropTypes.bool.isRequired
 };
 
-Paypal.defaultProps = {
-  orderId: undefined
-};
-
 export default function PaypalMethod({ createOrderAPI }) {
   const checkout = useCheckout();
   const { placeOrder } = useCheckoutDispatch();

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
-export default function Products({ products: { items } }) {
+export default function Products({ products: { items } = { items: []} }) {
   return (
     <div>
       <ProductList products={items} countPerRow={4} />
@@ -38,12 +38,6 @@ Products.propTypes = {
       })
     )
   })
-};
-
-Products.defaultProps = {
-  products: {
-    items: []
-  }
 };
 
 export const layout = {

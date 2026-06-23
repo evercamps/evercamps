@@ -6,7 +6,10 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
-function Subtotal({ subTotal }) {
+function Subtotal({ subTotal = {
+    value: 0,
+    text: ''
+  } }) {
   return (
     <div className="flex justify-between gap-12">
       <div>{_('Sub total')}</div>
@@ -22,14 +25,10 @@ Subtotal.propTypes = {
   })
 };
 
-Subtotal.defaultProps = {
-  subTotal: {
+function Discount({ discountAmount = {
     value: 0,
     text: ''
-  }
-};
-
-function Discount({ discountAmount, coupon }) {
+  }, coupon = '' }) {
   if (!coupon) {
     return null;
   }
@@ -49,13 +48,7 @@ Discount.propTypes = {
   coupon: PropTypes.string
 };
 
-Discount.defaultProps = {
-  discountAmount: {
-    value: 0,
-    text: ''
-  },
-  coupon: ''
-};
+
 
 function Summary({
   checkoutUrl,
