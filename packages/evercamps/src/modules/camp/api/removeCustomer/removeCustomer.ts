@@ -5,7 +5,11 @@ import removeCustomer from '../../services/participant/removeCustomer.js';
 
 export default async (request: EvercampsRequest, response: Response, next: NextFunction) => {
   try {
-    const { participantId } = request.params;
+    let { participantId } = request.params;
+
+    if(participantId instanceof Array) {
+      participantId = participantId[0];
+    }
     const participant = await removeCustomer(participantId, {
       routeId: request.currentRoute.id
     });

@@ -120,9 +120,20 @@ export function Field(props) {
 }
 
 Field.propTypes = {
+  id: PropTypes.string,
   name: PropTypes.string.isRequired,
+  label: PropTypes.string,
   type: PropTypes.string.isRequired,
+  placeholder: PropTypes.string,
+  disableDefaultOption: PropTypes.bool,
+  instruction: PropTypes.string,
+  suffix: PropTypes.string,
   onChange: PropTypes.func,
+  onKeyPress: PropTypes.func,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.oneOf([PropTypes.number, PropTypes.string]),
+    text: PropTypes.string
+  })),
   validationRules: PropTypes.arrayOf(
     PropTypes.oneOfType([
       PropTypes.string,
