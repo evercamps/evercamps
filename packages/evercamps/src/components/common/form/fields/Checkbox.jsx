@@ -19,10 +19,10 @@ function UnCheckedIcon() {
 
 function Checkbox({
   name,
-  label,
+  label = '',
   onChange,
   error,
-  instruction,
+  instruction = '',
   isChecked = false
 }) {
   const [_isChecked, setChecked] = React.useState(isChecked);
@@ -68,14 +68,6 @@ Checkbox.propTypes = {
   label: PropTypes.string,
   name: PropTypes.string,
   onChange: PropTypes.func.isRequired
-};
-
-Checkbox.defaultProps = {
-  error: undefined,
-  instruction: '',
-  isChecked: false,
-  label: '',
-  name: undefined
 };
 
 export { Checkbox };

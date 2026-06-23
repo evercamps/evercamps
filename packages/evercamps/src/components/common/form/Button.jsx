@@ -84,13 +84,4 @@ Button.propTypes = {
   type: PropTypes.string
 };
 
-Button.defaultProps = {
-  isLoading: false,
-  onAction: undefined,
-  outline: false,
-  url: undefined,
-  variant: 'primary',
-  type: 'button'
-};
-
 export default Button;

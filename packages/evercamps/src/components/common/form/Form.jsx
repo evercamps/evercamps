@@ -13,8 +13,8 @@ export const FormDispatch = React.createContext();
 export function Form(props) {
   const {
     id,
-    action,
-    method,
+    action = '',
+    method = 'POST',
     isJSON = true,
     onStart,
     onComplete,
@@ -230,20 +230,6 @@ Form.propTypes = {
   submitBtn: PropTypes.bool,
   isJSON: PropTypes.bool,
   dataFilter: PropTypes.func
-};
-
-Form.defaultProps = {
-  btnText: undefined,
-  onComplete: undefined,
-  onError: undefined,
-  onStart: undefined,
-  onSuccess: undefined,
-  onValidationError: undefined,
-  submitBtn: true,
-  isJSON: true,
-  action: '',
-  method: 'POST',
-  dataFilter: undefined
 };
 
 export const useFormContext = () => React.useContext(FormContext);
