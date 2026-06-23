@@ -12,7 +12,7 @@ import { compareOperatorList } from './CompareOperatorList';
 import PriceConditionSelector from './PriceConditionSelector';
 import SkuConditionSelector from './SkuConditionSelector';
 
-function Products({ targetProducts, maxQty }) {
+function Products({ targetProducts = [], maxQty = '' }) {
   const [products, setProducts] = React.useState(() =>
     targetProducts.map((p) => ({ ...p, editable: false }))
   );
@@ -434,11 +434,6 @@ Products.propTypes = {
       qty: PropTypes.string
     })
   )
-};
-
-Products.defaultProps = {
-  maxQty: '',
-  targetProducts: []
 };
 
 export function TargetProducts({ products, maxQty, discountType }) {

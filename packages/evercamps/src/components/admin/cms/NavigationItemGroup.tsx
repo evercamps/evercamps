@@ -54,9 +54,3 @@ export function NavigationItemGroup({
     </li>
   );
 }
-
-NavigationItemGroup.defaultProps = {
-  items: [],
-  Icon: null,
-  url: null
-};

@@ -20,7 +20,7 @@ const SearchQuery = `
   }
 `;
 
-function CollectionSelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
+function CollectionSelector({ onSelect, onUnSelect, selectedIDs = [], closeModal }) {
   const limit = 10;
   const [inputValue, setInputValue] = React.useState(null);
   const [page, setPage] = React.useState(1);
@@ -164,10 +164,6 @@ CollectionSelector.propTypes = {
   onUnSelect: PropTypes.func.isRequired,
   selectedIDs: PropTypes.arrayOf(PropTypes.number),
   closeModal: PropTypes.func.isRequired
-};
-
-CollectionSelector.defaultProps = {
-  selectedIDs: []
 };
 
 export default CollectionSelector;

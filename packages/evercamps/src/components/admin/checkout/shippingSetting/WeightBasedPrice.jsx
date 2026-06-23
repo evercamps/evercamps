@@ -2,7 +2,7 @@ import { Field } from '@components/common/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function WeightBasedPrice({ lines }) {
+export default function WeightBasedPrice({ lines = [] }) {
   // This is a table with 3 columns: Min Price, Shipping Cost, and Action
   const [rows, setRows] = React.useState(
     lines.map((line) => ({
@@ -94,8 +94,4 @@ WeightBasedPrice.propTypes = {
       })
     })
   )
-};
-
-WeightBasedPrice.defaultProps = {
-  lines: []
 };

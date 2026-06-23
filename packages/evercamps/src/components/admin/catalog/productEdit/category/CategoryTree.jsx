@@ -21,7 +21,7 @@ const categoriesQuery = `
   }
 `;
 
-function CategoryTree({ selectedCategory, setSelectedCategory }) {
+function CategoryTree({ selectedCategory = {}, setSelectedCategory }) {
   const [result] = useQuery({
     query: categoriesQuery,
     variables: {
@@ -90,10 +90,6 @@ CategoryTree.propTypes = {
     )
   }),
   setSelectedCategory: PropTypes.func.isRequired
-};
-
-CategoryTree.defaultProps = {
-  selectedCategory: {}
 };
 
 export default CategoryTree;

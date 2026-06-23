@@ -2,7 +2,7 @@ import { Field } from '@components/common/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export function Setting({ discountAmount, startDate, endDate }) {
+export function Setting({ discountAmount = '', startDate = '', endDate = ''}) {
   return (
     <div className="grid grid-cols-3 gap-8 form-field-container">
       <div>
@@ -73,10 +73,4 @@ Setting.propTypes = {
   discountAmount: PropTypes.number,
   endDate: PropTypes.string,
   startDate: PropTypes.string
-};
-
-Setting.defaultProps = {
-  discountAmount: '',
-  endDate: '',
-  startDate: ''
 };

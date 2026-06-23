@@ -58,7 +58,7 @@ query Query($productId: ID!) {
 export function Variants({
   productId,
   productUuid,
-  variantGroup,
+  variantGroup = null,
   variantAttributes,
   createProductApi,
   addVariantItemApi,
@@ -173,8 +173,4 @@ Variants.propTypes = {
   createProductApi: PropTypes.string.isRequired,
   addVariantItemApi: PropTypes.string.isRequired,
   productImageUploadUrl: PropTypes.string.isRequired
-};
-
-Variants.defaultProps = {
-  variantGroup: null
 };
