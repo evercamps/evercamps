@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import './Alert.scss';
 
-function Modal({ modal, title, children, primaryAction }) {
+function Modal({ modal, title, children, primaryAction = null }) {
   if (modal.state.showing) {
     return (
       <div className={modal.className} onAnimationEnd={modal.onAnimationEnd}>
@@ -56,9 +56,4 @@ Modal.propTypes = {
     onAction: PropTypes.func.isRequired
   })
 };
-
-Modal.defaultProps = {
-  primaryAction: null
-};
-
 export default Modal;

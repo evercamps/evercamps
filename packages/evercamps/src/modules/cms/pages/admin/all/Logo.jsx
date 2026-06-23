@@ -62,17 +62,6 @@ Logo.propTypes = {
   homepageUrl: PropTypes.string.isRequired
 };
 
-Logo.defaultProps = {
-  themeConfig: {
-    logo: {
-      src: '',
-      alt: 'EverCamps',
-      width: '128',
-      height: '128'
-    }
-  }
-};
-
 export const layout = {
   areaId: 'header',
   sortOrder: 10

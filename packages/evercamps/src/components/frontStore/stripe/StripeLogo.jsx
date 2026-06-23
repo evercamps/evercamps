@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 
-export default function StripeLogo({ width = 100, height = 30 }) {
+export default function StripeLogo({ width = 24, height = 24 }) {
   return (
     <img
       width={width}
@@ -17,9 +17,4 @@ export default function StripeLogo({ width = 100, height = 30 }) {
 StripeLogo.propTypes = {
   height: PropTypes.number,
   width: PropTypes.number
-};
-
-StripeLogo.defaultProps = {
-  height: 24,
-  width: 24
 };

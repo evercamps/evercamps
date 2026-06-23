@@ -53,17 +53,6 @@ Logo.propTypes = {
   })
 };
 
-Logo.defaultProps = {
-  themeConfig: {
-    logo: {
-      src: '',
-      alt: 'EverCamps',
-      width: '128',
-      height: '146'
-    }
-  }
-};
-
 export const layout = {
   areaId: 'header',
   sortOrder: 10

@@ -18,8 +18,3 @@ PaypalLogo.propTypes = {
   height: PropTypes.number,
   width: PropTypes.number
 };
-
-PaypalLogo.defaultProps = {
-  height: 30,
-  width: 100
-};
