@@ -5,8 +5,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { get } from '../../../../../lib/util/get.js';
 
-
-export default function Seo({ category }) {
+export default function Seo({ category = {
+    metaDescription: '',
+    metaKeywords: '',
+    metaTitle: '',
+    urlKey: ''
+  } }) {
   const fields = [
     {
       component: { default: Field },
@@ -76,15 +80,6 @@ Seo.propTypes = {
     metaTitle: PropTypes.string,
     urlKey: PropTypes.string
   })
-};
-
-Seo.defaultProps = {
-  category: {
-    metaDescription: '',
-    metaKeywords: '',
-    metaTitle: '',
-    urlKey: ''
-  }
 };
 
 export const layout = {

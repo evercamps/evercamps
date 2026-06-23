@@ -3,7 +3,7 @@ import { Card } from '@components/admin/cms/Card';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Media({ id, product, productImageUploadUrl }) {
+export default function Media({ id = 'images', product = null, productImageUploadUrl }) {
   const image = product?.image;
   let gallery = product?.gallery || [];
 
@@ -38,11 +38,6 @@ Media.propTypes = {
     })
   }),
   productImageUploadUrl: PropTypes.string.isRequired
-};
-
-Media.defaultProps = {
-  id: 'images',
-  product: null
 };
 
 export const layout = {

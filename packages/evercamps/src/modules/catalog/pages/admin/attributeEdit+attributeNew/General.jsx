@@ -200,7 +200,7 @@ Options.propTypes = {
   ).isRequired
 };
 
-export default function General({ attribute, createGroupApi }) {
+export default function General({ attribute = { type: 'text'}, createGroupApi }) {
   const [type, setType] = React.useState(attribute?.type);
   const fields = [
     {
@@ -302,12 +302,6 @@ General.propTypes = {
     })
   }),
   createGroupApi: PropTypes.string.isRequired
-};
-
-General.defaultProps = {
-  attribute: {
-    type: 'text'
-  }
 };
 
 export const layout = {

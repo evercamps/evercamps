@@ -56,13 +56,4 @@ TextArea.propTypes = {
   placeholder: PropTypes.string
 };
 
-TextArea.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  onChange: undefined,
-  value: undefined,
-  placeholder: undefined
-};
-
 export { TextArea };

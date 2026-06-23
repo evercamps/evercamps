@@ -3,7 +3,7 @@ import { Field } from '@components/common/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Status({ category }) {
+export default function Status({ category = {} }) {
   return (
     <Card>
       <Card.Session title="Status">
@@ -53,10 +53,6 @@ Status.propTypes = {
     includeInNav: PropTypes.number,
     showProducts: PropTypes.number
   })
-};
-
-Status.defaultProps = {
-  category: {}
 };
 
 export const layout = {

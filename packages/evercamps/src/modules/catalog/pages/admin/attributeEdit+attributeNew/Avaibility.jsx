@@ -3,7 +3,7 @@ import { Field } from '@components/common/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function General({ attribute }) {
+export default function General({ attribute = {} }) {
   return (
     <Card title="Setting" subdued>
       <Card.Session>
@@ -66,10 +66,6 @@ General.propTypes = {
     isRequired: PropTypes.number,
     sortOrder: PropTypes.number
   })
-};
-
-General.defaultProps = {
-  attribute: {}
 };
 
 export const layout = {

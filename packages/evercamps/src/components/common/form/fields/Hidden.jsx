@@ -23,8 +23,3 @@ Hidden.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   error: PropTypes.string
 };
-
-Hidden.defaultProps = {
-  value: undefined,
-  error: undefined
-};

@@ -99,7 +99,7 @@ ParentCategory.defaultProps = {
 };
 
 export default function General({
-  category,
+  category = {},
   browserApi,
   deleteApi,
   uploadApi,
@@ -197,10 +197,6 @@ General.propTypes = {
       ).isRequired
     })
   })
-};
-
-General.defaultProps = {
-  category: {}
 };
 
 export const layout = {

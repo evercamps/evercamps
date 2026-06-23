@@ -61,7 +61,7 @@ AreaInput.defaultProps = {
   values: []
 };
 
-export default function General({ widget, routes }) {
+export default function General({ widget = null, routes }) {
   const allRoutes = [
     {
       value: 'all',
@@ -154,10 +154,6 @@ General.propTypes = {
       method: PropTypes.arrayOf(PropTypes.string)
     })
   ).isRequired
-};
-
-General.defaultProps = {
-  widget: null
 };
 
 export const layout = {

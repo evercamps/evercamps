@@ -9,13 +9,13 @@ const Select = React.forwardRef((props, ref) => {
   const {
     name,
     placeholder,
-    disableDefaultOption,
+    disableDefaultOption = true,
     value,
     label,
     onChange,
     error,
     instruction,
-    options
+    options = []
   } = props;
   const [_value, setValue] = React.useState(value || '');
 
@@ -90,18 +90,6 @@ Select.propTypes = {
   placeholder: PropTypes.string,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   disableDefaultOption: PropTypes.bool
-};
-
-Select.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  onChange: undefined,
-  options: [],
-  placeholder: undefined,
-  name: undefined,
-  value: undefined,
-  disableDefaultOption: true
 };
 
 export { Select };

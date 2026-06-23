@@ -99,11 +99,4 @@ Toggle.propTypes = {
   ]).isRequired
 };
 
-Toggle.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  onChange: undefined
-};
-
 export { Toggle };

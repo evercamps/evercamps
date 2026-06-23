@@ -46,7 +46,3 @@ StatusColumnHeader.propTypes = {
     value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
   })
 };
-
-StatusColumnHeader.defaultProps = {
-  currentFilter: {}
-};

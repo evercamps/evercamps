@@ -8,7 +8,7 @@ import { get } from '../../../../../lib/util/get.js';
 
 
 export default function General({
-  collection,
+  collection = {},
   browserApi,
   deleteApi,
   uploadApi,
@@ -102,10 +102,6 @@ General.propTypes = {
     ),
     collectionId: PropTypes.number
   })
-};
-
-General.defaultProps = {
-  collection: {}
 };
 
 export const layout = {
