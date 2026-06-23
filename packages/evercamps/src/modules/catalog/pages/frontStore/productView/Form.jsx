@@ -13,7 +13,7 @@ import './Form.scss';
 import { useModal } from '@components/common/modal/useModal';
 import ParticipantForm from './ParticipantForm.jsx';
 
-function ToastMessage({ thumbnail, name, qty, count, cartUrl, toastId }) {
+function ToastMessage({ thumbnail = null, name, qty, count, cartUrl, toastId }) {
   return (
     <div className="toast-mini-cart">
       <div className="top-head grid grid-cols-2">
@@ -84,10 +84,6 @@ ToastMessage.propTypes = {
   toastId: PropTypes.string.isRequired
 };
 
-ToastMessage.defaultProps = {
-  thumbnail: null
-};
-
 function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick, manageRegistrations }) {
   return (
     <div className="add-to-cart mt-8">
@@ -124,10 +120,6 @@ AddToCart.propTypes = {
   error: PropTypes.string,
   loading: PropTypes.bool.isRequired,
   stockAvailability: PropTypes.bool.isRequired
-};
-
-AddToCart.defaultProps = {
-  error: undefined
 };
 
 export default function ProductForm({ product, action, currentCustomer, loginUrl, registerUrl}) {

@@ -36,17 +36,23 @@ interface Widget extends Component {
   areaId: string[];
 }
 
-function Area(props: AreaProps) {
+let _defaultComponents: Components = {};
+
+export function setDefaultComponents(c: Components) {
+  _defaultComponents = c;
+}
+
+function Area({
+  id,
+  className = '',
+  coreComponents = [],
+  noOuter = false,
+  wrapper = 'div',
+  wrapperProps = {},
+  components = _defaultComponents
+}: AreaProps) {
   const context = useAppState();
-  const {
-    id,
-    coreComponents,
-    wrapperProps,
-    noOuter,
-    wrapper,
-    className,
-    components
-  } = props;
+  const props = { id, className, coreComponents, noOuter, wrapper, wrapperProps, components };
 
   const areaComponents = (() => {
     const areaCoreComponents = coreComponents || [];
@@ -130,14 +136,6 @@ function Area(props: AreaProps) {
     </WrapperComponent>
   );
 }
-
-Area.defaultProps = {
-  className: undefined,
-  coreComponents: [],
-  noOuter: false,
-  wrapper: 'div',
-  wrapperProps: {}
-};
 
 export { Area };
 export default Area;

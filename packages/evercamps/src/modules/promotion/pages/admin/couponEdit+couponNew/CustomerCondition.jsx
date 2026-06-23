@@ -13,7 +13,7 @@ const customStyles = {
 
 export default function CustomerCondition({
   coupon = {},
-  groups: { items: customerGroups }
+  groups: { items: customerGroups } = { items: []}
 }) {
   const condition = coupon?.userCondition || {};
   const selectedGroups = (condition.groups || [])
@@ -120,13 +120,6 @@ CustomerCondition.propTypes = {
       })
     )
   })
-};
-
-CustomerCondition.defaultProps = {
-  coupon: {},
-  groups: {
-    items: []
-  }
 };
 
 export const layout = {

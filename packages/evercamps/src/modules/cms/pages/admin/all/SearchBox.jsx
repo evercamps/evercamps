@@ -66,7 +66,7 @@ const SearchQuery = `
   }
 `;
 
-export default function SearchBox({ resourceLinks }) {
+export default function SearchBox({ resourceLinks = [] }) {
   const [keyword, setKeyword] = React.useState('');
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -173,10 +173,6 @@ SearchBox.propTypes = {
       name: PropTypes.string
     })
   )
-};
-
-SearchBox.defaultProps = {
-  resourceLinks: []
 };
 
 export const layout = {

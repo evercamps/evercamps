@@ -8,14 +8,26 @@ import React from 'react';
 
 function OrderSummary({
   items,
-  subTotal,
-  subTotalInclTax,
-  shippingMethodName,
-  shippingFeeInclTax,
-  totalTaxAmount,
-  discountAmount,
-  coupon,
-  grandTotal,
+  subTotal = {
+    text: '0.00'
+  },
+  subTotalInclTax = {
+    text: '0.00'
+  },
+  shippingMethodName = 'Free Shipping',
+  shippingFeeInclTax = {
+    text: '0.00'
+  },
+  totalTaxAmount = {
+    text: '0.00'
+  },
+  discountAmount = {
+    text: '0.00'
+  },
+  coupon = '',
+  grandTotal = {
+    text: '0.00'
+  },
   priceIncludingTax
 }) {
   return (
@@ -70,29 +82,6 @@ OrderSummary.propTypes = {
     text: PropTypes.string
   }),
   priceIncludingTax: PropTypes.bool.isRequired
-};
-
-OrderSummary.defaultProps = {
-  coupon: '',
-  discountAmount: {
-    text: '0.00'
-  },
-  grandTotal: {
-    text: '0.00'
-  },
-  shippingFeeInclTax: {
-    text: '0.00'
-  },
-  shippingMethodName: 'Free Shipping',
-  subTotal: {
-    text: '0.00'
-  },
-  subTotalInclTax: {
-    text: '0.00'
-  },
-  totalTaxAmount: {
-    text: '0.00'
-  }
 };
 
 export { OrderSummary };

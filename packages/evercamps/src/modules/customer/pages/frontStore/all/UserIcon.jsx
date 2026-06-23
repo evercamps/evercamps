@@ -3,7 +3,7 @@ import Icon from '@heroicons/react/outline/UserIcon';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function UserIcon({ customer, accountUrl, loginUrl }) {
+export default function UserIcon({ customer = null, accountUrl = null, loginUrl }) {
   return (
     <div className="self-center">
       <a href={customer ? accountUrl : loginUrl}>
@@ -21,11 +21,6 @@ UserIcon.propTypes = {
     uuid: PropTypes.string.isRequired
   }),
   loginUrl: PropTypes.string.isRequired
-};
-
-UserIcon.defaultProps = {
-  accountUrl: null,
-  customer: null
 };
 
 export const layout = {

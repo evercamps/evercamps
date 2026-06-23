@@ -2,7 +2,7 @@ import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 
-function Current({ image }) {
+function Current({ image = null }) {
   const [height, setHeight] = useState();
 
   useEffect(() => {
@@ -28,10 +28,6 @@ Current.propTypes = {
     alt: PropTypes.string,
     single: PropTypes.string.isRequired
   })
-};
-
-Current.defaultProps = {
-  image: null
 };
 
 export default function Images({ product: { uuid, image, gallery = [] } }) {

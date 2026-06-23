@@ -2,7 +2,7 @@ import { Toggle } from '@components/common/form/fields/Toggle';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Status({ cmsPage }) {
+export default function Status({ cmsPage = null }) {
   return (
     <div className="form-field-container">
       <Toggle
@@ -20,10 +20,6 @@ Status.propTypes = {
     status: PropTypes.number,
     includeInNave: PropTypes.number
   })
-};
-
-Status.defaultProps = {
-  cmsPage: null
 };
 
 export const layout = {

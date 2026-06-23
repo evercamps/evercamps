@@ -5,8 +5,13 @@ import deleteRegistration from '../../services/registration/deleteRegistration.j
 
 export default async (request: EvercampsRequest, response: Response, next: NextFunction) => {
   try {
-    const { id } = request.params;
-    const participant = await deleteRegistration(id, {
+    let { id } = request.params;
+    
+    if(typeof id !== 'string') {
+      id = id[0];
+    }
+    
+    const participant = await deleteRegistration(id as string, {
       routeId: request.currentRoute.id
     });
     response.status(OK);

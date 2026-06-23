@@ -2,7 +2,7 @@ import Dot from '@components/common/Dot';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export function NoResult({ keyword, resourseLinks = [] }) {
+export function NoResult({ keyword = '', resourseLinks = [] }) {
   return (
     <div className="no-result items-center text-center">
       <h3>
@@ -36,9 +36,4 @@ NoResult.propTypes = {
       name: PropTypes.string
     })
   )
-};
-
-NoResult.defaultProps = {
-  keyword: '',
-  resourseLinks: undefined
 };

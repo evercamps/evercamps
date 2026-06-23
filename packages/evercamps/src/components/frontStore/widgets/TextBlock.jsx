@@ -2,7 +2,10 @@ import Editor from '@components/common/Editor';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function TextBlock({ textWidget: { text, className } }) {
+export default function TextBlock({ textWidget: { text, className } = {
+    text: [],
+    className: ''
+  } }) {
   return (
     <div className={`text-block-widget ${className}`}>
       <Editor rows={text} />
@@ -15,13 +18,6 @@ TextBlock.propTypes = {
     text: PropTypes.array,
     className: PropTypes.string
   })
-};
-
-TextBlock.defaultProps = {
-  textWidget: {
-    text: [],
-    className: ''
-  }
 };
 
 export const query = `

@@ -24,7 +24,7 @@ const SearchQuery = `
 function AttributeGroupSelector({
   onSelect,
   onUnSelect,
-  selectedIDs,
+  selectedIDs = [],
   closeModal
 }) {
   const limit = 10;
@@ -187,10 +187,6 @@ AttributeGroupSelector.propTypes = {
   onUnSelect: PropTypes.func.isRequired,
   selectedIDs: PropTypes.arrayOf(PropTypes.string),
   closeModal: PropTypes.func.isRequired
-};
-
-AttributeGroupSelector.defaultProps = {
-  selectedIDs: []
 };
 
 export default AttributeGroupSelector;

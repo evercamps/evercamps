@@ -53,7 +53,7 @@ File.propTypes = {
 
 function FileBrowser({
   onInsert,
-  isMultiple,
+  isMultiple = false,
   setFileBrowser,
   browserApi,
   deleteApi,
@@ -411,10 +411,6 @@ FileBrowser.propTypes = {
   uploadApi: PropTypes.string.isRequired,
   onInsert: PropTypes.func.isRequired,
   isMultiple: PropTypes.bool
-};
-
-FileBrowser.defaultProps = {
-  isMultiple: false
 };
 
 export default FileBrowser;

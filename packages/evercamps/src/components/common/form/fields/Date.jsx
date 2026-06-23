@@ -64,15 +64,4 @@ Date.propTypes = {
   value: PropTypes.string
 };
 
-Date.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  onChange: undefined,
-  placeholder: undefined,
-  prefix: undefined,
-  suffix: undefined,
-  value: undefined
-};
-
 export { Date };

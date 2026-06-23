@@ -71,12 +71,4 @@ Radio.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 };
 
-Radio.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  onChange: undefined,
-  value: undefined
-};
-
 export { Radio };

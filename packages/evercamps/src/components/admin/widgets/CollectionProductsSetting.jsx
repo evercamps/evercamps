@@ -22,7 +22,7 @@ const SearchQuery = `
 `;
 
 function CollectionProductsSetting({
-  collectionProductsWidget: { collection, count }
+  collectionProductsWidget: { collection = '', count = 5 }
 }) {
   const limit = 10;
   const [inputValue, setInputValue] = React.useState(null);
@@ -177,13 +177,6 @@ CollectionProductsSetting.propTypes = {
     collection: PropTypes.string,
     count: PropTypes.number
   })
-};
-
-CollectionProductsSetting.defaultProps = {
-  collectionProductsWidget: {
-    collection: '',
-    count: 5
-  }
 };
 
 export default CollectionProductsSetting;

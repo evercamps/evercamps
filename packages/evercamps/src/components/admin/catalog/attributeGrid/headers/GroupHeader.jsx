@@ -74,7 +74,3 @@ GroupHeader.propTypes = {
     })
   )
 };
-
-GroupHeader.defaultProps = {
-  currentFilters: []
-};

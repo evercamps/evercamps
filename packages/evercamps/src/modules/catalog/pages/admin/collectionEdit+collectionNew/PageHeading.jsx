@@ -2,7 +2,7 @@ import PageHeading from '@components/admin/cms/PageHeading';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function CollectionEditPageHeading({ backUrl, collection }) {
+export default function CollectionEditPageHeading({ backUrl, collection = {} }) {
   return (
     <div className="w-2/3" style={{ margin: '0 auto' }}>
       <PageHeading
@@ -20,10 +20,6 @@ CollectionEditPageHeading.propTypes = {
   collection: PropTypes.shape({
     name: PropTypes.string
   })
-};
-
-CollectionEditPageHeading.defaultProps = {
-  collection: {}
 };
 
 export const layout = {

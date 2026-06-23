@@ -14,7 +14,7 @@ const MultiSelect = React.forwardRef((props, ref) => {
     onChange,
     error,
     instruction,
-    options
+    options = []
   } = props;
   return (
     <div
@@ -79,17 +79,6 @@ MultiSelect.propTypes = {
   ),
   placeholder: PropTypes.string,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-};
-
-MultiSelect.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  onChange: undefined,
-  options: [],
-  placeholder: undefined,
-  name: undefined,
-  value: undefined
 };
 
 export { MultiSelect };

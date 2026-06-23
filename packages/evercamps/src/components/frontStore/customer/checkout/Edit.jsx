@@ -7,9 +7,9 @@ import { toast } from 'react-toastify';
 import { _ } from '../../../../lib/locale/translate/_.js';
 
 export function Edit({
-  customer,
+  customer = null,
   addContactInfoApi,
-  email,
+  email = '',
   setEmail,
   loginUrl
 }) {
@@ -93,7 +93,3 @@ Edit.propTypes = {
   })
 };
 
-Edit.defaultProps = {
-  email: '',
-  customer: null
-};

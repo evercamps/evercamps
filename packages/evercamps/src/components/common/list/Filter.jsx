@@ -3,7 +3,7 @@ import React from 'react';
 
 import './Filter.scss';
 
-export default function Filter({ title, options, selectedOption }) {
+export default function Filter({ title = '', options = [], selectedOption = '' }) {
   const [show, setShow] = React.useState(false);
 
   return (
@@ -75,10 +75,4 @@ Filter.propTypes = {
     })
   ),
   selectedOption: PropTypes.string
-};
-
-Filter.defaultProps = {
-  title: '',
-  options: [],
-  selectedOption: ''
 };

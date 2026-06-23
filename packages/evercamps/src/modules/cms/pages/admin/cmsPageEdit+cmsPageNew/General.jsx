@@ -6,9 +6,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { get } from '../../../../../lib/util/get.js';
 
-
 export default function General({
-  page,
+  page = {
+    cmsPageId: null,
+    name: '',
+    content: ''
+  },
   browserApi,
   deleteApi,
   uploadApi,
@@ -88,14 +91,6 @@ General.propTypes = {
   deleteApi: PropTypes.string.isRequired,
   folderCreateApi: PropTypes.string.isRequired,
   uploadApi: PropTypes.string.isRequired
-};
-
-General.defaultProps = {
-  page: {
-    cmsPageId: null,
-    name: '',
-    content: ''
-  }
 };
 
 export const layout = {

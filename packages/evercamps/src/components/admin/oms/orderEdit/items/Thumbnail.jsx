@@ -33,7 +33,3 @@ Thumbnail.propTypes = {
   imageUrl: PropTypes.string,
   qty: PropTypes.number.isRequired
 };
-
-Thumbnail.defaultProps = {
-  imageUrl: undefined
-};

@@ -25,7 +25,7 @@ const MethodsQuery = `
   }
 `;
 
-function Condition({ method }) {
+function Condition({ method = null }) {
   const [type, setType] = React.useState(method?.conditionType || 'price');
   return (
     <div>
@@ -82,11 +82,7 @@ Condition.propTypes = {
   })
 };
 
-Condition.defaultProps = {
-  method: null
-};
-
-function MethodForm({ saveMethodApi, closeModal, getZones, method }) {
+function MethodForm({ saveMethodApi, closeModal, getZones, method = null}) {
   const [type, setType] = React.useState(() => {
     if (method?.calculateApi) {
       return 'api';
@@ -361,10 +357,6 @@ MethodForm.propTypes = {
     min: PropTypes.number,
     max: PropTypes.number
   })
-};
-
-MethodForm.defaultProps = {
-  method: null
 };
 
 export default MethodForm;

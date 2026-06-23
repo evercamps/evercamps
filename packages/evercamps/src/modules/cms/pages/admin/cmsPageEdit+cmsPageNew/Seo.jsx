@@ -6,7 +6,7 @@ import React from 'react';
 import { get } from '../../../../../lib/util/get.js';
 
 
-export default function Seo({ page }) {
+export default function Seo({ page = {} }) {
   const fields = [
     {
       component: { default: Field },
@@ -74,10 +74,6 @@ Seo.propTypes = {
     metaKeywords: PropTypes.string,
     metaDescription: PropTypes.string
   })
-};
-
-Seo.defaultProps = {
-  page: {}
 };
 
 export const layout = {

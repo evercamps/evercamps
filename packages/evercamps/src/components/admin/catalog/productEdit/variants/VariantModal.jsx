@@ -23,8 +23,8 @@ const AttributesQuery = `
 `;
 
 export function VariantModal({
-  variant,
-  variantAttributes,
+  variant = null,
+  variantAttributes = [],
   productImageUploadUrl
 }) {
   const formContext = useFormContext();
@@ -191,9 +191,4 @@ VariantModal.propTypes = {
     })
   ),
   productImageUploadUrl: PropTypes.string.isRequired
-};
-
-VariantModal.defaultProps = {
-  variant: null,
-  variantAttributes: []
 };

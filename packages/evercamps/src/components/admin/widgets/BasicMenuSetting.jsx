@@ -315,7 +315,11 @@ MenuItem.propTypes = {
 };
 
 export default function BasicMenuSetting({
-  basicMenuWidget: { menus, isMain, className }
+  basicMenuWidget: { menus, isMain, className } = {
+    menus: [],
+    isMain: 1,
+    className: ''
+  }
 }) {
   const [items, setItems] = React.useState(menus);
   const modal = useModal();
@@ -575,14 +579,6 @@ BasicMenuSetting.propTypes = {
     isMain: PropTypes.bool,
     className: PropTypes.string
   })
-};
-
-BasicMenuSetting.defaultProps = {
-  basicMenuWidget: {
-    menus: [],
-    isMain: 1,
-    className: ''
-  }
 };
 
 export const query = `

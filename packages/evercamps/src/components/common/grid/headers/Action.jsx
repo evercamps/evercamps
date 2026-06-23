@@ -29,7 +29,3 @@ export default function ActionColumnHeader({ gridOriginalUrl = undefined }) {
 ActionColumnHeader.propTypes = {
   gridOriginalUrl: PropTypes.string
 };
-
-ActionColumnHeader.defaultProps = {
-  gridOriginalUrl: undefined
-};

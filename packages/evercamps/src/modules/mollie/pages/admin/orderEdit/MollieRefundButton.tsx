@@ -73,11 +73,10 @@ export default function MollieRefundButton({
                     >
                       <div>
                         <Field
-                          formId="mollieRefund"
                           type="text"
                           name="amount"
                           label="Refund amount"
-                          placeHolder="Refund amount"
+                          placeholder="Refund amount"
                           value={grandTotal.value}
                           validationRules={['notEmpty']}
                           suffix={grandTotal.currency}

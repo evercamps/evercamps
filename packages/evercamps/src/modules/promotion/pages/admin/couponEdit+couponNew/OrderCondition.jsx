@@ -49,10 +49,6 @@ OrderCondition.propTypes = {
   })
 };
 
-OrderCondition.defaultProps = {
-  coupon: {}
-};
-
 export const layout = {
   areaId: 'couponEditLeft',
   sortOrder: 10

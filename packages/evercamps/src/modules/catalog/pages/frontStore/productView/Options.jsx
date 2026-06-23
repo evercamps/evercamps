@@ -79,10 +79,6 @@ Options.propTypes = {
   )
 };
 
-Options.defaultProps = {
-  options: []
-};
-
 export const layout = {
   areaId: 'productPageMiddleRight',
   sortOrder: 30

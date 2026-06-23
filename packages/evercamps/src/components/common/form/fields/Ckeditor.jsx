@@ -400,7 +400,7 @@ FileBrowser.propTypes = {
 export default function CkeditorField({
   name,
   value,
-  label,
+  label = '',
   browserApi,
   deleteApi,
   uploadApi,
@@ -510,6 +510,4 @@ CkeditorField.propTypes = {
   folderCreateApi: PropTypes.string.isRequired
 };
 
-CkeditorField.defaultProps = {
-  label: ''
-};
+

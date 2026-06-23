@@ -61,7 +61,3 @@ Name.propTypes = {
     })
   )
 };
-
-Name.defaultProps = {
-  variantOptions: []
-};

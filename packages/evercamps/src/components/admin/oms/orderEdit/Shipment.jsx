@@ -18,7 +18,7 @@ Status.propTypes = {
   }).isRequired
 };
 
-function Note({ note }) {
+function Note({ note = '' }) {
   return (
     <td>
       <i>{note}</i>
@@ -28,10 +28,6 @@ function Note({ note }) {
 
 Note.propTypes = {
   note: PropTypes.string
-};
-
-Note.defaultProps = {
-  note: ''
 };
 
 function Weight({ weight }) {

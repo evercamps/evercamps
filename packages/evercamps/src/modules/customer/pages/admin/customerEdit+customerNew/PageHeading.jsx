@@ -2,7 +2,7 @@ import PageHeading from '@components/admin/cms/PageHeading';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function CustomerEditPageHeading({ backUrl, customer }) {
+export default function CustomerEditPageHeading({ backUrl, customer = null }) {
   return (
     <PageHeading
       backUrl={backUrl}
@@ -18,10 +18,6 @@ CustomerEditPageHeading.propTypes = {
   customer: PropTypes.shape({
     fullName: PropTypes.string.isRequired
   })
-};
-
-CustomerEditPageHeading.defaultProps = {
-  customer: null
 };
 
 export const layout = {

@@ -6,14 +6,14 @@ import { useAppState } from '@components/common/context/app';
 import Bag from '@heroicons/react/outline/ShoppingBagIcon';
 import { get } from '../../../../../lib/util/get.js';
 
-export default function MiniCart({ cartUrl, cart }) {
-  const miniCart = get(useAppState(), 'cart', cart || {});
+export default function MiniCart({ cartUrl, cart = {} }) {
+  const miniCart = get(useAppState(), 'cart', cart);
 
   return (
     <div className="mini-cart-wrapper self-center">
       <a className="mini-cart-icon" href={cartUrl}>
         <Bag width={20} height={20} />
-        {miniCart.totalQty > 0 && <span>{miniCart.totalQty}</span>}
+        {miniCart?.totalQty > 0 && <span>{miniCart.totalQty}</span>}
       </a>
     </div>
   );
@@ -24,10 +24,6 @@ MiniCart.propTypes = {
   cart: PropTypes.shape({
     totalQty: PropTypes.number
   })
-};
-
-MiniCart.defaultProps = {
-  cart: null
 };
 
 export const layout = {

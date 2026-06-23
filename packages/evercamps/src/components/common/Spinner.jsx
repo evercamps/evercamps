@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 
-function Spinner({ width, height }) {
+function Spinner({ width = 60, height = 60 }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -33,11 +33,6 @@ function Spinner({ width, height }) {
 Spinner.propTypes = {
   width: PropTypes.number,
   height: PropTypes.number
-};
-
-Spinner.defaultProps = {
-  width: 60,
-  height: 60
 };
 
 export default Spinner;

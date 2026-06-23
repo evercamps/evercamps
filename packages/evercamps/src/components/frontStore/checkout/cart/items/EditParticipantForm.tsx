@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import { Field } from '@components/common/form/Field';
@@ -35,10 +34,7 @@ export default function EditParticipantForm({
             placeholder="Enter First Name"
             type="text"
             validationRules={['notEmpty']}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegistration && setRegistration({
-              ...registration,
-              firstName: e.target.value
-            })}
+            onChange={(newValue) => { setRegistration?.({ ...registration, firstName: newValue as string }); }}
           />
         </div>
 
@@ -51,10 +47,7 @@ export default function EditParticipantForm({
             placeholder="Enter Last Name"
             type="text"
             validationRules={['notEmpty']}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegistration && setRegistration({
-              ...registration,
-              lastName: e.target.value
-            })}
+            onChange={(newValue) => { setRegistration?.({ ...registration, lastName: newValue as string }); }}
           />
         </div>
       </Card.Session>

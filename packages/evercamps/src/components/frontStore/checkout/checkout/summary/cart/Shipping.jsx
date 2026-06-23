@@ -22,8 +22,3 @@ Shipping.propTypes = {
   cost: PropTypes.string,
   method: PropTypes.string
 };
-
-Shipping.defaultProps = {
-  cost: undefined,
-  method: undefined
-};

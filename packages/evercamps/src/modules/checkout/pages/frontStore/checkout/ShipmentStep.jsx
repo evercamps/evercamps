@@ -8,7 +8,9 @@ import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export default function ShipmentStep({
-  account,
+  account = {
+    addresses: []
+  },
   cart: {
     shippingAddress,
     shippingMethod,
@@ -112,11 +114,6 @@ ShipmentStep.propTypes = {
   }).isRequired
 };
 
-ShipmentStep.defaultProps = {
-  account: {
-    addresses: []
-  }
-};
 
 export const layout = {
   areaId: 'checkoutSteps',

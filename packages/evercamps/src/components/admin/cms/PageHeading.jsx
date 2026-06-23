@@ -28,10 +28,6 @@ BreadcrumbIcon.propTypes = {
   backUrl: PropTypes.string
 };
 
-BreadcrumbIcon.defaultProps = {
-  backUrl: undefined
-};
-
 function Heading({ heading }) {
   return (
     <div className="self-center">
@@ -85,10 +81,6 @@ function PageHeading({ backUrl, heading }) {
 PageHeading.propTypes = {
   backUrl: PropTypes.string,
   heading: PropTypes.string.isRequired
-};
-
-PageHeading.defaultProps = {
-  backUrl: undefined
 };
 
 export default PageHeading;

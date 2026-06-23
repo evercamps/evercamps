@@ -35,7 +35,3 @@ Dot.propTypes = {
     'new'
   ]).isRequired
 };
-
-Dot.defaultProps = {
-  size: '1rem'
-};

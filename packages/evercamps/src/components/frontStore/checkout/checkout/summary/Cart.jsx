@@ -7,16 +7,26 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 function CartSummary({
-  totalQty,
-  subTotal,
-  subTotalInclTax,
-  grandTotal,
-  discountAmount,
-  totalTaxAmount,
-  shippingMethodName,
+  totalQty = '',
+  subTotal = {
+    text: ''
+  },
+  subTotalInclTax ={
+    text: ''
+  },
+  grandTotal = {
+    text: ''
+  },
+  discountAmount = {
+    text: ''
+  },
+  totalTaxAmount= {
+    text: ''
+  },
+  shippingMethodName = '',
   shippingFeeInclTax,
-  coupon,
-  priceIncludingTax
+  coupon = '',
+  priceIncludingTax = false
 }) {
   return (
     <div className="checkout-summary-block">
@@ -59,31 +69,6 @@ CartSummary.propTypes = {
   }),
   totalQty: PropTypes.number,
   priceIncludingTax: PropTypes.bool
-};
-
-CartSummary.defaultProps = {
-  coupon: '',
-  discountAmount: {
-    text: ''
-  },
-  grandTotal: {
-    text: ''
-  },
-  shippingFeeInclTax: {
-    text: ''
-  },
-  shippingMethodName: '',
-  subTotal: {
-    text: ''
-  },
-  subTotalInclTax: {
-    text: ''
-  },
-  totalTaxAmount: {
-    text: ''
-  },
-  totalQty: '',
-  priceIncludingTax: false
 };
 
 export { CartSummary };

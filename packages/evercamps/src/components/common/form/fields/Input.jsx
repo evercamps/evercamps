@@ -65,14 +65,4 @@ Input.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 };
 
-Input.defaultProps = {
-  error: undefined,
-  instruction: undefined,
-  label: undefined,
-  prefix: undefined,
-  suffix: undefined,
-  name: undefined,
-  value: undefined
-};
-
 export { Input };

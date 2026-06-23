@@ -20,7 +20,7 @@ const childrenQuery = `
   }
 `;
 
-function CategoryItem({ category, selectedCategory, setSelectedCategory }) {
+function CategoryItem({ category = {}, selectedCategory = {}, setSelectedCategory }) {
   const [expanded, setExpanded] = React.useState(false);
   const [result] = useQuery({
     query: childrenQuery,
@@ -119,11 +119,6 @@ CategoryItem.propTypes = {
     )
   }),
   setSelectedCategory: PropTypes.func.isRequired
-};
-
-CategoryItem.defaultProps = {
-  category: {},
-  selectedCategory: {}
 };
 
 export default CategoryItem;
