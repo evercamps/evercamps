@@ -61,13 +61,13 @@ export default function AreaLoader(c) {
       }
     };
   });
-  const content = `${imports.join(
+  const content = `import { setDefaultComponents } from '@components/common/Area';\r\n${imports.join(
     '\r\n'
-  )}\r\nArea.defaultProps.components = ${inspect(areas, { depth: 5 })
+  )}\r\nsetDefaultComponents(${inspect(areas, { depth: 5 })
     .replace(/"---/g, '')
     .replace(/---"/g, '')
     .replace(/'---/g, '')
-    .replace(/---'/g, '')} ;`;
+    .replace(/---'/g, '')}) ;`;
   const result = c
     .replace('/** render */', content)
     .replace('/eHot', `/eHot/${route.id}`);

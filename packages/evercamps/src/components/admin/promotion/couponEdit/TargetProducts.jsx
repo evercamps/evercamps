@@ -436,7 +436,7 @@ Products.propTypes = {
   )
 };
 
-export function TargetProducts({ products, maxQty, discountType }) {
+export function TargetProducts({ products = [], maxQty = '', discountType = '' }) {
   const [active, setActive] = React.useState(() => {
     if (
       discountType === 'fixed_discount_to_specific_products' ||
@@ -495,10 +495,4 @@ TargetProducts.propTypes = {
       qty: PropTypes.string
     })
   )
-};
-
-TargetProducts.defaultProps = {
-  discountType: '',
-  maxQty: '',
-  products: []
 };

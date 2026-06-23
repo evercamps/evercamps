@@ -19,7 +19,7 @@ const MethodsQuery = `
   }
 `;
 
-function MethodForm({ saveRateApi, closeModal, getTaxClasses, rate }) {
+function MethodForm({ saveRateApi, closeModal, getTaxClasses, rate = null}) {
   const [result] = useQuery({
     query: MethodsQuery
   });
@@ -166,10 +166,6 @@ MethodForm.propTypes = {
     isCompound: PropTypes.bool,
     priority: PropTypes.number
   })
-};
-
-MethodForm.defaultProps = {
-  rate: null
 };
 
 export default MethodForm;
