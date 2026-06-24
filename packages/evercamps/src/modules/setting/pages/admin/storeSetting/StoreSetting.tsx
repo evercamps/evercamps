@@ -3,7 +3,7 @@ import SettingMenu from '@components/admin/setting/SettingMenu';
 import Area from '@components/common/Area';
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQuery } from 'urql';
 
@@ -202,6 +202,122 @@ function StoreEmail({ storeEmail = '' }: StoreEmailProps) {
   );
 }
 
+interface ParticipantCheckoutField {
+  code: string;
+  label: string;
+  type: 'text' | 'date' | 'select';
+  required: boolean;
+  useForUniqueness: boolean;
+}
+
+function ParticipantCheckoutFields({ initialFields }: { initialFields: ParticipantCheckoutField[] }) {
+  const [fields, setFields] = useState<ParticipantCheckoutField[]>(initialFields);
+
+  const addField = () =>
+    setFields((prev) => [
+      ...prev,
+      { code: '', label: '', type: 'text', required: false, useForUniqueness: false }
+    ]);
+
+  const removeField = (index: number) =>
+    setFields((prev) => prev.filter((_, i) => i !== index));
+
+  const updateField = <K extends keyof ParticipantCheckoutField>(
+    index: number,
+    key: K,
+    value: ParticipantCheckoutField[K]
+  ) => setFields((prev) => prev.map((f, i) => (i === index ? { ...f, [key]: value } : f)));
+
+  return (
+    <Card.Session title="Participant Fields">
+      {fields.length > 0 && (
+        <table className="listing sticky">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Label</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Use for uniqueness</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {fields.map((field, index) => (
+              <tr key={index}>
+                <td>
+                  <input
+                    className="form-input"
+                    name={`participant_checkout_fields[${index}][code]`}
+                    value={field.code}
+                    onChange={(e) => updateField(index, 'code', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <input
+                    className="form-input"
+                    name={`participant_checkout_fields[${index}][label]`}
+                    value={field.label}
+                    onChange={(e) => updateField(index, 'label', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <select
+                    className="form-select"
+                    name={`participant_checkout_fields[${index}][type]`}
+                    value={field.type}
+                    onChange={(e) =>
+                      updateField(index, 'type', e.target.value as ParticipantCheckoutField['type'])
+                    }
+                  >
+                    <option value="text">Text</option>
+                    <option value="date">Date</option>
+                    <option value="select">Select</option>
+                  </select>
+                </td>
+                <td>
+                  <select
+                    className="form-select"
+                    name={`participant_checkout_fields[${index}][required]`}
+                    value={field.required ? 'true' : 'false'}
+                    onChange={(e) => updateField(index, 'required', e.target.value === 'true')}
+                  >
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
+                </td>
+                <td>
+                  <select
+                    className="form-select"
+                    name={`participant_checkout_fields[${index}][useForUniqueness]`}
+                    value={field.useForUniqueness ? 'true' : 'false'}
+                    onChange={(e) =>
+                      updateField(index, 'useForUniqueness', e.target.value === 'true')
+                    }
+                  >
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
+                </td>
+                <td>
+                  <button type="button" className="button secondary" onClick={() => removeField(index)}>
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <div className="mt-4">
+        <button type="button" className="button secondary" onClick={addField}>
+          + Add Field
+        </button>
+      </div>
+    </Card.Session>
+  );
+}
+
 interface StoreSetting {
   storeName?: string;
   storeDescription?: string;
@@ -213,11 +329,33 @@ interface StoreSetting {
   storeCity?: string;
   storeProvince?: string;
   storePostalCode?: string;
+  participantCheckoutFields?: string;
 }
 
 interface Props {
   saveSettingApi: string;
   setting: StoreSetting;
+}
+
+function parseParticipantFields(raw?: string): ParticipantCheckoutField[] {
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function participantFieldsDataFilter(data: Record<string, any>): Record<string, any> {
+  const fields = Array.isArray(data.participant_checkout_fields)
+    ? data.participant_checkout_fields
+    : [];
+  data.participant_checkout_fields = fields.map((f: any) => ({
+    ...f,
+    required: f.required === 'true',
+    useForUniqueness: f.useForUniqueness === 'true'
+  }));
+  return data;
 }
 
 export default function StoreSetting({
@@ -231,7 +369,8 @@ export default function StoreSetting({
     storeAddress,
     storeCity,
     storeProvince,
-    storePostalCode
+    storePostalCode,
+    participantCheckoutFields
   }
 }: Props) {
   const [selectedCountry, setSelectedCountry] = useState(() => {
@@ -249,6 +388,7 @@ export default function StoreSetting({
             method="POST"
             id="storeSetting"
             action={saveSettingApi}
+            dataFilter={participantFieldsDataFilter}
             onSuccess={(response: any) => {
               if (!response.error) {
                 toast.success('Setting saved');
@@ -355,6 +495,9 @@ export default function StoreSetting({
                   </div>
                 </div>
               </Card.Session>
+              <ParticipantCheckoutFields
+                initialFields={parseParticipantFields(participantCheckoutFields)}
+              />
             </Card>
           </Form>
         </div>
@@ -382,6 +525,7 @@ export const query = `
       storeCity
       storeProvince
       storePostalCode
+      participantCheckoutFields
     }
   }
 `;

@@ -24,6 +24,8 @@ export default {
     storeProvince: (setting: SettingRow[]) =>
       findValue(setting, 'storeProvince'),
     storePostalCode: (setting: SettingRow[]) =>
-      findValue(setting, 'storePostalCode')
+      findValue(setting, 'storePostalCode'),
+    participantCheckoutFields: (setting: SettingRow[]) =>
+      findValue(setting, 'participant_checkout_fields')
   }
 };
