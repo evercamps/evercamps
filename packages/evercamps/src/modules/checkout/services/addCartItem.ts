@@ -32,15 +32,12 @@ async function addCartItem(
 
         if (context.first_name && context.last_name) {
           const existingRegs = items[i].getData('registrations') || [];
-          const newReg = {
-            firstName: context.first_name,
-            lastName: context.last_name
-          };
           await items[i].setData('registrations', [
             ...existingRegs,
             {
               firstName: context.first_name,
-              lastName: context.last_name
+              lastName: context.last_name,
+              ...(context.extraData !== undefined && { extraData: context.extraData })
             }
           ]);
         }
@@ -58,10 +55,11 @@ async function addCartItem(
         await item.setData('registrations', [
           {
             firstName: context.first_name,
-            lastName: context.last_name
+            lastName: context.last_name,
+            ...(context.extraData !== undefined && { extraData: context.extraData })
           }
         ]);
-    }
+      }
       items = items.concat(item);
     }
     await cart.setData('items', items, true);

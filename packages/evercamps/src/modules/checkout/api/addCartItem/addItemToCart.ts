@@ -8,14 +8,16 @@ import {
 import { setContextValue } from '../../../graphql/services/contextHelper.js';
 import { getCartByUUID } from '../../services/getCartByUUID.js';
 import { saveCart } from '../../services/saveCart.js';
+import { getSetting } from '../../../setting/services/setting.js';
+import type { Response, NextFunction } from 'express';
+import { EvercampsRequest } from '../../../../types/request.js';
 
-export default async (request, response, next) => {
+export default async (request: EvercampsRequest, response: Response, next: NextFunction) => {
   try {
     const cartId = request.params.cart_id;
-    const { sku, qty } = request.body;
-    const cart = await getCartByUUID(cartId); // Cart object
+    const { sku, qty, first_name, last_name } = request.body;
+    const cart = await getCartByUUID(cartId instanceof Array ? cartId[0] : cartId);
 
-    // If the cart is not found, respond with 400
     if (!cart) {
       response.status(INVALID_PAYLOAD);
       response.json({
@@ -27,7 +29,6 @@ export default async (request, response, next) => {
       return;
     }
 
-    // Load the product by sku
     const product = await select()
       .from('product')
       .where('sku', '=', sku)
@@ -45,13 +46,31 @@ export default async (request, response, next) => {
       return;
     }
 
-    // If everything is fine, add the product to the cart
-    const item = await cart.addItem(product.product_id, parseInt(qty, 10));
+    // Collect extra field values from the body and assemble extraData
+    let extraData: Record<string, string> | undefined;
+    if (first_name && last_name) {
+      const extraFields: { code: string }[] = await getSetting('participant_checkout_fields', []);
+      if (extraFields.length > 0) {
+        const collected = Object.fromEntries(
+          extraFields
+            .filter((f) => request.body[f.code] !== undefined)
+            .map((f) => [f.code, request.body[f.code]])
+        );
+        if (Object.keys(collected).length > 0) {
+          extraData = collected;
+        }
+      }
+    }
+
+    const item = await cart.addItem(product.product_id, parseInt(qty, 10), {
+      first_name,
+      last_name,
+      extraData
+    });
     await saveCart(cart);
-    // Set the new cart id to the context, so next middleware can use it
     setContextValue(request, 'cartId', cart.getData('uuid'));
     response.status(OK);
-    response.$body = {
+    (response as any).$body = {
       data: {
         item: item.export(),
         count: cart.getData('total_qty'),
@@ -59,12 +78,12 @@ export default async (request, response, next) => {
       }
     };
     next();
-  } catch (error) {
+  } catch (err: any) {
     response.status(INTERNAL_SERVER_ERROR);
     response.json({
       error: {
         status: INTERNAL_SERVER_ERROR,
-        message: error.message
+        message: err.message
       }
     });
   }
