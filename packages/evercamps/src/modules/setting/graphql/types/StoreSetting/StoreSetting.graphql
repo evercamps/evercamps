@@ -11,5 +11,4 @@ extend type Setting {
   storeCity: String
   storeProvince: String
   storePostalCode: String
-  participantCheckoutFields: String
 }
