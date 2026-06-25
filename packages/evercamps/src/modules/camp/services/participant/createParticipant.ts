@@ -18,6 +18,7 @@ import {
   getValueSync
 } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
+import { getSetting } from '../../../setting/services/setting.js';
 import participantDataSchema from './participantDataSchema.json' with { type: 'json' };
 
 export type ParticipantData = {  
@@ -64,13 +65,23 @@ async function createParticipant(data: ParticipantData, context: Record<string, 
     );
     // Validate participant data
     validateParticipantDataBeforeInsert(participantData);
-    const { first_name, last_name } = participantData;    
-    // Check if participant already exists
-    const existingParticipant = await select()
+    const { first_name, last_name } = participantData;
+
+    // Check if participant already exists, including configured uniqueness fields
+    const allFields: { code: string; useForUniqueness: boolean }[] =
+      await getSetting('participant_checkout_fields', []);
+    const uniquenessFields = allFields.filter((f) => f.useForUniqueness);
+
+    let existingQuery = select()
       .from('participant')
       .where('first_name', '=', first_name)
-      .andWhere('last_name', '=', last_name)
-      .load(pool);
+      .andWhere('last_name', '=', last_name);
+
+    for (const field of uniquenessFields) {
+      existingQuery = existingQuery.and(field.code, '=', participantData[field.code] ?? null);
+    }
+
+    const existingParticipant = await existingQuery.load(pool);
 
     if (existingParticipant) {
       throw new Error('Participant already exists');
