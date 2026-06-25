@@ -121,7 +121,13 @@ async function saveOrderItems(
   orderId: number,
   connection: PoolClient
 ) {
-  const allFields: ParticipantCheckoutField[] = await getSetting('participant_checkout_fields', []);
+  const rawFields = await getSetting('participant_checkout_fields', null);
+  const allFields: ParticipantCheckoutField[] = (() => {
+    try {
+      const parsed = typeof rawFields === 'string' ? JSON.parse(rawFields) : rawFields;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  })();
   const uniquenessFields = allFields.filter((f) => f.useForUniqueness);
 
   const items = cart.getItems();

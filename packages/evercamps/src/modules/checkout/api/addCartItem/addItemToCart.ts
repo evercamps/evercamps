@@ -49,7 +49,13 @@ export default async (request: EvercampsRequest, response: Response, next: NextF
     // Collect extra field values from the body and assemble extraData
     let extraData: Record<string, string> | undefined;
     if (first_name && last_name) {
-      const extraFields: { code: string }[] = await getSetting('participant_checkout_fields', []);
+      const rawExtraFields = await getSetting('participant_checkout_fields', null);
+      const extraFields: { code: string }[] = (() => {
+        try {
+          const parsed = typeof rawExtraFields === 'string' ? JSON.parse(rawExtraFields) : rawExtraFields;
+          return Array.isArray(parsed) ? parsed : [];
+        } catch { return []; }
+      })();
       if (extraFields.length > 0) {
         const collected = Object.fromEntries(
           extraFields

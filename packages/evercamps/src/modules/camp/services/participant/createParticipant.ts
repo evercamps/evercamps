@@ -68,8 +68,13 @@ async function createParticipant(data: ParticipantData, context: Record<string, 
     const { first_name, last_name } = participantData;
 
     // Check if participant already exists, including configured uniqueness fields
-    const allFields: { code: string; useForUniqueness: boolean }[] =
-      await getSetting('participant_checkout_fields', []);
+    const rawFields = await getSetting('participant_checkout_fields', null);
+    const allFields: { code: string; useForUniqueness: boolean }[] = (() => {
+      try {
+        const parsed = typeof rawFields === 'string' ? JSON.parse(rawFields) : rawFields;
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    })();
     const uniquenessFields = allFields.filter((f) => f.useForUniqueness);
 
     let existingQuery = select()
