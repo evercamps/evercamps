@@ -109,7 +109,8 @@ export const saveCart = async (cart: Cart) => {
                 .given({
                   cart_item_id: cartItemId,
                   first_name: r.firstName,
-                  last_name: r.lastName
+                  last_name: r.lastName,
+                  extra_data: r.extraData || null
                 })
                 .execute(connection, false);
             }
@@ -119,11 +120,13 @@ export const saveCart = async (cart: Cart) => {
           for (const r of newRegs) {
             if (r.cartItemRegistrationId && currentById.has(r.cartItemRegistrationId)) {
               const existing = currentById.get(r.cartItemRegistrationId);
-              if (existing && (existing.first_name !== r.firstName || existing.last_name !== r.lastName)) {
+              const extraDataChanged = (r.extraData || null) !== (existing?.extra_data || null);
+            if (existing && (existing.first_name !== r.firstName || existing.last_name !== r.lastName || extraDataChanged)) {
                 await update('cart_item_registration')
                   .given({
                     first_name: r.firstName,
-                    last_name: r.lastName
+                    last_name: r.lastName,
+                    extra_data: r.extraData || null
                   })
                   .where('cart_item_registration_id', '=', r.cartItemRegistrationId)
                   .execute(connection, false);
