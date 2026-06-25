@@ -1,6 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import { Field } from '@components/common/form/Field';
+import React from 'react';
 
 interface Registration {
   firstName: string;

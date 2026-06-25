@@ -116,7 +116,7 @@ export default function ParticipantForm({
             placeholder="Enter First Name"
             type="text"
             validationRules={['notEmpty']}
-            onChange={(newValue: unknown) => setFirstName(newValue as string)}
+            onChange={(e: any) => setFirstName(e?.target?.value ?? e)}
           />
         </div>
         <label className="block mb-2 font-medium">Last Name</label>
@@ -128,7 +128,7 @@ export default function ParticipantForm({
             placeholder="Enter Last Name"
             type="text"
             validationRules={['notEmpty']}
-            onChange={(newValue: unknown) => setLastName(newValue as string)}
+            onChange={(e: any) => setLastName(e?.target?.value ?? e)}
           />
         </div>
         {extraFields.map((field) => (
@@ -137,11 +137,12 @@ export default function ParticipantForm({
             <Field
               id={field.code}
               name={field.code}
-              type={field.type}
+              type="text"
+              placeholder={field.type === 'date' ? 'YYYY-MM-DD' : undefined}
               value={extraValues[field.code] || ''}
               validationRules={field.required ? ['notEmpty'] : []}
-              onChange={(newValue: unknown) =>
-                setExtraValues((prev) => ({ ...prev, [field.code]: newValue as string }))
+              onChange={(e: any) =>
+                setExtraValues((prev) => ({ ...prev, [field.code]: e?.target?.value ?? e }))
               }
             />
           </div>
