@@ -1,11 +1,11 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   // Reduce product stock when order is placed if product manage stock is true
   await execute(
     connection,
     `CREATE OR REPLACE FUNCTION reduce_product_stock_when_order_placed()
-        RETURNS TRIGGER 
+        RETURNS TRIGGER
         LANGUAGE PLPGSQL
         AS
       $$

@@ -1,6 +1,6 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   // Create a function to add event to the event table after a order is created
   await execute(
     connection,

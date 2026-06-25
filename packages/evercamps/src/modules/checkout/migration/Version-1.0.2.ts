@@ -1,8 +1,8 @@
 import { execute, select } from '@evershop/postgres-query-builder';
 import { warning } from '../../../lib/log/logger.js';
-import { resolveOrderStatus } from '../services/updateOrderStatus.js';
+import { resolveOrderStatus } from '../../oms/services/updateOrderStatus.js';
 
-export default async (connection) => {
+export default async (connection: any) => {
   await execute(
     connection,
     `ALTER TABLE "order" ADD COLUMN IF NOT EXISTS "status" varchar DEFAULT NULL;`
@@ -23,7 +23,7 @@ export default async (connection) => {
       );
     } catch (err) {
       warning(
-        `Error while updating order status for order_id: ${order.order_id}. 
+        `Error while updating order status for order_id: ${order.order_id}.
         This happened because we can not resolve the order status. You may need to update the order status manually.`
       );
     }

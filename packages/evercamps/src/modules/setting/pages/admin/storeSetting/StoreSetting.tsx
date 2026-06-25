@@ -202,6 +202,10 @@ function StoreEmail({ storeEmail = '' }: StoreEmailProps) {
   );
 }
 
+const AVAILABLE_PARTICIPANT_FIELDS = [
+  { code: 'birth_date', label: 'Date of Birth', type: 'date' as const }
+];
+
 interface ParticipantCheckoutField {
   code: string;
   label: string;
@@ -213,11 +217,16 @@ interface ParticipantCheckoutField {
 function ParticipantCheckoutFields({ initialFields }: { initialFields: ParticipantCheckoutField[] }) {
   const [fields, setFields] = useState<ParticipantCheckoutField[]>(initialFields);
 
-  const addField = () =>
+  const usedCodes = fields.map((f) => f.code);
+  const nextAvailable = AVAILABLE_PARTICIPANT_FIELDS.find((f) => !usedCodes.includes(f.code));
+
+  const addField = () => {
+    if (!nextAvailable) return;
     setFields((prev) => [
       ...prev,
-      { code: '', label: '', type: 'text', required: false, useForUniqueness: false }
+      { code: nextAvailable.code, label: nextAvailable.label, type: nextAvailable.type, required: false, useForUniqueness: false }
     ]);
+  };
 
   const removeField = (index: number) =>
     setFields((prev) => prev.filter((_, i) => i !== index));
@@ -228,15 +237,24 @@ function ParticipantCheckoutFields({ initialFields }: { initialFields: Participa
     value: ParticipantCheckoutField[K]
   ) => setFields((prev) => prev.map((f, i) => (i === index ? { ...f, [key]: value } : f)));
 
+  const changeCode = (index: number, code: string) => {
+    const definition = AVAILABLE_PARTICIPANT_FIELDS.find((f) => f.code === code);
+    if (!definition) return;
+    setFields((prev) =>
+      prev.map((f, i) =>
+        i === index ? { ...f, code: definition.code, type: definition.type } : f
+      )
+    );
+  };
+
   return (
     <Card.Session title="Participant Fields">
       {fields.length > 0 && (
         <table className="listing sticky">
           <thead>
             <tr>
-              <th>Code</th>
+              <th>Field</th>
               <th>Label</th>
-              <th>Type</th>
               <th>Required</th>
               <th>Use for uniqueness</th>
               <th></th>
@@ -244,14 +262,24 @@ function ParticipantCheckoutFields({ initialFields }: { initialFields: Participa
           </thead>
           <tbody>
             {fields.map((field, index) => (
-              <tr key={index}>
+              <tr key={field.code}>
                 <td>
-                  <input
-                    className="form-input"
+                  <select
+                    className="form-select"
                     name={`participant_checkout_fields[${index}][code]`}
                     value={field.code}
-                    onChange={(e) => updateField(index, 'code', e.target.value)}
-                  />
+                    onChange={(e) => changeCode(index, e.target.value)}
+                  >
+                    {AVAILABLE_PARTICIPANT_FIELDS.filter(
+                      (f) => f.code === field.code || !usedCodes.includes(f.code)
+                    ).map((f) => (
+                      <option key={f.code} value={f.code}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                  {/* hidden so the form submission includes type derived from the allowlist */}
+                  <input type="hidden" name={`participant_checkout_fields[${index}][type]`} value={field.type} />
                 </td>
                 <td>
                   <input
@@ -260,20 +288,6 @@ function ParticipantCheckoutFields({ initialFields }: { initialFields: Participa
                     value={field.label}
                     onChange={(e) => updateField(index, 'label', e.target.value)}
                   />
-                </td>
-                <td>
-                  <select
-                    className="form-select"
-                    name={`participant_checkout_fields[${index}][type]`}
-                    value={field.type}
-                    onChange={(e) =>
-                      updateField(index, 'type', e.target.value as ParticipantCheckoutField['type'])
-                    }
-                  >
-                    <option value="text">Text</option>
-                    <option value="date">Date</option>
-                    <option value="select">Select</option>
-                  </select>
                 </td>
                 <td>
                   <select
@@ -310,7 +324,12 @@ function ParticipantCheckoutFields({ initialFields }: { initialFields: Participa
         </table>
       )}
       <div className="mt-4">
-        <button type="button" className="button secondary" onClick={addField}>
+        <button
+          type="button"
+          className="button secondary"
+          onClick={addField}
+          disabled={!nextAvailable}
+        >
           + Add Field
         </button>
       </div>
