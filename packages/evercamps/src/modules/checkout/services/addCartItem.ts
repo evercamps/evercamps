@@ -19,7 +19,7 @@ async function addCartItem(
 
   if (item.hasError()) {
     // Get the first error from the item.getErrors() object
-    throw new Error(Object.values(item.getErrors())[0]);
+    throw new Error(Object.values(item.getErrors())[0] as string);
   } else {
     let items = cart.getItems();
     let duplicateItem;
@@ -43,7 +43,7 @@ async function addCartItem(
         }
 
         if (items[i].hasError()) {
-          throw new Error(Object.values(items[i].getErrors())[0]);
+          throw new Error(Object.values(items[i].getErrors())[0] as string);
         }
 
         duplicateItem = items[i];
