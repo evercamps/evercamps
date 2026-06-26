@@ -74,7 +74,7 @@ const useMemoizeArgs = <T extends unknown[]>(
   args: T,
   equalityFunc: (a: unknown, b: unknown) => boolean
 ): T => {
-  const ref = React.useRef<T>();
+  const ref = React.useRef<T | undefined>(undefined);
   const prevArgs = ref.current;
   const argsAreEqual =
     prevArgs !== undefined &&
