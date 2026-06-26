@@ -1,9 +1,21 @@
 import Error from '@components/common/form/fields/Error';
-import PropTypes from 'prop-types';
 import React from 'react';
 import './Toggle.scss';
 
-function Enabled({ onClick }) {
+interface ClickProps {
+  onClick: () => void;
+}
+
+interface ToggleProps {
+  name: string;
+  value: string | number | boolean;
+  label?: string;
+  onChange?: (value: boolean | number) => void;
+  error?: string;
+  instruction?: string;
+}
+
+function Enabled({ onClick }: ClickProps) {
   return (
     <a
       href="#"
@@ -18,11 +30,7 @@ function Enabled({ onClick }) {
   );
 }
 
-Enabled.propTypes = {
-  onClick: PropTypes.func.isRequired
-};
-
-function Disabled({ onClick }) {
+function Disabled({ onClick }: ClickProps) {
   return (
     <a
       href="#"
@@ -37,25 +45,22 @@ function Disabled({ onClick }) {
   );
 }
 
-Disabled.propTypes = {
-  onClick: PropTypes.func.isRequired
+const isBool = (value: string | number | boolean): value is boolean =>
+  typeof value === 'boolean';
+
+const isEnable = (value: boolean | number): boolean =>
+  isBool(value) ? value : value === 1;
+
+const getValue = (value: string | number | boolean): boolean | number =>
+  isBool(value) ? value : parseInt(String(value), 10) || 0;
+
+const getOppositeValue = (value: boolean | number): boolean | number => {
+  if (isBool(value)) return !value;
+  return value === 1 ? 0 : 1;
 };
 
-const isBool = (value) => typeof value === 'boolean';
-const isEnable = (value) => (isBool(value) ? value : parseInt(value, 10) === 1);
-const getValue = (value) => (isBool(value) ? value : parseInt(value, 10) || 0);
-const getOppositeValue = (value) => {
-  if (isBool(value)) {
-    return !value;
-  }
-  if (value === 1) {
-    return 0;
-  }
-  return 1;
-};
-
-function Toggle({ name, value, label, onChange, error, instruction }) {
-  const [_value, setValue] = React.useState(getValue(value));
+function Toggle({ name, value, label, onChange, error, instruction }: ToggleProps) {
+  const [_value, setValue] = React.useState<boolean | number>(getValue(value));
 
   React.useEffect(() => {
     setValue(getValue(value));
@@ -64,10 +69,7 @@ function Toggle({ name, value, label, onChange, error, instruction }) {
   const onChangeFunc = () => {
     const newVal = getOppositeValue(_value);
     setValue(newVal);
-
-    if (onChange) {
-      onChange.call(window, newVal);
-    }
+    if (onChange) onChange(newVal);
   };
 
   return (
@@ -85,18 +87,5 @@ function Toggle({ name, value, label, onChange, error, instruction }) {
     </div>
   );
 }
-
-Toggle.propTypes = {
-  error: PropTypes.string,
-  instruction: PropTypes.string,
-  label: PropTypes.string,
-  name: PropTypes.string.isRequired,
-  onChange: PropTypes.func,
-  value: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number,
-    PropTypes.bool
-  ]).isRequired
-};
 
 export { Toggle };

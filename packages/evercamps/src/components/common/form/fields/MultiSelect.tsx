@@ -1,14 +1,24 @@
 import Error from '@components/common/form/fields/Error';
-import PropTypes from 'prop-types';
 import React from 'react';
-
 import '../Field.scss';
 import { _ } from '../../../../lib/locale/translate/_.js';
+import type { SelectOption } from '../../../../types/form';
 
-const MultiSelect = React.forwardRef((props, ref) => {
+interface MultiSelectProps {
+  name?: string;
+  label?: string;
+  instruction?: string;
+  error?: string;
+  placeholder?: string;
+  value?: string | number;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  options?: SelectOption[];
+  ref?: React.Ref<HTMLSelectElement>;
+}
+
+function MultiSelect({ ref, ...props }: MultiSelectProps) {
   const {
     name,
-    placeholder,
     value,
     label,
     onChange,
@@ -16,20 +26,18 @@ const MultiSelect = React.forwardRef((props, ref) => {
     instruction,
     options = []
   } = props;
+
   return (
-    <div
-      className={`form-field-container dropdown ${error ? 'has-error' : null}`}
-    >
+    <div className={`form-field-container dropdown ${error ? 'has-error' : null}`}>
       {label && <label htmlFor={name}>{label}</label>}
       <div className="field-wrapper flex flex-grow items-baseline">
         <select
           className="form-field"
           id={name}
           name={name}
-          placeholder={placeholder}
           defaultValue={value}
           onChange={(e) => {
-            if (onChange) onChange.call(window, e);
+            if (onChange) onChange(e);
           }}
           ref={ref}
           multiple
@@ -37,12 +45,11 @@ const MultiSelect = React.forwardRef((props, ref) => {
           <option value="" disabled>
             {_('Please select')}
           </option>
-          {options &&
-            options.map((option, key) => (
-              <option key={key} value={option.value}>
-                {option.text}
-              </option>
-            ))}
+          {options.map((option, key) => (
+            <option key={key} value={option.value}>
+              {option.text}
+            </option>
+          ))}
         </select>
         <div className="field-border" />
         <div className="field-suffix">
@@ -63,22 +70,6 @@ const MultiSelect = React.forwardRef((props, ref) => {
       <Error error={error} />
     </div>
   );
-});
-
-MultiSelect.propTypes = {
-  error: PropTypes.string,
-  instruction: PropTypes.string,
-  label: PropTypes.string,
-  name: PropTypes.string,
-  onChange: PropTypes.func,
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      text: PropTypes.string
-    })
-  ),
-  placeholder: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-};
+}
 
 export { MultiSelect };

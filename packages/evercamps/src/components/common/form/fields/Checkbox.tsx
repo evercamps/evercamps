@@ -1,7 +1,15 @@
 import Error from '@components/common/form/fields/Error';
-import PropTypes from 'prop-types';
 import React from 'react';
 import '../Field.scss';
+
+interface CheckboxProps {
+  name?: string;
+  label?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  instruction?: string;
+  isChecked?: boolean;
+}
 
 function CheckedIcon() {
   return (
@@ -24,12 +32,12 @@ function Checkbox({
   error,
   instruction = '',
   isChecked = false
-}) {
+}: CheckboxProps) {
   const [_isChecked, setChecked] = React.useState(isChecked);
 
-  const onChangeFunc = (e) => {
+  const onChangeFunc = (e: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(e.target.checked);
-    if (onChange) onChange.call(window, e);
+    onChange(e);
   };
 
   React.useEffect(() => {
@@ -60,14 +68,5 @@ function Checkbox({
     </div>
   );
 }
-
-Checkbox.propTypes = {
-  error: PropTypes.string,
-  instruction: PropTypes.string,
-  isChecked: PropTypes.bool,
-  label: PropTypes.string,
-  name: PropTypes.string,
-  onChange: PropTypes.func.isRequired
-};
 
 export { Checkbox };

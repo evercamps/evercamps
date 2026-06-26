@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React, { useMemo, useState } from 'react';
 import Area from '@components/common/Area';
 import { useAppDispatch } from '@components/common/context/app';
@@ -8,7 +7,50 @@ import { CategoryFilter } from '@components/frontStore/catalog/categoryView/filt
 import { PriceFilter } from '@components/frontStore/catalog/categoryView/filter/PriceFilter';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
-export const FilterDispatch = React.createContext();
+export const FilterDispatch = React.createContext<{ updateFilter: (newFilters: FilterItem[]) => Promise<void> } | undefined>(undefined);
+
+interface FilterItem {
+  key: string;
+  operation: string;
+  value: string;
+}
+
+interface AttributeOption {
+  optionId: number;
+  optionText: string;
+}
+
+interface AvailableAttribute {
+  attributeCode: string;
+  attributeName: string;
+  options: AttributeOption[];
+}
+
+interface CategoryChild {
+  categoryId: number;
+  name: string;
+  uuid: string;
+}
+
+interface PriceRange {
+  min: number;
+  max: number;
+}
+
+interface FilterProps {
+  category: {
+    products: {
+      currentFilters: FilterItem[];
+    };
+    availableAttributes: AvailableAttribute[];
+    priceRange: PriceRange;
+    children: CategoryChild[];
+  };
+  setting: {
+    storeLanguage: string;
+    storeCurrency: string;
+  };
+}
 
 export default function Filter({
   category: {
@@ -18,15 +60,14 @@ export default function Filter({
     children
   },
   setting
-}) {
+}: FilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const AppContextDispatch = useAppDispatch();
 
-  const updateFilter = async (newFilters) => {
+  const updateFilter = async (newFilters: FilterItem[]) => {
     const currentUrl = window.location.href;
     const url = new URL(currentUrl, window.location.origin);
     for (let i = 0; i < currentFilters.length; i += 1) {
-      // Leave the page, limit and sort untouched
       if (
         currentFilters[i].key === 'page' ||
         currentFilters[i].key === 'limit' ||
@@ -65,13 +106,11 @@ export default function Filter({
         );
       }
     }
-    // window.location.href = url;
-    url.searchParams.delete('ajax', true);
 
-    // Delete the page. We want to go back to page 1
+    url.searchParams.delete('ajax');
     url.searchParams.delete('page');
-    url.searchParams.append('ajax', true);
-    await AppContextDispatch.fetchPageData(url);
+    url.searchParams.append('ajax', 'true');
+    await AppContextDispatch?.fetchPageData(url);
     url.searchParams.delete('ajax');
 
     history.pushState(null, '', url);
@@ -80,7 +119,7 @@ export default function Filter({
   const contextValue = useMemo(() => ({ updateFilter }), [currentFilters]);
 
   return (
-    <FilterDispatch.Provider value={contextValue}>
+    <FilterDispatch value={contextValue}>
       <div
         className={`product-filter-tool hidden md:block ${
           isOpen ? 'opening' : 'closed'
@@ -165,50 +204,9 @@ export default function Filter({
           />
         </svg>
       </a>
-    </FilterDispatch.Provider>
+    </FilterDispatch>
   );
 }
-
-Filter.propTypes = {
-  category: PropTypes.shape({
-    products: PropTypes.shape({
-      currentFilters: PropTypes.arrayOf(
-        PropTypes.shape({
-          key: PropTypes.string,
-          operation: PropTypes.string,
-          value: PropTypes.string
-        })
-      )
-    }),
-    availableAttributes: PropTypes.arrayOf(
-      PropTypes.shape({
-        attributeCode: PropTypes.string,
-        attributeName: PropTypes.string,
-        options: PropTypes.arrayOf(
-          PropTypes.shape({
-            optionId: PropTypes.number,
-            optionText: PropTypes.string
-          })
-        )
-      })
-    ),
-    priceRange: PropTypes.shape({
-      min: PropTypes.number,
-      max: PropTypes.number
-    }),
-    children: PropTypes.arrayOf(
-      PropTypes.shape({
-        categoryId: PropTypes.number,
-        name: PropTypes.string,
-        uuid: PropTypes.string
-      })
-    )
-  }).isRequired,
-  setting: PropTypes.shape({
-    storeLanguage: PropTypes.string,
-    storeCurrency: PropTypes.string
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'leftColumn',

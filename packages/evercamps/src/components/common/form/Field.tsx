@@ -15,6 +15,7 @@ import React from 'react';
 import isEqual from 'react-fast-compare';
 import './Field.scss';
 import { FORM_FIELD_UPDATED } from '../../../lib/util/events';
+import type { SelectOption, ValidationRule } from '../../../types/form';
 
 type FieldType =
   | 'text'
@@ -28,10 +29,6 @@ type FieldType =
   | 'textarea'
   | 'password'
   | 'hidden';
-
-type ValidationRule = string | { rule: string; message?: string };
-
-type SelectOption = { value: string | number; text: string };
 
 export interface FieldProps {
   name: string;
@@ -74,7 +71,7 @@ const useMemoizeArgs = <T extends unknown[]>(
   args: T,
   equalityFunc: (a: unknown, b: unknown) => boolean
 ): T => {
-  const ref = React.useRef<T>();
+  const ref = React.useRef<T | undefined>(undefined);
   const prevArgs = ref.current;
   const argsAreEqual =
     prevArgs !== undefined &&

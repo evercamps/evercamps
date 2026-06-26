@@ -4,22 +4,22 @@ import React from 'react';
 import { createClient, Provider } from 'urql';
 import { get } from '../../../lib/util/get.js';
 
-const AuthContext = React.createContext();
+const AuthContext = React.createContext<string | undefined>(undefined);
 
 export function AuthProvider() {
   const context = useAppState();
-  const token = get(context, 'token');
+  const token = get(context, 'token') as string | undefined;
 
   const client = createClient({
     url: '/v1/graphql'
   });
 
   return (
-    <AuthContext.Provider token={token}>
+    <AuthContext value={token}>
       <Provider value={client}>
         <Area id="body" />
       </Provider>
-    </AuthContext.Provider>
+    </AuthContext>
   );
 }
 

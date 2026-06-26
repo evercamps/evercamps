@@ -1,14 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import { Field } from '@components/common/form/Field';
-
-interface ParticipantCheckoutField {
-  code: string;
-  label: string;
-  type: 'text' | 'date' | 'select';
-  required: boolean;
-  useForUniqueness: boolean;
-}
+import type { ParticipantCheckoutField } from '../../../../../types/checkout';
 
 interface BaseRegistration {
   firstName: string;

@@ -1,11 +1,23 @@
 import Error from '@components/common/form/fields/Error';
-import PropTypes from 'prop-types';
 import React from 'react';
-
 import '../Field.scss';
 import { _ } from '../../../../lib/locale/translate/_.js';
+import type { SelectOption } from '../../../../types/form';
 
-const Select = React.forwardRef((props, ref) => {
+interface SelectProps {
+  name?: string;
+  label?: string;
+  instruction?: string;
+  error?: string;
+  placeholder?: string;
+  value?: string | number;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  options?: SelectOption[];
+  disableDefaultOption?: boolean;
+  ref?: React.Ref<HTMLSelectElement>;
+}
+
+function Select({ ref, ...props }: SelectProps) {
   const {
     name,
     placeholder,
@@ -17,27 +29,25 @@ const Select = React.forwardRef((props, ref) => {
     instruction,
     options = []
   } = props;
+
   const [_value, setValue] = React.useState(value || '');
 
   React.useEffect(() => {
-    setValue(value);
+    setValue(value ?? '');
   }, [value]);
 
   return (
-    <div
-      className={`form-field-container dropdown ${error ? 'has-error' : null}`}
-    >
+    <div className={`form-field-container dropdown ${error ? 'has-error' : null}`}>
       {label && <label htmlFor={name}>{label}</label>}
       <div className="field-wrapper flex flex-grow items-baseline">
         <select
           className="form-field"
           id={name}
           name={name}
-          placeholder={placeholder}
           value={_value}
           onChange={(e) => {
             if (onChange) {
-              onChange.call(window, e);
+              onChange(e);
             } else {
               setValue(e.target.value);
             }
@@ -47,12 +57,11 @@ const Select = React.forwardRef((props, ref) => {
           <option value="" disabled={disableDefaultOption}>
             {placeholder || _('Please select')}
           </option>
-          {options &&
-            options.map((option, key) => (
-              <option key={key} value={option.value}>
-                {option.text}
-              </option>
-            ))}
+          {options.map((option, key) => (
+            <option key={key} value={option.value}>
+              {option.text}
+            </option>
+          ))}
         </select>
         <div className="field-border" />
         <div className="field-suffix">
@@ -73,23 +82,6 @@ const Select = React.forwardRef((props, ref) => {
       <Error error={error} />
     </div>
   );
-});
-
-Select.propTypes = {
-  error: PropTypes.string,
-  instruction: PropTypes.string,
-  label: PropTypes.string,
-  name: PropTypes.string,
-  onChange: PropTypes.func,
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      text: PropTypes.string
-    })
-  ),
-  placeholder: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  disableDefaultOption: PropTypes.bool
-};
+}
 
 export { Select };

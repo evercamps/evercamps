@@ -1,7 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
 import { Field } from '@components/common/form/Field';
 import { Toggle } from '@components/common/form/fields/Toggle';
-import React from 'react';
 import { MollieConfig } from '../../../types/mollieConfig';
 
 interface MolliePaymentProps {

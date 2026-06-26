@@ -1,16 +1,54 @@
 import Button from '@components/common/form/Button';
-import PropTypes from 'prop-types';
 import PubSub from 'pubsub-js';
 import React, { useState } from 'react';
 import { FORM_SUBMIT, FORM_VALIDATED } from '../../../lib/util/events';
 import { serializeForm } from '../../../lib/util/formToJson';
 import { get } from '../../../lib/util/get.js';
 import { validator } from './validator';
+import type { ValidationRule } from '../../../types/form';
 
-export const FormContext = React.createContext();
-export const FormDispatch = React.createContext();
+interface FormField {
+  name: string;
+  value: unknown;
+  validationRules: ValidationRule[];
+  updated: boolean;
+  error?: string;
+}
 
-export function Form(props) {
+interface FormContextValue {
+  fields: FormField[];
+  addField: (name: string, value: unknown, validationRules?: ValidationRule[]) => void;
+  updateField: (name: string, value: unknown, validationRules?: ValidationRule[]) => void;
+  removeField: (name: string) => void;
+  state: string;
+  [key: string]: unknown;
+}
+
+interface FormDispatchValue {
+  submit: (e: React.FormEvent<HTMLFormElement>) => Promise<boolean>;
+  validate: () => Record<string, string>;
+}
+
+export const FormContext = React.createContext<FormContextValue | undefined>(undefined);
+export const FormDispatch = React.createContext<FormDispatchValue | undefined>(undefined);
+
+interface FormProps {
+  id: string;
+  action?: string;
+  method?: string;
+  isJSON?: boolean;
+  onStart?: () => Promise<void> | void;
+  onComplete?: () => Promise<void> | void;
+  onError?: (error: unknown) => Promise<void> | void;
+  onSuccess?: (responseJson: unknown) => Promise<void> | void;
+  onValidationError?: () => Promise<void> | void;
+  children: React.ReactNode;
+  submitBtn?: boolean;
+  btnText?: string;
+  dataFilter?: (data: unknown) => unknown;
+}
+
+export function Form(props: FormProps) {
   const {
     id,
     action = '',
@@ -27,18 +65,18 @@ export function Form(props) {
     dataFilter
   } = props;
 
-  const [fields, setFields] = React.useState([]);
-  const formRef = React.useRef();
+  const [fields, setFields] = React.useState<FormField[]>([]);
+  const formRef = React.useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
   const [state, setState] = useState('initialized');
 
-  const addField = (name, value, validationRules = []) => {
+  const addField = (name: string, value: unknown, validationRules: ValidationRule[] = []) => {
     setFields((previous) =>
       previous.concat({ name, value, validationRules, updated: false })
     );
   };
 
-  const updateField = (name, value, validationRules = []) => {
+  const updateField = (name: string, value: unknown, validationRules: ValidationRule[] = []) => {
     setFields((previous) =>
       previous.map((f) => {
         if (f.name === name) {
@@ -50,16 +88,15 @@ export function Form(props) {
     );
   };
 
-  const removeField = (name) => {
+  const removeField = (name: string) => {
     setFields((previous) => previous.filter((f) => f.name !== name));
   };
 
-  const validate = () => {
-    const errors = {};
+  const validate = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
     fields.forEach((f) => {
       f.validationRules.forEach((r) => {
-        let rule;
-        // Check if r is a string or an object
+        let rule: string;
         if (typeof r === 'string') {
           rule = r;
         } else {
@@ -69,7 +106,7 @@ export function Form(props) {
         const ruleValidator = validator.getRule(rule);
         if (ruleValidator === undefined) return;
         if (!ruleValidator.handler.call(fields, f.value)) {
-          if (r.message) {
+          if (typeof r !== 'string' && r.message) {
             errors[f.name] = r.message;
           } else {
             errors[f.name] = ruleValidator.errorMessage;
@@ -94,7 +131,7 @@ export function Form(props) {
     return errors;
   };
 
-  const submit = async (e) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>): Promise<boolean> => {
     e.preventDefault();
     setState('submitting');
     try {
@@ -102,30 +139,26 @@ export function Form(props) {
       const errors = validate();
       PubSub.publishSync(FORM_VALIDATED, { formId: id, errors });
       if (Object.keys(errors).length === 0) {
-        const formData = new FormData(document.getElementById(id));
+        const formData = new FormData(document.getElementById(id) as HTMLFormElement);
         setLoading(true);
         if (onStart) {
           await onStart();
         }
-        const response = await fetch(
-          // TODO: Replace by Axios
-          action,
-          {
-            method,
-            body:
-              isJSON === true
-                ? JSON.stringify(serializeForm(formData.entries(), dataFilter))
-                : formData,
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              ...(isJSON === true ? { 'Content-Type': 'application/json' } : {})
-            }
+        const response = await fetch(action, {
+          method,
+          body:
+            isJSON === true
+              ? JSON.stringify(serializeForm(formData.entries(), dataFilter))
+              : formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(isJSON === true ? { 'Content-Type': 'application/json' } : {})
           }
-        );
+        });
 
         if (
           !response.headers.get('content-type') ||
-          !response.headers.get('content-type').includes('application/json')
+          !response.headers.get('content-type')!.includes('application/json')
         ) {
           throw new TypeError('Something wrong. Please try again');
         }
@@ -139,18 +172,14 @@ export function Form(props) {
         if (onSuccess) {
           await onSuccess(responseJson);
         }
-        setState('submitSuccess'); // This indicates that the form has been submitted successfully. It does not mean that the business logic is successful.
+        setState('submitSuccess');
       } else {
         setState('validateFailed');
         if (onValidationError) {
           await onValidationError();
         }
-        // Get the first field with error
         const firstFieldWithError = Object.keys(errors)[0];
-        // Get the first element with the name of the field with error
-        const firstElementWithError =
-          document.getElementsByName(firstFieldWithError)[0];
-        // Focus on the first element with error
+        const firstElementWithError = document.getElementsByName(firstFieldWithError)[0];
         if (firstElementWithError) {
           firstElementWithError.focus();
         }
@@ -172,17 +201,15 @@ export function Form(props) {
   };
 
   return (
-    <FormContext.Provider
-      value={{
-        fields,
-        addField,
-        updateField,
-        removeField,
-        state,
-        ...props
-      }}
-    >
-      <FormDispatch.Provider value={{ submit, validate }}>
+    <FormContext value={{
+      fields,
+      addField,
+      updateField,
+      removeField,
+      state,
+      ...props
+    }}>
+      <FormDispatch value={{ submit, validate }}>
         <form
           ref={formRef}
           id={id}
@@ -198,7 +225,7 @@ export function Form(props) {
                 onAction={() => {
                   document
                     .getElementById(id)
-                    .dispatchEvent(
+                    ?.dispatchEvent(
                       new Event('submit', { cancelable: true, bubbles: true })
                     );
                 }}
@@ -208,29 +235,10 @@ export function Form(props) {
             </div>
           )}
         </form>
-      </FormDispatch.Provider>
-    </FormContext.Provider>
+      </FormDispatch>
+    </FormContext>
   );
 }
-
-Form.propTypes = {
-  action: PropTypes.string,
-  btnText: PropTypes.string,
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node
-  ]).isRequired,
-  id: PropTypes.string.isRequired,
-  method: PropTypes.string,
-  onComplete: PropTypes.func,
-  onError: PropTypes.func,
-  onStart: PropTypes.func,
-  onSuccess: PropTypes.func,
-  onValidationError: PropTypes.func,
-  submitBtn: PropTypes.bool,
-  isJSON: PropTypes.bool,
-  dataFilter: PropTypes.func
-};
 
 export const useFormContext = () => React.useContext(FormContext);
 export const useFormDispatch = () => React.useContext(FormDispatch);
