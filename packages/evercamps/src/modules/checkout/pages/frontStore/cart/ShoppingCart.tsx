@@ -5,51 +5,12 @@ import Items from '@components/frontStore/checkout/cart/items/Items';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import { get } from '../../../../../lib/util/get.js';
-
-interface Price {
-  value: number;
-  text: string;
-}
-
-interface CartItemRegistration {
-  firstName: string;
-  lastName: string;
-  extraData?: string;
-  editApi: string;
-  removeApi: string;
-}
-
-interface CartItem {
-  cartItemId: string;
-  thumbnail?: string;
-  qty: number;
-  productName: string;
-  productSku: string;
-  variantOptions?: string;
-  productCustomOptions?: string;
-  productUrl: string;
-  productPrice: Price;
-  productPriceInclTax: Price;
-  finalPrice: Price;
-  finalPriceInclTax: Price;
-  lineTotal: Price;
-  lineTotalInclTax: Price;
-  removeApi: string;
-  updateQtyApi: string;
-  manageRegistrations?: number;
-  registrations: CartItemRegistration[];
-  errors: string[];
-}
+import type { CartItem, CheckoutSetting } from '../../../../../types/checkout';
 
 interface Cart {
   totalQty: number;
   uuid: string;
   items: CartItem[];
-}
-
-interface Setting {
-  priceIncludingTax: boolean;
-  participantCheckoutFields?: string;
 }
 
 interface TitleProps {
@@ -72,7 +33,7 @@ function Title({ title }: TitleProps) {
 
 interface Props {
   cart: Cart;
-  setting: Setting;
+  setting: CheckoutSetting;
 }
 
 export default function ShoppingCart({ cart, setting }: Props) {

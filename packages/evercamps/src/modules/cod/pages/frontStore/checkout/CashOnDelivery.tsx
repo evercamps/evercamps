@@ -21,7 +21,7 @@ export function COD({ orderId, checkoutSuccessUrl }: CODProps) {
 }
 
 export default function CashOnDeliveryMethod() {
-  const checkout = useCheckout();
+  const checkout = useCheckout()!;
   const {
     steps,
     paymentMethods,
@@ -30,7 +30,7 @@ export default function CashOnDeliveryMethod() {
     orderId,
     checkoutSuccessUrl
   } = checkout;
-  const { placeOrder } = useCheckoutDispatch();
+  const { placeOrder } = useCheckoutDispatch()!;
 
   const selectedPaymentMethod = paymentMethods
     ? paymentMethods.find((paymentMethod: { code: string; selected: boolean }) => paymentMethod.selected)
@@ -41,7 +41,7 @@ export default function CashOnDeliveryMethod() {
       (paymentMethod: { code: string; selected: boolean }) => paymentMethod.selected
     );
     if (
-      steps.every((step: { isCompleted: boolean }) => step.isCompleted) &&
+      steps?.every((step) => !!step.isCompleted) &&
       selectedPaymentMethod?.code === 'cod'
     ) {
       placeOrder();

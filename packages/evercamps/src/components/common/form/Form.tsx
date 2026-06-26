@@ -5,8 +5,7 @@ import { FORM_SUBMIT, FORM_VALIDATED } from '../../../lib/util/events';
 import { serializeForm } from '../../../lib/util/formToJson';
 import { get } from '../../../lib/util/get.js';
 import { validator } from './validator';
-
-type ValidationRule = string | { rule: string; message?: string };
+import type { ValidationRule } from '../../../types/form';
 
 interface FormField {
   name: string;

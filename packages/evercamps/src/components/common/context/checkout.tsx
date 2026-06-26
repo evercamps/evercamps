@@ -1,10 +1,7 @@
 import { useCheckoutSteps, type Step } from '@components/common/context/checkoutSteps';
 import axios from 'axios';
 import React, { useMemo, useState } from 'react';
-
-interface PaymentMethod {
-  [key: string]: unknown;
-}
+import type { PaymentMethodOption } from '../../../types/checkout';
 
 interface CheckoutContextValue {
   steps: Step[] | undefined;
@@ -12,8 +9,8 @@ interface CheckoutContextValue {
   error: string | null;
   orderPlaced: boolean;
   orderId: string | undefined;
-  paymentMethods: PaymentMethod[];
-  setPaymentMethods: React.Dispatch<React.SetStateAction<PaymentMethod[]>>;
+  paymentMethods: PaymentMethodOption[];
+  setPaymentMethods: React.Dispatch<React.SetStateAction<PaymentMethodOption[]>>;
   getPaymentMethods: () => Promise<void>;
   checkoutSuccessUrl: string;
 }
@@ -42,7 +39,7 @@ export function CheckoutProvider({
   checkoutSuccessUrl
 }: CheckoutProviderProps) {
   const steps = useCheckoutSteps();
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);

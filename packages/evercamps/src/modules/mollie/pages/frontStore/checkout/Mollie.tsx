@@ -55,8 +55,8 @@ export function Mollie({ createPaymentApi, orderId, orderPlaced }: MollieProps) 
 }
 
 export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
-  const checkout = useCheckout();
-  const { placeOrder } = useCheckoutDispatch();
+  const checkout = useCheckout()!;
+  const { placeOrder } = useCheckoutDispatch()!;
 
   const { steps, paymentMethods, setPaymentMethods, orderPlaced, orderId } = checkout;
 
@@ -68,7 +68,7 @@ export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
     const selected = paymentMethods.find(
       (paymentMethod: { selected: boolean }) => paymentMethod.selected
     );
-    if (steps.every((step: { isCompleted: boolean }) => step.isCompleted) && selected?.code === 'mollie') {
+    if (steps?.every((step) => !!step.isCompleted) && selected?.code === 'mollie') {
       placeOrder();
     }
   }, [steps]);

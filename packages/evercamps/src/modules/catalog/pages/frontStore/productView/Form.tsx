@@ -11,14 +11,7 @@ import { _ } from '../../../../../lib/locale/translate/_.js';
 import './Form.scss';
 import { useModal } from '@components/common/modal/useModal';
 import ParticipantForm from './ParticipantForm';
-
-interface ParticipantCheckoutField {
-  code: string;
-  label: string;
-  type: 'text' | 'date' | 'select';
-  required: boolean;
-  useForUniqueness: boolean;
-}
+import type { ParticipantCheckoutField, CheckoutSetting } from '../../../../../types/checkout';
 
 interface ToastMessageProps {
   thumbnail?: string | null;
@@ -156,17 +149,13 @@ interface CurrentCustomer {
   }[];
 }
 
-interface Setting {
-  participantCheckoutFields?: string;
-}
-
 interface Props {
   product: Product;
   action: string;
   currentCustomer?: CurrentCustomer | null;
   loginUrl: string;
   registerUrl: string;
-  setting?: Setting;
+  setting?: Pick<CheckoutSetting, 'participantCheckoutFields'>;
 }
 
 export default function ProductForm({ product, action, currentCustomer, loginUrl, registerUrl, setting }: Props) {

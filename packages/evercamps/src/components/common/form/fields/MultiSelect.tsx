@@ -2,11 +2,7 @@ import Error from '@components/common/form/fields/Error';
 import React from 'react';
 import '../Field.scss';
 import { _ } from '../../../../lib/locale/translate/_.js';
-
-interface SelectOption {
-  value: string | number;
-  text: string;
-}
+import type { SelectOption } from '../../../../types/form';
 
 interface MultiSelectProps {
   name?: string;
