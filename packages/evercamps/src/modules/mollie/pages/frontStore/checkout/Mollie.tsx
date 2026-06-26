@@ -3,6 +3,7 @@ import MollieLogo from '@components/frontStore/mollie/MollieLogo';
 import RenderIfTrue from '@components/common/RenderIfTrue';
 import React, { useState } from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
+import { PaymentMethodOption } from '../../../../../types/checkout.js';
 
 interface MollieProps {
   createPaymentApi: string;
@@ -81,7 +82,7 @@ export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
         >
           <a href="#" onClick={(e) => {
             e.preventDefault();
-            setPaymentMethods((previous: { code: string; selected: boolean }[]) =>
+            setPaymentMethods((previous: PaymentMethodOption[]) =>
               previous.map((paymentMethod) => ({
                 ...paymentMethod,
                 selected: paymentMethod.code === 'mollie'

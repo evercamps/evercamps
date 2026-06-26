@@ -1,6 +1,7 @@
 import Area from '@components/common/Area';
 import Button from '@components/common/form/Button';
 import { useFormContext } from '@components/common/form/Form';
+import React from 'react';
 import './FormContent.scss';
 
 interface Props {

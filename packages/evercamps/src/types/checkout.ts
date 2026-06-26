@@ -50,4 +50,5 @@ export interface CheckoutSetting {
 
 export interface PaymentMethodOption {
   [key: string]: unknown;
+  selected: boolean;
 }
