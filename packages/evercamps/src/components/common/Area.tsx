@@ -28,6 +28,7 @@ interface AreaProps {
   wrapper?: React.ReactNode | string;
   wrapperProps?: Record<string, any>;
   components?: Components;
+  [key: string]: unknown;
 }
 
 interface Widget extends Component {
@@ -51,7 +52,7 @@ function Area({
   wrapperProps = {},
   components = _defaultComponents
 }: AreaProps) {
-  const context = useAppState();
+  const context = useAppState() as any;
   const props = { id, className, coreComponents, noOuter, wrapper, wrapperProps, components };
 
   const areaComponents = (() => {

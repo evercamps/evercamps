@@ -37,7 +37,7 @@ function Select({ ref, ...props }: SelectProps) {
   const [_value, setValue] = React.useState(value || '');
 
   React.useEffect(() => {
-    setValue(value);
+    setValue(value ?? '');
   }, [value]);
 
   return (
@@ -48,7 +48,6 @@ function Select({ ref, ...props }: SelectProps) {
           className="form-field"
           id={name}
           name={name}
-          placeholder={placeholder}
           value={_value}
           onChange={(e) => {
             if (onChange) {

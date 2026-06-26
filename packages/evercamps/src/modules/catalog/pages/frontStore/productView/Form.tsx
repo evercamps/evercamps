@@ -184,8 +184,8 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
   const [error, setError] = useState<string | undefined>();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const appContext = useAppState();
-  const { setData } = useAppDispatch();
+  const appContext = useAppState()!;
+  const { setData } = useAppDispatch()!;
   const modal = useModal();
 
   const onSuccess = (response: any) => {

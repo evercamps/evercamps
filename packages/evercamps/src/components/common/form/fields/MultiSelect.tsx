@@ -23,7 +23,6 @@ interface MultiSelectProps {
 function MultiSelect({ ref, ...props }: MultiSelectProps) {
   const {
     name,
-    placeholder,
     value,
     label,
     onChange,
@@ -40,7 +39,6 @@ function MultiSelect({ ref, ...props }: MultiSelectProps) {
           className="form-field"
           id={name}
           name={name}
-          placeholder={placeholder}
           defaultValue={value}
           onChange={(e) => {
             if (onChange) onChange(e);

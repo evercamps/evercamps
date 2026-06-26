@@ -94,7 +94,7 @@ export default function Items({ items, setting: { priceIncludingTax, participant
       if (!json.error) {
         const url = new URL(window.location.href);
         url.searchParams.set('ajax', 'true');
-        await AppContextDispatch.fetchPageData(url);
+        await AppContextDispatch?.fetchPageData(url);
       } else {
         toast.error(json.error.message);
       }
@@ -113,7 +113,7 @@ export default function Items({ items, setting: { priceIncludingTax, participant
     if (response.ok) {
       const url = new URL(window.location.href);
       url.searchParams.set('ajax', 'true');
-      await AppContextDispatch.fetchPageData(url);
+      await AppContextDispatch?.fetchPageData(url);
     } else {
       const data = await response.json();
       toast(data.error.message);
@@ -128,7 +128,7 @@ export default function Items({ items, setting: { priceIncludingTax, participant
     if (response.ok) {
       const url = new URL(window.location.href);
       url.searchParams.set('ajax', 'true');
-      await AppContextDispatch.fetchPageData(url);
+      await AppContextDispatch?.fetchPageData(url);
     } else {
       const data = await response.json();
       toast(data.error.message);
@@ -268,7 +268,7 @@ export default function Items({ items, setting: { priceIncludingTax, participant
                 }}
                 onStart={() => setLoading(true)}
                 onComplete={() => setLoading(false)}
-                onError={(e: any) => toast.error(e.message)}
+                onError={(e: any) => { toast.error(e.message); }}
                 isJSON
               >
                 <EditParticipantForm

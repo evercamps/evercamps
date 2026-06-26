@@ -1,18 +1,58 @@
-
 import Button from '@components/common/form/Button';
 import produce from 'immer';
-import PropTypes from 'prop-types';
 import React, { useReducer } from 'react';
 import ReactDOM from 'react-dom';
 import { assign } from '../../../lib/util/assign.js';
-
 import './Alert.scss';
 import { Card } from '@components/admin/cms/Card';
 
-const AlertContext = React.createContext();
-export const useAlertContext = () => React.useContext(AlertContext);
+interface AlertAction {
+  title: string | React.ReactNode;
+  onAction?: () => void;
+  [key: string]: unknown;
+}
 
-function reducer(state, action) {
+interface AlertPayload {
+  heading?: string;
+  content?: React.ReactNode;
+  primaryAction?: AlertAction;
+  secondaryAction?: AlertAction;
+}
+
+interface AlertActionUpdate {
+  title?: string | React.ReactNode;
+  onAction?: () => void;
+  [key: string]: unknown;
+}
+
+interface AlertPayloadUpdate {
+  heading?: string;
+  content?: React.ReactNode;
+  primaryAction?: AlertActionUpdate;
+  secondaryAction?: AlertActionUpdate;
+}
+
+interface AlertContextValue {
+  dispatchAlert: React.Dispatch<{ type: string; payload?: AlertPayloadUpdate }>;
+  openAlert: (payload: AlertPayload) => void;
+  closeAlert: () => void;
+}
+
+interface ModalState {
+  showing: boolean;
+  closing: boolean;
+}
+
+type ModalAction = { type: 'close' | 'closing' | 'open' };
+
+const AlertContext = React.createContext<AlertContextValue | undefined>(undefined);
+export const useAlertContext = (): AlertContextValue => {
+  const ctx = React.useContext(AlertContext);
+  if (!ctx) throw new Error('useAlertContext must be used within <Alert>');
+  return ctx;
+};
+
+function reducer(state: ModalState, action: ModalAction): ModalState {
   switch (action.type) {
     case 'close':
       return { ...state, showing: false, closing: false };
@@ -25,49 +65,46 @@ function reducer(state, action) {
   }
 }
 
-const alertReducer = produce((draff, action) => {
+const alertReducer = produce((draff: AlertPayload, action: { type: string; payload?: AlertPayload }) => {
   switch (action.type) {
     case 'open':
       draff = { ...action.payload };
       return draff;
     case 'remove':
-      return {};
+      return {} as AlertPayload;
     case 'update':
-      assign(draff, action.payload);
+      if (action.payload) assign(draff, action.payload);
       return draff;
     default:
       throw new Error();
   }
 });
 
-function Alert({ children }) {
+interface AlertProps {
+  children: React.ReactNode;
+}
+
+function Alert({ children }: AlertProps) {
   const [alert, dispatchAlert] = useReducer(alertReducer, {});
   const [state, dispatch] = useReducer(reducer, {
     showing: false,
     closing: false
   });
 
-  const openAlert = ({ heading, content, primaryAction, secondaryAction }) => {
+  const openAlert = ({ heading, content, primaryAction, secondaryAction }: AlertPayload) => {
     dispatchAlert({
       type: 'open',
-      payload: {
-        heading,
-        content,
-        primaryAction,
-        secondaryAction
-      }
+      payload: { heading, content, primaryAction, secondaryAction }
     });
     dispatch({ type: 'open' });
   };
 
   return (
-    <AlertContext.Provider
-      value={{
-        dispatchAlert,
-        openAlert,
-        closeAlert: () => dispatch({ type: 'closing' })
-      }}
-    >
+    <AlertContext value={{
+      dispatchAlert,
+      openAlert,
+      closeAlert: () => dispatch({ type: 'closing' })
+    }}>
       {children}
       {state.showing === true &&
         ReactDOM.createPortal(
@@ -85,7 +122,6 @@ function Alert({ children }) {
             }}
           >
             <div
-              key={state.key}
               className="modal-wrapper flex self-center justify-center"
               aria-modal
               aria-hidden
@@ -132,12 +168,8 @@ function Alert({ children }) {
           </div>,
           document.body
         )}
-    </AlertContext.Provider>
+    </AlertContext>
   );
 }
-
-Alert.propTypes = {
-  children: PropTypes.node.isRequired
-};
 
 export { Alert };
