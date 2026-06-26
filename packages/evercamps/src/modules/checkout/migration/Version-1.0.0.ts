@@ -1,6 +1,6 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   await execute(
     connection,
     `CREATE TABLE "cart" (
@@ -270,7 +270,7 @@ export default async (connection) => {
   await execute(
     connection,
     `CREATE OR REPLACE FUNCTION reduce_product_stock_when_order_placed()
-        RETURNS TRIGGER 
+        RETURNS TRIGGER
         LANGUAGE PLPGSQL
         AS
       $$

@@ -19,7 +19,7 @@ async function addCartItem(
 
   if (item.hasError()) {
     // Get the first error from the item.getErrors() object
-    throw new Error(Object.values(item.getErrors())[0]);
+    throw new Error(Object.values(item.getErrors())[0] as string);
   } else {
     let items = cart.getItems();
     let duplicateItem;
@@ -32,21 +32,18 @@ async function addCartItem(
 
         if (context.first_name && context.last_name) {
           const existingRegs = items[i].getData('registrations') || [];
-          const newReg = {
-            firstName: context.first_name,
-            lastName: context.last_name
-          };
           await items[i].setData('registrations', [
             ...existingRegs,
             {
               firstName: context.first_name,
-              lastName: context.last_name
+              lastName: context.last_name,
+              ...(context.extraData !== undefined && { extraData: context.extraData })
             }
           ]);
         }
 
         if (items[i].hasError()) {
-          throw new Error(Object.values(items[i].getErrors())[0]);
+          throw new Error(Object.values(items[i].getErrors())[0] as string);
         }
 
         duplicateItem = items[i];
@@ -58,10 +55,11 @@ async function addCartItem(
         await item.setData('registrations', [
           {
             firstName: context.first_name,
-            lastName: context.last_name
+            lastName: context.last_name,
+            ...(context.extraData !== undefined && { extraData: context.extraData })
           }
         ]);
-    }
+      }
       items = items.concat(item);
     }
     await cart.setData('items', items, true);

@@ -1,10 +1,10 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   await execute(
     connection,
     `
-    ALTER TABLE order_item_registration 
+    ALTER TABLE order_item_registration
     ADD COLUMN IF NOT EXISTS registration_id INT;
 
     ALTER TABLE order_item_registration
@@ -12,5 +12,5 @@ export default async (connection) => {
     FOREIGN KEY (registration_id) REFERENCES registration (registration_id)
     ON DELETE CASCADE;
     `
-  );  
+  );
 };

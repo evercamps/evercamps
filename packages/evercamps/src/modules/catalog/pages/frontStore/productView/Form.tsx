@@ -5,15 +5,31 @@ import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
 import produce from 'immer';
-import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import './Form.scss';
 import { useModal } from '@components/common/modal/useModal';
-import ParticipantForm from './ParticipantForm.jsx';
+import ParticipantForm from './ParticipantForm';
 
-function ToastMessage({ thumbnail = null, name, qty, count, cartUrl, toastId }) {
+interface ParticipantCheckoutField {
+  code: string;
+  label: string;
+  type: 'text' | 'date' | 'select';
+  required: boolean;
+  useForUniqueness: boolean;
+}
+
+interface ToastMessageProps {
+  thumbnail?: string | null;
+  name: string;
+  qty: number;
+  count: number;
+  cartUrl: string;
+  toastId: string;
+}
+
+function ToastMessage({ thumbnail = null, name, qty, count, cartUrl, toastId }: ToastMessageProps) {
   return (
     <div className="toast-mini-cart">
       <div className="top-head grid grid-cols-2">
@@ -55,11 +71,11 @@ function ToastMessage({ thumbnail = null, name, qty, count, cartUrl, toastId }) 
           <div className="name">
             <span className="font-bold">{name}</span>
           </div>
-          <div>{_('QTY: ${qty}', { qty })}</div>
+          <div>{_('QTY: ${qty}', { qty: String(qty) })}</div>
         </div>
       </div>
       <a className="add-cart-popup-button" href={cartUrl}>
-        {_('VIEW CART (${count})', { count })}
+        {_('VIEW CART (${count})', { count: String(count) })}
       </a>
       <a
         className="add-cart-popup-continue text-center underline block"
@@ -75,27 +91,25 @@ function ToastMessage({ thumbnail = null, name, qty, count, cartUrl, toastId }) 
   );
 }
 
-ToastMessage.propTypes = {
-  cartUrl: PropTypes.string.isRequired,
-  count: PropTypes.number.isRequired,
-  name: PropTypes.string.isRequired,
-  qty: PropTypes.number.isRequired,
-  thumbnail: PropTypes.string,
-  toastId: PropTypes.string.isRequired
-};
+interface AddToCartProps {
+  stockAvailability: boolean;
+  loading?: boolean;
+  error?: string;
+  onAddToCartClick: () => void;
+  manageRegistrations: number;
+}
 
-function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick, manageRegistrations }) {
+function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick, manageRegistrations }: AddToCartProps) {
   return (
     <div className="add-to-cart mt-8">
       <div style={{ width: '8rem' }}>
         <Field
-          type={manageRegistrations === 1 ? "hidden" : "text"}
+          type={manageRegistrations === 1 ? 'hidden' : 'text'}
           value="1"
           validationRules={['notEmpty']}
-          className="qty"
           name="qty"
           placeholder={_('Qty')}
-          formId="productForm"
+          form="productForm"
         />
       </div>
       {error && <div className="text-critical mt-4">{error}</div>}
@@ -116,32 +130,74 @@ function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick
   );
 }
 
-AddToCart.propTypes = {
-  error: PropTypes.string,
-  loading: PropTypes.bool.isRequired,
-  stockAvailability: PropTypes.bool.isRequired
-};
+interface VariantAttribute {
+  attributeCode: string;
+}
 
-export default function ProductForm({ product, action, currentCustomer, loginUrl, registerUrl}) {
+interface Product {
+  productId: number;
+  sku: string;
+  name: string;
+  inventory: {
+    isInStock: boolean;
+  };
+  manageRegistrations: number;
+  variantGroup?: {
+    variantAttributes?: VariantAttribute[];
+  };
+}
+
+interface CurrentCustomer {
+  email: string;
+  participants?: {
+    participantId: number;
+    firstName: string;
+    lastName: string;
+  }[];
+}
+
+interface Setting {
+  participantCheckoutFields?: string;
+}
+
+interface Props {
+  product: Product;
+  action: string;
+  currentCustomer?: CurrentCustomer | null;
+  loginUrl: string;
+  registerUrl: string;
+  setting?: Setting;
+}
+
+export default function ProductForm({ product, action, currentCustomer, loginUrl, registerUrl, setting }: Props) {
+  const extraFields = React.useMemo<ParticipantCheckoutField[]>(() => {
+    if (!setting?.participantCheckoutFields) return [];
+    try {
+      return JSON.parse(setting.participantCheckoutFields);
+    } catch {
+      return [];
+    }
+  }, [setting?.participantCheckoutFields]);
+
   const [loading, setLoading] = useState(false);
-  const [toastId, setToastId] = useState();
-  const [error, setError] = useState();
+  const [toastId, setToastId] = useState<string | number | undefined>();
+  const [error, setError] = useState<string | undefined>();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const appContext = useAppState();
   const { setData } = useAppDispatch();
   const modal = useModal();
 
-  const onSuccess = (response) => {
+  const onSuccess = (response: any) => {
     if (!response.error) {
       if (product.manageRegistrations === 1) {
-      modal.closeModal();
-    }
+        modal.closeModal();
+      }
       setData(
-        produce(appContext, (draff) => {
-          draff.cart = appContext.cart || {};
-          draff.cart.totalQty = response.data.count;
-          draff.cart.uuid = response.data.cartId;
+        produce(appContext, (draft: any) => {
+          draft.cart = appContext.cart || {};
+          draft.cart.totalQty = response.data.count;
+          draft.cart.uuid = response.data.cartId;
         })
       );
       setToastId(
@@ -164,8 +220,8 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
 
   const handleAddToCartClick = () => {
     const { variantGroup } = product;
-    
-    if (variantGroup && variantGroup.variantAttributes?.length > 0) {
+
+    if (variantGroup && variantGroup.variantAttributes && variantGroup.variantAttributes.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
 
       const missingAttribute = variantGroup.variantAttributes.some(
@@ -181,18 +237,18 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
       modal.openModal();
     } else {
       document
-        .getElementById('productForm')
+        .getElementById('productForm')!
         .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     }
   };
 
-  const handleModalSubmit = () => {        
+  const handleModalSubmit = () => {
     document
-      .getElementById('productForm')
-      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));    
+      .getElementById('productForm')!
+      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
   };
 
-  return (    
+  return (
     <Form
       id="productForm"
       action={action}
@@ -201,7 +257,7 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
       onSuccess={onSuccess}
       onStart={() => setLoading(true)}
       onComplete={() => setLoading(false)}
-      onError={(e) => setError(e.message)}
+      onError={(e: any) => setError(e.message)}
       isJSON
     >
       <input type="hidden" name="sku" value={product.sku} />
@@ -223,46 +279,36 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
         ]}
       />
       {modal.state.showing && (
-      <div
-        className={modal.className}
-        onAnimationEnd={modal.onAnimationEnd}
-      >
         <div
-          className="modal-wrapper flex self-center justify-center items-center"
-          tabIndex={-1}
-          role="dialog"
+          className={modal.className}
+          onAnimationEnd={modal.onAnimationEnd}
         >
-          <div className="modal">
-            <ParticipantForm
-              firstName={firstName}
-              setFirstName={setFirstName}
-              lastName={lastName}
-              setLastName={setLastName}
-              loading={loading}
-              onCancel={modal.closeModal}
-              onSubmit={handleModalSubmit}
-              customer={currentCustomer}
-              loginUrl={loginUrl}
-              registerUrl={registerUrl}
-            />
+          <div
+            className="modal-wrapper flex self-center justify-center items-center"
+            tabIndex={-1}
+            role="dialog"
+          >
+            <div className="modal">
+              <ParticipantForm
+                firstName={firstName}
+                setFirstName={setFirstName}
+                lastName={lastName}
+                setLastName={setLastName}
+                loading={loading}
+                onCancel={modal.closeModal}
+                onSubmit={handleModalSubmit}
+                customer={currentCustomer}
+                loginUrl={loginUrl}
+                registerUrl={registerUrl}
+                extraFields={extraFields}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </Form>
   );
 }
-
-ProductForm.propTypes = {
-  action: PropTypes.string.isRequired,
-  product: PropTypes.shape({
-    inventory: PropTypes.shape({
-      isInStock: PropTypes.bool.isRequired
-    }).isRequired,
-    name: PropTypes.string.isRequired,
-    sku: PropTypes.string.isRequired
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'productPageMiddleRight',
@@ -299,5 +345,8 @@ export const query = `
     action:url (routeId: "addMineCartItem")
     loginUrl: url(routeId: "login")
     registerUrl: url(routeId: "register")
+    setting {
+      participantCheckoutFields
+    }
   }
 `;

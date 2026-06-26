@@ -1,6 +1,6 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection: any) => {
   // Add a column 'price_based_cost' to the method table if it does not exist
   await execute(
     connection,

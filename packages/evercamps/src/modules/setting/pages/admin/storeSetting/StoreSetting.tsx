@@ -3,7 +3,7 @@ import SettingMenu from '@components/admin/setting/SettingMenu';
 import Area from '@components/common/Area';
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQuery } from 'urql';
 
