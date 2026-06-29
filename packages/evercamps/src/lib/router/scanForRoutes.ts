@@ -3,8 +3,6 @@ import { basename, dirname, join } from 'path';
 import { jsonParse } from '../util/jsonParse.js';
 import type { Route } from './Router.js';
 
-type ScannedRoute = Omit<Route, 'isAdmin' | 'name'> & { name: string };
-
 function startWith(str: string, prefix: string): boolean {
   return str.slice(0, prefix.length) === prefix;
 }
@@ -40,7 +38,7 @@ export function parseRoute(
   jsonPath: string,
   isAdmin = false,
   isApi = false
-): ScannedRoute | null {
+): Route | null {
   const routeId = basename(dirname(jsonPath));
   if (/^[a-zA-Z]+$/.test(routeId) === false) {
     throw new Error(
@@ -75,6 +73,7 @@ export function parseRoute(
       folder: dirname(jsonPath),
       payloadSchema,
       access: routeJson?.access ?? 'private',
+      isAdmin
     };
   }
 
@@ -85,7 +84,7 @@ export function scanForRoutes(
   path: string,
   isAdmin: boolean,
   isApi: boolean
-): ScannedRoute[] {
+): Route[] {
   const scannedRoutes = readdirSync(path, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
@@ -99,5 +98,5 @@ export function scanForRoutes(
       }
       return false as const;
     })
-    .filter((e): e is ScannedRoute => e !== false);
+    .filter((e): e is Route => e !== false);
 }
