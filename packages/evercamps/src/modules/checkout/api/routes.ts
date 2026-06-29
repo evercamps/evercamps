@@ -73,6 +73,7 @@ export const routes: RouteDefinition[] = [
     methods: ['POST'],
     access: 'public',
     middleware: [
+      { id: 'addItemToCart', after: ['escapeHtml'], before: ['apiResponse'] },
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
     ],
   },
@@ -280,6 +281,7 @@ export const routes: RouteDefinition[] = [
     access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'updateRegistration', after: ['bodyParser'], before: ['apiResponse'] },
       { id: 'updateRegistration', after: ['bodyParser'], before: ['apiResponse'] },
     ],
   },

@@ -39,36 +39,38 @@ interface RouteDefinition {
 // Replicates the regex logic in lib/middleware/parseFromFile.js
 
 function parseFilename(name: string): MiddlewareEntry | null {
-  // Skip non-middleware files: capitalized names (React components) and non-.js
-  if (!/\.js$/.test(name) || /^[A-Z]/.test(name)) return null;
+  // Skip non-middleware files: capitalized names (React components), declaration files, and non-.js/.ts
+  if (!/\.(js|ts)$/.test(name) || /\.d\.ts$/.test(name) || /^[A-Z]/.test(name)) return null;
 
-  // [after]id[before].js
-  if (/^(\[)[a-zA-Z1-9,]+(\])[a-zA-Z1-9]+(\[)[a-zA-Z1-9,]+(\])\.js$/.test(name)) {
+  const stripExt = (s: string) => s.replace(/\.(js|ts)$/, '');
+
+  // [after]id[before].js/.ts
+  if (/^(\[)[a-zA-Z1-9,]+(\])[a-zA-Z1-9]+(\[)[a-zA-Z1-9,]+(\])\.(js|ts)$/.test(name)) {
     const parts = name.split(/[\[\]]+/);
     return {
-      id: parts[2],
+      id: stripExt(parts[2]),
       after: parts[1].split(',').filter(Boolean),
       before: parts[3].split(',').filter(Boolean),
     };
   }
-  // [after]id.js
-  if (/^(\[)[a-zA-Z1-9.,]+(\])[a-zA-Z1-9]+\.js$/.test(name)) {
+  // [after]id.js/.ts
+  if (/^(\[)[a-zA-Z1-9.,]+(\])[a-zA-Z1-9]+\.(js|ts)$/.test(name)) {
     const parts = name.split(/[\[\]]+/);
     return {
-      id: parts[2].replace(/\.js$/, ''),
+      id: stripExt(parts[2]),
       after: parts[1].split(',').filter(Boolean),
     };
   }
-  // id[before].js
-  if (/^[a-zA-Z1-9]+(\[)[a-zA-Z1-9,]+(\])\.js$/.test(name)) {
+  // id[before].js/.ts
+  if (/^[a-zA-Z1-9]+(\[)[a-zA-Z1-9,]+(\])\.(js|ts)$/.test(name)) {
     const parts = name.split(/[\[\]]+/);
     return {
       id: parts[0],
-      before: parts[1].split(',').filter(Boolean),
+      before: stripExt(parts[1]).split(',').filter(Boolean),
     };
   }
-  // plain id.js
-  return { id: name.replace(/\.js$/, '') };
+  // plain id.js/.ts
+  return { id: stripExt(name) };
 }
 
 // ── Implicit defaults ──────────────────────────────────────────────────────────
