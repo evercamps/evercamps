@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-
-function Footer({ themeConfig: { copyRight } }) {
+function Footer({ themeConfig: { copyRight } } = {
+  themeConfig: {
+    copyRight: '© 2026 EverCamps. All Rights Reserved.'
+  }
+}) {
   return (
     <div className="footer__default">
       <div className="page-width grid grid-cols-1 md:grid-cols-2 gap-8 justify-between">
@@ -102,12 +105,6 @@ Footer.propTypes = {
   themeConfig: PropTypes.shape({
     copyRight: PropTypes.string
   })
-};
-
-Footer.defaultProps = {
-  themeConfig: {
-    copyRight: '© 2025 EverCamps. All Rights Reserved.'
-  }
 };
 
 export default Footer;

@@ -49,7 +49,7 @@ async function loadEditorJSRaw() {
 export default function Editor({
   name,
   value = [],
-  label,
+  label = '',
   browserApi,
   deleteApi,
   uploadApi,
@@ -335,7 +335,3 @@ Editor.propTypes = {
   folderCreateApi: PropTypes.string.isRequired
 };
 
-Editor.defaultProps = {
-  value: [],
-  label: ''
-};

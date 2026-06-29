@@ -5,7 +5,16 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 
-function Method({ method, getZones }) {
+function Method({ method = {
+    cost: {
+      text: ''
+    },
+    priceBasedCost: [],
+    weightBasedCost: [],
+    conditionType: null,
+    min: null,
+    max: null
+  }, getZones }) {
   const modal = useModal();
   return (
     <>
@@ -133,17 +142,6 @@ Method.propTypes = {
   getZones: PropTypes.func.isRequired
 };
 
-Method.defaultProps = {
-  method: {
-    cost: {
-      text: ''
-    },
-    priceBasedCost: [],
-    weightBasedCost: [],
-    conditionType: null,
-    min: null,
-    max: null
-  }
-};
+
 
 export default Method;

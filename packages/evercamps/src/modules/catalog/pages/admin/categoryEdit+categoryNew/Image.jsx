@@ -167,10 +167,6 @@ Image.propTypes = {
   imageUploadUrl: PropTypes.string.isRequired
 };
 
-Image.defaultProps = {
-  category: undefined
-};
-
 export const layout = {
   areaId: 'rightSide',
   sortOrder: 10

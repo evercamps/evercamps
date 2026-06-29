@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../../lib/locale/translate/_.js';
 
-export function Total({ total, totalTaxAmount, priceIncludingTax }) {
+export function Total({ total, totalTaxAmount, priceIncludingTax = false}) {
   return (
     <div className="summary-row grand-total flex justify-between">
       {(priceIncludingTax && (
@@ -31,8 +31,4 @@ Total.propTypes = {
   total: PropTypes.string.isRequired,
   totalTaxAmount: PropTypes.string.isRequired,
   priceIncludingTax: PropTypes.bool
-};
-
-Total.defaultProps = {
-  priceIncludingTax: false
 };

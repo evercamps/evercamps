@@ -10,7 +10,7 @@ import { compareOperatorList } from './CompareOperatorList';
 import PriceConditionSelector from './PriceConditionSelector';
 import SkuConditionSelector from './SkuConditionSelector';
 
-export function RequiredProducts({ requiredProducts }) {
+export function RequiredProducts({ requiredProducts = [] }) {
   const [products, setProducts] = React.useState(() =>
     requiredProducts.map((p) => ({ ...p, editable: false }))
   );
@@ -434,8 +434,4 @@ RequiredProducts.propTypes = {
       qty: PropTypes.string
     })
   )
-};
-
-RequiredProducts.defaultProps = {
-  requiredProducts: []
 };

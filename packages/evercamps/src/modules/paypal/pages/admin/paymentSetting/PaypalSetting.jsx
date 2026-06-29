@@ -12,6 +12,13 @@ export default function PaypalPayment({
     paypalClientSecret,
     paypalEnvironment,
     paypalPaymentIntent
+  } = {
+    paypalPaymentStatus: 0,
+    paypalDisplayName: '',
+    paypalClientId: '',
+    paypalClientSecret: '',
+    paypalEnvironment: '',
+    paypalPaymentIntent: 'CAPTURE'
   }
 }) {
   return (
@@ -128,17 +135,6 @@ PaypalPayment.propTypes = {
     paypalEnvironment: PropTypes.string,
     paypalPaymentIntent: PropTypes.string
   })
-};
-
-PaypalPayment.defaultProps = {
-  setting: {
-    paypalPaymentStatus: 0,
-    paypalDisplayName: '',
-    paypalClientId: '',
-    paypalClientSecret: '',
-    paypalEnvironment: '',
-    paypalPaymentIntent: 'CAPTURE'
-  }
 };
 
 export const layout = {

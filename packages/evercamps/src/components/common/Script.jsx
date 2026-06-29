@@ -10,7 +10,3 @@ Script.propTypes = {
   isAsync: PropTypes.bool,
   src: PropTypes.string.isRequired
 };
-
-Script.defaultProps = {
-  isAsync: false
-};

@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-
-export default function CopyRight({ themeConfig: { copyRight } }) {
+export default function CopyRight({ themeConfig: { copyRight } } = {
+  themeConfig: {
+    copyRight: '© 2026 EverCamps. All Rights Reserved.'
+  }
+}) {
   return (
     <div className="copyright">
       <span>{copyRight}</span>
@@ -14,12 +17,6 @@ CopyRight.propTypes = {
   themeConfig: PropTypes.shape({
     copyRight: PropTypes.string.isRequired
   })
-};
-
-CopyRight.defaultProps = {
-  themeConfig: {
-    copyRight: '© 2025 EverCamps. All Rights Reserved.'
-  }
 };
 
 export const layout = {

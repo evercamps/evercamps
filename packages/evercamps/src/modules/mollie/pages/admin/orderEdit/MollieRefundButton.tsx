@@ -4,7 +4,6 @@ import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
 import { useAlertContext } from '@components/common/modal/Alert';
 import RenderIfTrue from '@components/common/RenderIfTrue';
-import React from 'react';
 import { toast } from 'react-toastify';
 import { MolliePaymentStatus } from '../../../types/molliePaymentStatus';
 
@@ -53,7 +52,8 @@ export default function MollieRefundButton({
                       action={refundAPI}
                       submitBtn={false}
                       isJSON
-                      onSuccess={(result: { error?: { message: string } }) => {
+                      onSuccess={(responseJson: unknown) => {
+                        const result = responseJson as { error?: { message: string } };
                         if (result.error) {
                           toast.error(result.error.message);
                           dispatchAlert({
@@ -73,11 +73,10 @@ export default function MollieRefundButton({
                     >
                       <div>
                         <Field
-                          formId="mollieRefund"
                           type="text"
                           name="amount"
                           label="Refund amount"
-                          placeHolder="Refund amount"
+                          placeholder="Refund amount"
                           value={grandTotal.value}
                           validationRules={['notEmpty']}
                           suffix={grandTotal.currency}

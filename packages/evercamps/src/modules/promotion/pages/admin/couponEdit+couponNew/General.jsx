@@ -83,10 +83,6 @@ General.propTypes = {
   })
 };
 
-General.defaultProps = {
-  coupon: {}
-};
-
 export const layout = {
   areaId: 'couponEditGeneral',
   sortOrder: 10

@@ -22,8 +22,3 @@ Discount.propTypes = {
   code: PropTypes.string,
   discount: PropTypes.string
 };
-
-Discount.defaultProps = {
-  code: undefined,
-  discount: undefined
-};

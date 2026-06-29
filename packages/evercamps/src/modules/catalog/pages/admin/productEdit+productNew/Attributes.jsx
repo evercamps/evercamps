@@ -8,7 +8,7 @@ const getGroup = (groups = [], groupId = null) =>
     (group) => parseInt(group.groupId, 10) === parseInt(groupId, 10)
   ) || groups[0];
 
-export default function Attributes({ product, groups: { items } }) {
+export default function Attributes({ product = {}, groups: { items = [] } }) {
   const attributeIndex = product?.attributeIndex || [];
   const groupId = product?.groupId || undefined;
   const [currentGroup, setCurrentGroup] = React.useState(
@@ -239,11 +239,6 @@ Attributes.propTypes = {
     groupId: PropTypes.string,
     variantGroupId: PropTypes.string
   })
-};
-
-Attributes.defaultProps = {
-  groups: [],
-  product: {}
 };
 
 export const layout = {

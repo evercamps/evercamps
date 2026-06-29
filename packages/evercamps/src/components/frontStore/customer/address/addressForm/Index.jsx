@@ -69,9 +69,3 @@ Index.propTypes = {
 
   customerAddressSchema: PropTypes.object.isRequired
 };
-
-Index.defaultProps = {
-  address: {},
-  areaId: 'customerAddressForm',
-  formId: 'customerAddressForm'
-};

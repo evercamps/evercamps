@@ -32,11 +32,7 @@ ItemVariantOptions.propTypes = {
   )
 };
 
-ItemVariantOptions.defaultProps = {
-  options: []
-};
-
-function Items({ items, priceIncludingTax }) {
+function Items({ items = [], priceIncludingTax = false }) {
   return (
     <div id="summary-items">
       <table className="listing items-table">
@@ -97,11 +93,6 @@ Items.propTypes = {
     })
   ),
   priceIncludingTax: PropTypes.bool
-};
-
-Items.defaultProps = {
-  items: [],
-  priceIncludingTax: false
 };
 
 export { Items };

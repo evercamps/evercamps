@@ -3,6 +3,7 @@ type Participant {
   uuid: String!
   firstName: String!
   lastName: String!
+  birthDate: String
   createdAt: Date!
   editUrl: String
   updateApi: String!

@@ -59,7 +59,3 @@ DropdownColumnHeader.propTypes = {
     })
   )
 };
-
-DropdownColumnHeader.defaultProps = {
-  currentFilters: []
-};

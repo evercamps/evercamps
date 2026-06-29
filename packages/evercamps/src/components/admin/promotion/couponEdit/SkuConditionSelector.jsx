@@ -6,7 +6,7 @@ import React from 'react';
 export default function SkuConditionSelector({
   condition,
   setCondition,
-  isMulti
+  isMulti = true
 }) {
   const skus = Array.isArray(condition.value) ? condition.value : [];
   const [selectedSKUs, setSelectedSKUs] = React.useState(skus || []);
@@ -92,10 +92,6 @@ SkuConditionSelector.propTypes = {
   }).isRequired,
   setCondition: PropTypes.func.isRequired,
   isMulti: PropTypes.bool
-};
-
-SkuConditionSelector.defaultProps = {
-  isMulti: true
 };
 
 export const layout = {

@@ -169,9 +169,3 @@ CustomerAddressForm.propTypes = {
 
   customerAddressSchema: PropTypes.object.isRequired
 };
-
-CustomerAddressForm.defaultProps = {
-  address: {},
-  areaId: 'customerAddressForm',
-  formId: 'customerAddressForm'
-};

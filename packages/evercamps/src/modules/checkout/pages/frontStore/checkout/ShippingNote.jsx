@@ -6,8 +6,8 @@ import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 export default function ShippingNote({
-  setting: { showShippingNote },
-  cart: { shippingNote, addNoteApi }
+  setting: { showShippingNote } = {showShippingNote: false},
+  cart: { shippingNote, addNoteApi } = { shippingNote: ''}
 }) {
   const AppContextDispatch = useAppDispatch();
   const [note, setNote] = React.useState(shippingNote);
@@ -75,15 +75,6 @@ ShippingNote.propTypes = {
     shippingNote: PropTypes.string,
     addNoteApi: PropTypes.string.isRequired
   })
-};
-
-ShippingNote.defaultProps = {
-  setting: {
-    showShippingNote: false
-  },
-  cart: {
-    shippingNote: ''
-  }
 };
 
 export const layout = {

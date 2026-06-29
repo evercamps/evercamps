@@ -35,7 +35,9 @@ const QUERY = `
 
 export function StepContent({
   addShippingAddressApi,
-  shipmentInfo,
+  shipmentInfo =  {
+    address: {}
+  },
   setShipmentInfo,
   customerAddressSchema,
   addresses
@@ -185,10 +187,4 @@ StepContent.propTypes = {
       isDefault: PropTypes.bool.isRequired
     })
   ).isRequired
-};
-
-StepContent.defaultProps = {
-  shipmentInfo: {
-    address: {}
-  }
 };

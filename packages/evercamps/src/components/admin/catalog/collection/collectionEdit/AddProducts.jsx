@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
 
-function AddProducts({ addProductApi, addedProductIDs, closeModal }) {
+function AddProducts({ addProductApi, addedProductIDs = [], closeModal }) {
   const [addedProducts, setAddedProducts] = React.useState(addedProductIDs);
 
   const addProduct = async (sku, uuid) => {
@@ -41,10 +41,6 @@ AddProducts.propTypes = {
   addProductApi: PropTypes.string.isRequired,
   addedProductIDs: PropTypes.arrayOf(PropTypes.number),
   closeModal: PropTypes.func.isRequired
-};
-
-AddProducts.defaultProps = {
-  addedProductIDs: []
 };
 
 export default AddProducts;

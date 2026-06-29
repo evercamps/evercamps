@@ -29,7 +29,3 @@ ItemVariantOptions.propTypes = {
     })
   )
 };
-
-ItemVariantOptions.defaultProps = {
-  options: []
-};

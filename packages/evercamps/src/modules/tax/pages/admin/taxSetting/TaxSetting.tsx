@@ -122,7 +122,7 @@ export default function TaxSetting({ createTaxClassApi, saveSettingApi, setting 
                         { value: 0, text: 'Higest tax rate based on cart items' }
                       ].concat(
                         taxClassesQueryData.data.taxClasses.items.map((taxClass: any) => ({
-                          value: taxClass.taxClassId,
+                          value: taxClass.taxClassId as number, 
                           text: taxClass.name
                         })) || []
                       )}

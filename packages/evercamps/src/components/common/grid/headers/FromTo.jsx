@@ -68,6 +68,3 @@ FromToColumnHeader.propTypes = {
   )
 };
 
-FromToColumnHeader.defaultProps = {
-  currentFilters: []
-};

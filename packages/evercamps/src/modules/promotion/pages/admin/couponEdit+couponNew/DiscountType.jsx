@@ -98,10 +98,6 @@ DiscountType.propTypes = {
   })
 };
 
-DiscountType.defaultProps = {
-  coupon: {}
-};
-
 export const layout = {
   areaId: 'couponEditDiscountType',
   sortOrder: 30

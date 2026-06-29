@@ -50,7 +50,3 @@ ItemOptions.propTypes = {
     })
   )
 };
-
-ItemOptions.defaultProps = {
-  options: []
-};

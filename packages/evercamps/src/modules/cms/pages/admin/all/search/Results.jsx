@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-
 export function Results({ keyword, results = {} }) {
   const { customers = [], products = [], orders = [], participants = [] } = results;
 
@@ -75,9 +74,4 @@ Results.propTypes = {
       )
     })
   )
-};
-
-Results.defaultProps = {
-  keyword: undefined,
-  results: []
 };

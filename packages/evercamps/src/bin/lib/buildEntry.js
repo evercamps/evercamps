@@ -60,8 +60,8 @@ export async function buildEntry(routes, clientOnly = false) {
 
       let contentClient = `
       import React from 'react';
-      import ReactDOM from 'react-dom';
-      import { Area } from '@evercamps/evercamps/components/common';
+      import { hydrateRoot } from 'react-dom/client';
+      import { Area, setDefaultComponents } from '@evercamps/evercamps/components/common';
       import {${
         route.isAdmin ? 'HydrateAdmin' : 'HydrateFrontStore'
       }} from '@evercamps/evercamps/components/common';
@@ -83,15 +83,13 @@ export async function buildEntry(routes, clientOnly = false) {
       contentClient += '\r\n';
       contentClient += imports.join('\r\n');
       contentClient += '\r\n';
-      contentClient += `Area.defaultProps.components = ${inspect(areas, {
-        depth: 5
-      })
+      contentClient += `setDefaultComponents(${inspect(areas, { depth: 5 })
         .replace(/"---/g, '')
         .replace(/---"/g, '')
         .replace(/'---/g, '')
-        .replace(/---'/g, '')} `;
+        .replace(/---'/g, '')});`;
       contentClient += '\r\n';
-      contentClient += `ReactDOM.hydrate(
+      contentClient += `hydrateRoot(
         ${
           route.isAdmin
             ? 'React.createElement(HydrateAdmin, null)'
@@ -114,21 +112,19 @@ export async function buildEntry(routes, clientOnly = false) {
         // Loop through the widgets config and add the query to the widgets
         let contentServer = `import React from 'react'; `;
         contentServer += '\r\n';
-        contentServer += `import ReactDOM from 'react-dom'; `;
+        contentServer += `import { hydrateRoot } from 'react-dom/client';`;
         contentServer += '\r\n';
-        contentServer += `import { Area } from '@evercamps/evercamps/components/common';`;
+        contentServer += `import { Area, setDefaultComponents } from '@evercamps/evercamps/components/common';`;
         contentServer += '\r\n';
         contentServer += `import { renderHtml } from '@evercamps/evercamps/components/common';\r\n`;
         contentServer += imports.join('\r\n');
         contentServer += '\r\n';
         contentServer += `export default renderHtml;\r\n`;
-        contentServer += `Area.defaultProps.components = ${inspect(areas, {
-          depth: 5
-        })
+        contentServer += `setDefaultComponents(${inspect(areas, { depth: 5 })
           .replace(/"---/g, '')
           .replace(/---"/g, '')
           .replace(/'---/g, '')
-          .replace(/---'/g, '')} `;
+          .replace(/---'/g, '')});`;
 
         if (!fs.existsSync(path.resolve(subPath, 'server'))) {
           await mkdir(path.resolve(subPath, 'server'), { recursive: true });

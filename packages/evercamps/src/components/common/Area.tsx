@@ -1,4 +1,4 @@
-import { useAppState } from '@components/common/context/app.jsx';
+import { useAppState } from '@components/common/context/app';
 import React from 'react';
 import type { ElementType } from 'react';
 
@@ -28,6 +28,7 @@ interface AreaProps {
   wrapper?: React.ReactNode | string;
   wrapperProps?: Record<string, any>;
   components?: Components;
+  [key: string]: unknown;
 }
 
 interface Widget extends Component {
@@ -36,17 +37,23 @@ interface Widget extends Component {
   areaId: string[];
 }
 
-function Area(props: AreaProps) {
-  const context = useAppState();
-  const {
-    id,
-    coreComponents,
-    wrapperProps,
-    noOuter,
-    wrapper,
-    className,
-    components
-  } = props;
+let _defaultComponents: Components = {};
+
+export function setDefaultComponents(c: Components) {
+  _defaultComponents = c;
+}
+
+function Area({
+  id,
+  className = '',
+  coreComponents = [],
+  noOuter = false,
+  wrapper = 'div',
+  wrapperProps = {},
+  components = _defaultComponents
+}: AreaProps) {
+  const context = useAppState() as any;
+  const props = { id, className, coreComponents, noOuter, wrapper, wrapperProps, components };
 
   const areaComponents = (() => {
     const areaCoreComponents = coreComponents || [];
@@ -130,14 +137,6 @@ function Area(props: AreaProps) {
     </WrapperComponent>
   );
 }
-
-Area.defaultProps = {
-  className: undefined,
-  coreComponents: [],
-  noOuter: false,
-  wrapper: 'div',
-  wrapperProps: {}
-};
 
 export { Area };
 export default Area;

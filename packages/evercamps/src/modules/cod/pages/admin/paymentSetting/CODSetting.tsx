@@ -4,7 +4,7 @@ import { Toggle } from '@components/common/form/fields/Toggle';
 import React from 'react';
 
 interface CODSettings {
-  codPaymentStatus?: number;
+  codPaymentStatus: number;
   codDisplayName?: string;
 }
 

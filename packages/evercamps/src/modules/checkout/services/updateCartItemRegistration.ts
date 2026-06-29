@@ -25,6 +25,7 @@ async function updateCartItemRegistration(cart: Cart, itemUuid: string, registra
       ...updatedRegs[regIndex],
       firstName: context.firstName,
       lastName: context.lastName,
+      ...(context.extraData !== undefined && { extraData: context.extraData })
     };
     await item.setData("registrations", updatedRegs);  
   }

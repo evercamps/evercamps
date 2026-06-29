@@ -3,7 +3,7 @@ import Area from '@components/common/Area';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Setting({ type }) {
+export default function Setting({ type = {} }) {
   const areaId = `widget_setting_form`;
   return (
     <Card title={`${type.name} widget setting`}>
@@ -25,11 +25,6 @@ Setting.propTypes = {
     code: PropTypes.string,
     name: PropTypes.string
   })
-};
-
-Setting.defaultProps = {
-  widget: {},
-  type: {}
 };
 
 export const layout = {

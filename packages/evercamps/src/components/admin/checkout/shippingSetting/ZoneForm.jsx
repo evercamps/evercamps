@@ -7,12 +7,12 @@ import React from 'react';
 import Select from 'react-select';
 
 function ZoneForm({
-  method,
+  method = 'POST',
   saveZoneApi,
   countries,
   closeModal,
   getZones,
-  zone
+  zone = null
 }) {
   const [country, setCountry] = React.useState(
     countries.find((c) => c.value === zone?.country?.code)
@@ -138,9 +138,6 @@ ZoneForm.propTypes = {
   })
 };
 
-ZoneForm.defaultProps = {
-  method: 'POST',
-  zone: null
-};
+
 
 export default ZoneForm;

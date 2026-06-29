@@ -1,12 +1,9 @@
 {
   "type": "object",
-  "properties": {    
-    "first_name": {
-      "type": "string"
-    },
-    "last_name": {
-      "type": "string"
-    }
+  "properties": {
+    "first_name": { "type": "string" },
+    "last_name": { "type": "string" },
+    "birth_date": { "type": "string", "format": "date" }
   },
   "required": [
     "first_name",

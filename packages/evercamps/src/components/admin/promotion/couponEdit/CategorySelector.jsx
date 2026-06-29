@@ -23,7 +23,7 @@ const SearchQuery = `
   }
 `;
 
-function CategorySelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
+function CategorySelector({ onSelect, onUnSelect, selectedIDs = [], closeModal }) {
   const limit = 10;
   const [inputValue, setInputValue] = React.useState(null);
   const [page, setPage] = React.useState(1);
@@ -174,10 +174,6 @@ CategorySelector.propTypes = {
   onUnSelect: PropTypes.func.isRequired,
   selectedIDs: PropTypes.arrayOf(PropTypes.number),
   closeModal: PropTypes.func.isRequired
-};
-
-CategorySelector.defaultProps = {
-  selectedIDs: []
 };
 
 export default CategorySelector;

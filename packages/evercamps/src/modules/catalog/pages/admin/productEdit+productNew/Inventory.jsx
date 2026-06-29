@@ -3,7 +3,13 @@ import { Field } from '@components/common/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Inventory({ product }) {
+export default function Inventory({ product = {
+  inventory: {
+    qty: 0,
+    stockAvailability: 0,
+    manageStock: 0
+  }
+} }) {
   const inventory = product?.inventory || {};
   return (
     <Card title="Inventory" subdued>
@@ -62,16 +68,6 @@ Inventory.propTypes = {
       manageStock: PropTypes.number
     })
   })
-};
-
-Inventory.defaultProps = {
-  product: {
-    inventory: {
-      qty: 0,
-      stockAvailability: 0,
-      manageStock: 0
-    }
-  }
 };
 
 export const layout = {

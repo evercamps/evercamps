@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 
-export function Discount({ discount, code }) {
+export function Discount({ discount = 0, code }) {
   return (
     <div className="summary-row">
       <span>Discount</span>
@@ -17,9 +17,4 @@ export function Discount({ discount, code }) {
 Discount.propTypes = {
   code: PropTypes.string,
   discount: PropTypes.string
-};
-
-Discount.defaultProps = {
-  code: undefined,
-  discount: 0
 };

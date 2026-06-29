@@ -1,28 +1,39 @@
-import React from 'react';
 import { Card } from '@components/admin/cms/Card';
 import Button from '@components/common/form/Button';
 import { Field } from '@components/common/form/Field';
+import type { ParticipantCheckoutField } from '../../../../../types/checkout';
 
-interface Registration {
+interface BaseRegistration {
   firstName: string;
   lastName: string;
+  extraData?: string;
 }
 
-interface Props {
-  registration: Registration;
-  setRegistration?: (registration: Registration) => void;
+interface Props<T extends BaseRegistration> {
+  registration: T;
+  setRegistration?: (registration: T) => void;
   loading?: boolean;
   onCancel: () => void;
   onSubmit: () => void;
+  extraFields?: ParticipantCheckoutField[];
 }
 
-export default function EditParticipantForm({
+export default function EditParticipantForm<T extends BaseRegistration>({
   registration,
   setRegistration,
   loading,
   onCancel,
-  onSubmit
-}: Props) {
+  onSubmit,
+  extraFields = []
+}: Props<T>) {
+  const parsedExtraData = (): Record<string, string> => {
+    try {
+      return registration.extraData ? JSON.parse(registration.extraData) : {};
+    } catch {
+      return {};
+    }
+  };
+
   return (
     <Card title="Enter Participant Details">
       <Card.Session>
@@ -35,10 +46,9 @@ export default function EditParticipantForm({
             placeholder="Enter First Name"
             type="text"
             validationRules={['notEmpty']}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegistration && setRegistration({
-              ...registration,
-              firstName: e.target.value
-            })}
+            onChange={(e: any) =>
+              setRegistration?.({ ...registration, firstName: e?.target?.value ?? e })
+            }
           />
         </div>
 
@@ -51,12 +61,29 @@ export default function EditParticipantForm({
             placeholder="Enter Last Name"
             type="text"
             validationRules={['notEmpty']}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegistration && setRegistration({
-              ...registration,
-              lastName: e.target.value
-            })}
+            onChange={(e: any) =>
+              setRegistration?.({ ...registration, lastName: e?.target?.value ?? e })
+            }
           />
         </div>
+
+        {extraFields.map((field) => (
+          <div key={field.code} className="mb-2">
+            <label className="block mb-2 font-medium">{field.label}</label>
+            <Field
+              id={field.code}
+              name={field.code}
+              type="text"
+              placeholder={field.type === 'date' ? 'YYYY-MM-DD' : undefined}
+              value={parsedExtraData()[field.code] || ''}
+              validationRules={field.required ? ['notEmpty'] : []}
+              onChange={(e: any) => {
+                const updated = { ...parsedExtraData(), [field.code]: e?.target?.value ?? e };
+                setRegistration?.({ ...registration, extraData: JSON.stringify(updated) });
+              }}
+            />
+          </div>
+        ))}
       </Card.Session>
 
       <Card.Session>

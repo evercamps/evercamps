@@ -64,12 +64,6 @@ SKUPriceWeight.propTypes = {
   }).isRequired
 };
 
-SKUPriceWeight.defaultProps = {
-  price: undefined,
-  sku: undefined,
-  weight: undefined
-};
-
 const CategoryQuery = `
   query Query ($id: Int!) {
     category(id: $id) {
@@ -139,7 +133,7 @@ ProductCategory.propTypes = {
   onUnassign: PropTypes.func.isRequired
 };
 
-function CategorySelect({ product }) {
+function CategorySelect({ product = { category: {}} }) {
   const [category, setCategory] = React.useState(
     product ? product.category?.categoryId : null
   );
@@ -215,12 +209,6 @@ CategorySelect.propTypes = {
   })
 };
 
-CategorySelect.defaultProps = {
-  product: {
-    category: {}
-  }
-};
-
 export default function General({
   product,
   browserApi,
@@ -228,7 +216,7 @@ export default function General({
   uploadApi,
   folderCreateApi,
   setting,
-  productTaxClasses: { items: taxClasses }
+  productTaxClasses: { items: taxClasses } = { items: []}
 }) {
   return (
     <Card title="General">
@@ -364,13 +352,6 @@ General.propTypes = {
       })
     )
   })
-};
-
-General.defaultProps = {
-  product: undefined,
-  productTaxClasses: {
-    items: []
-  }
 };
 
 export const layout = {

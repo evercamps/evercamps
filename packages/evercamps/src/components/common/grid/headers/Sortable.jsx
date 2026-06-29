@@ -83,7 +83,7 @@ function None() {
   );
 }
 
-export default function SortableHeader({ title, name, currentFilters }) {
+export default function SortableHeader({ title, name, currentFilters = [] }) {
   const [currentDirection] = React.useState(() => {
     const currentOrderBy = currentFilters.find((filter) => filter.key === 'ob');
     if (!currentOrderBy || currentOrderBy.value !== name) {
@@ -140,8 +140,4 @@ SortableHeader.propTypes = {
       value: PropTypes.string.isRequired
     })
   )
-};
-
-SortableHeader.defaultProps = {
-  currentFilters: []
 };

@@ -1,11 +1,17 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-
 export default function HeadTags({
   pageInfo: { title, description },
   themeConfig: {
     headTags: { metas, links, scripts, base }
+  } = {
+    headTags: {
+      metas: [],
+      links: [],
+      scripts: [],
+      base: undefined
+    }
   }
 }) {
   React.useEffect(() => {
@@ -93,17 +99,6 @@ HeadTags.propTypes = {
       })
     })
   })
-};
-
-HeadTags.defaultProps = {
-  themeConfig: {
-    headTags: {
-      metas: [],
-      links: [],
-      scripts: [],
-      base: undefined
-    }
-  }
 };
 
 export const layout = {

@@ -3,7 +3,7 @@ import React from 'react';
 
 import './Card.scss';
 
-function Card({ title, actions = [], subdued = false, children }) {
+function Card({ title = '', actions = [], subdued = false, children }) {
   return (
     <div className={subdued ? 'card shadow subdued' : 'card shadow'}>
       {(title || actions.length > 0) && (
@@ -59,13 +59,7 @@ Card.propTypes = {
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.node])
 };
 
-Card.defaultProps = {
-  actions: [],
-  subdued: false,
-  title: ''
-};
-
-const Session = function Session({ actions = [], title, children }) {
+const Session = function Session({ actions = [], title = '', children = null }) {
   return (
     <div className="card-section border-b box-border">
       {(title || actions.length > 0) && (
@@ -118,12 +112,6 @@ Session.propTypes = {
   ),
   children: PropTypes.node,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.node])
-};
-
-Session.defaultProps = {
-  actions: [],
-  title: '',
-  children: null
 };
 
 Card.Session = Session;

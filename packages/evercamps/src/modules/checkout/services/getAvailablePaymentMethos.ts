@@ -1,15 +1,6 @@
 import { addProcessor, getValue } from '../../../lib/util/registry.js';
-
-export type PaymentMethodInfo = {
-  methodCode: string;
-  methodName: string;
-  meta?: Record<string, any>;
-};
-
-export type PaymentMethodFactory = {
-  init: () => PaymentMethodInfo | Promise<PaymentMethodInfo>;
-  validator?: () => boolean | Promise<boolean>;
-};
+export type { PaymentMethodInfo, PaymentMethodFactory } from '../types';
+import type { PaymentMethodInfo, PaymentMethodFactory } from '../types';
 
 /**
  * This function retrieves the available payment methods from the registry.

@@ -3,6 +3,7 @@ import MollieLogo from '@components/frontStore/mollie/MollieLogo';
 import RenderIfTrue from '@components/common/RenderIfTrue';
 import React, { useState } from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
+import { PaymentMethodOption } from '../../../../../types/checkout.js';
 
 interface MollieProps {
   createPaymentApi: string;
@@ -55,8 +56,8 @@ export function Mollie({ createPaymentApi, orderId, orderPlaced }: MollieProps) 
 }
 
 export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
-  const checkout = useCheckout();
-  const { placeOrder } = useCheckoutDispatch();
+  const checkout = useCheckout()!;
+  const { placeOrder } = useCheckoutDispatch()!;
 
   const { steps, paymentMethods, setPaymentMethods, orderPlaced, orderId } = checkout;
 
@@ -68,7 +69,7 @@ export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
     const selected = paymentMethods.find(
       (paymentMethod: { selected: boolean }) => paymentMethod.selected
     );
-    if (steps.every((step: { isCompleted: boolean }) => step.isCompleted) && selected?.code === 'mollie') {
+    if (steps?.every((step) => !!step.isCompleted) && selected?.code === 'mollie') {
       placeOrder();
     }
   }, [steps]);
@@ -81,7 +82,7 @@ export default function MollieMethod({ createPaymentApi }: MollieMethodProps) {
         >
           <a href="#" onClick={(e) => {
             e.preventDefault();
-            setPaymentMethods((previous: { code: string; selected: boolean }[]) =>
+            setPaymentMethods((previous: PaymentMethodOption[]) =>
               previous.map((paymentMethod) => ({
                 ...paymentMethod,
                 selected: paymentMethod.code === 'mollie'

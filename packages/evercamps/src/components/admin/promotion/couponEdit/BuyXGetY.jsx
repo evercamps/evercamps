@@ -66,7 +66,7 @@ SkuSelector.propTypes = {
   updateProduct: PropTypes.func.isRequired
 };
 
-export function BuyXGetY({ requireProducts, discountType }) {
+export function BuyXGetY({ requireProducts = [], discountType }) {
   const [products, setProducts] = React.useState(requireProducts);
   const [active, setActive] = React.useState(() => {
     if (discountType === 'buy_x_get_y') {
@@ -268,8 +268,4 @@ BuyXGetY.propTypes = {
     })
   ),
   discountType: PropTypes.string.isRequired
-};
-
-BuyXGetY.defaultProps = {
-  requireProducts: []
 };

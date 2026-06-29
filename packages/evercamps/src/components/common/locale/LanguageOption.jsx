@@ -2,9 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 
-function LanguageOptions(props) {
-  const { languages, children } = props;
-
+function LanguageOptions({ languages = [], children }) {
   const options = [
     { value: 'aa', text: 'Afar' },
     { value: 'ab', text: 'Abkhazian' },
@@ -210,10 +208,6 @@ function LanguageOptions(props) {
 LanguageOptions.propTypes = {
   children: PropTypes.node.isRequired,
   languages: PropTypes.arrayOf(PropTypes.string)
-};
-
-LanguageOptions.defaultProps = {
-  languages: []
 };
 
 export { LanguageOptions };

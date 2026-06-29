@@ -6,10 +6,10 @@ export default function StatusRow({ id, areaProps }) {
   return (
     <td>
       <div>
-        {parseInt(areaProps.row[id], 10) === 0 && (
+        {parseInt(areaProps?.row?.[id], 10) === 0 && (
           <Dot variant="default" size="1.2rem" />
         )}
-        {parseInt(areaProps.row[id], 10) === 1 && (
+        {parseInt(areaProps?.row?.[id], 10) === 1 && (
           <Dot variant="success" size="1.2rem" />
         )}
       </div>

@@ -271,8 +271,4 @@ CountryOptions.propTypes = {
   countries: PropTypes.arrayOf(PropTypes.string)
 };
 
-CountryOptions.defaultProps = {
-  countries: []
-};
-
 export { CountryOptions };

@@ -3,7 +3,11 @@ import CollectionIcon from '@heroicons/react/solid/esm/TagIcon';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Collections({ product: { collections } }) {
+export default function Collections({ product: { collections } = {
+  product: {
+    collections: []
+  }
+} }) {
   return (
     <Card title="Collections" subdued>
       <Card.Session>
@@ -36,12 +40,6 @@ Collections.propTypes = {
       })
     )
   })
-};
-
-Collections.defaultProps = {
-  product: {
-    collections: []
-  }
 };
 
 export const layout = {

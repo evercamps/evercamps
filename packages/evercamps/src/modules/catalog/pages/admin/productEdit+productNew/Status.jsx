@@ -3,7 +3,11 @@ import { Field } from '@components/common/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Status({ product }) {
+export default function Status({ product = {
+  status: 1,
+  visibility: 1,
+  manageRegistrations: 1
+} }) {
   return (
     <Card title="Product status" subdued>
       <Card.Session>
@@ -55,14 +59,6 @@ Status.propTypes = {
     visibility: PropTypes.number.isRequired,
     manageRegistrations: PropTypes.number.isRequired
   })
-};
-
-Status.defaultProps = {
-  product: {
-    status: 1,
-    visibility: 1,
-    manageRegistrations: 1
-  }
 };
 
 export const layout = {

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 export default function TextBlockSetting({
-  textWidget: { text, className },
+  textWidget: { text, className } = { text: [], className: ''},
   browserApi,
   deleteApi,
   uploadApi,
@@ -41,13 +41,6 @@ TextBlockSetting.propTypes = {
     text: PropTypes.array,
     className: PropTypes.string
   })
-};
-
-TextBlockSetting.defaultProps = {
-  textWidget: {
-    text: [],
-    className: ''
-  }
 };
 
 export const query = `

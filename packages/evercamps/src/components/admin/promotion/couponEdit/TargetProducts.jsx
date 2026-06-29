@@ -12,7 +12,7 @@ import { compareOperatorList } from './CompareOperatorList';
 import PriceConditionSelector from './PriceConditionSelector';
 import SkuConditionSelector from './SkuConditionSelector';
 
-function Products({ targetProducts, maxQty }) {
+function Products({ targetProducts = [], maxQty = '' }) {
   const [products, setProducts] = React.useState(() =>
     targetProducts.map((p) => ({ ...p, editable: false }))
   );
@@ -436,12 +436,7 @@ Products.propTypes = {
   )
 };
 
-Products.defaultProps = {
-  maxQty: '',
-  targetProducts: []
-};
-
-export function TargetProducts({ products, maxQty, discountType }) {
+export function TargetProducts({ products = [], maxQty = '', discountType = '' }) {
   const [active, setActive] = React.useState(() => {
     if (
       discountType === 'fixed_discount_to_specific_products' ||
@@ -500,10 +495,4 @@ TargetProducts.propTypes = {
       qty: PropTypes.string
     })
   )
-};
-
-TargetProducts.defaultProps = {
-  discountType: '',
-  maxQty: '',
-  products: []
 };

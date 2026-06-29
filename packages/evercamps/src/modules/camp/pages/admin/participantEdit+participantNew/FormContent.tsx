@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function FormContent({ gridUrl }: Props) {
-  const { state } = useFormContext();
+  const { state } = useFormContext()!;
   return (
     <>
       <div className="grid grid-cols-2 gap-x-8 grid-flow-row ">

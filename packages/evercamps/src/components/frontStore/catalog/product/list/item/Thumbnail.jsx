@@ -4,7 +4,7 @@ import React from 'react';
 import '@components/frontStore/catalog/product/list/item/Thumbnail.scss';
 import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
 
-function Thumbnail({ url, imageUrl, alt }) {
+function Thumbnail({ url = '', imageUrl = '', alt = '' }) {
   return (
     <div className="product-thumbnail-listing">
       {imageUrl && (
@@ -25,12 +25,6 @@ Thumbnail.propTypes = {
   alt: PropTypes.string,
   imageUrl: PropTypes.string,
   url: PropTypes.string
-};
-
-Thumbnail.defaultProps = {
-  alt: '',
-  imageUrl: '',
-  url: ''
 };
 
 export { Thumbnail };

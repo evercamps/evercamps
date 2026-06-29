@@ -18,8 +18,4 @@ Error.propTypes = {
   error: PropTypes.string
 };
 
-Error.defaultProps = {
-  error: undefined
-};
-
 export default Error;

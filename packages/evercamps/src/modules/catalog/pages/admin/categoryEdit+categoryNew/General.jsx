@@ -8,7 +8,7 @@ import React from 'react';
 import { get } from '../../../../../lib/util/get.js';
 
 
-function ParentCategory({ currentId, parent }) {
+function ParentCategory({ currentId = null, parent = null }) {
   const [selecting, setSelecting] = React.useState(false);
   const [category, setCategory] = React.useState(parent || null);
 
@@ -93,13 +93,8 @@ ParentCategory.propTypes = {
   currentId: PropTypes.number
 };
 
-ParentCategory.defaultProps = {
-  parent: null,
-  currentId: null
-};
-
 export default function General({
-  category,
+  category = {},
   browserApi,
   deleteApi,
   uploadApi,
@@ -197,10 +192,6 @@ General.propTypes = {
       ).isRequired
     })
   })
-};
-
-General.defaultProps = {
-  category: {}
 };
 
 export const layout = {

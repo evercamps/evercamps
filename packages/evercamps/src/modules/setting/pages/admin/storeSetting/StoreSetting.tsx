@@ -3,7 +3,7 @@ import SettingMenu from '@components/admin/setting/SettingMenu';
 import Area from '@components/common/Area';
 import { Field } from '@components/common/form/Field';
 import { Form } from '@components/common/form/Form';
-import React from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQuery } from 'urql';
 
@@ -97,8 +97,8 @@ function Country({
   allowedCountries = [],
   fieldName = 'storeCountry'
 }: CountryProps) {
-  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCountry(e.target.value);
+  const onChange = (newValue: unknown) => {
+    setSelectedCountry(newValue as string);
   };
   const [result] = useQuery({
     query: CountriesQuery,
@@ -234,7 +234,7 @@ export default function StoreSetting({
     storePostalCode
   }
 }: Props) {
-  const [selectedCountry, setSelectedCountry] = React.useState(() => {
+  const [selectedCountry, setSelectedCountry] = useState(() => {
     return storeCountry ?? 'US';
   });
 

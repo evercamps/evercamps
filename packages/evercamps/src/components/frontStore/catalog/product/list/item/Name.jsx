@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-
-function Name({ name, url }) {
+function Name({ name = '', url = '' }) {
   return (
     <div className="product-name product-list-name mt-4 mb-1">
       <a href={url} className="font-bold hover:underline h5">
@@ -15,11 +14,6 @@ function Name({ name, url }) {
 Name.propTypes = {
   url: PropTypes.string,
   name: PropTypes.string
-};
-
-Name.defaultProps = {
-  url: '',
-  name: ''
 };
 
 export { Name };

@@ -2,11 +2,11 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 
-function NoThumbnail({ width, height }) {
+function NoThumbnail({ width = 100, height = 100 }) {
   return (
     <svg
-      width={width || 100}
-      height={height || 100}
+      width={width}
+      height={height}
       viewBox="0 0 251 276"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -30,11 +30,6 @@ function NoThumbnail({ width, height }) {
 NoThumbnail.propTypes = {
   width: PropTypes.number,
   height: PropTypes.number
-};
-
-NoThumbnail.defaultProps = {
-  width: 100,
-  height: 100
 };
 
 export default NoThumbnail;
