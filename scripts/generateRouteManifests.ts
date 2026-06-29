@@ -240,7 +240,7 @@ for (const mod of modules) {
   if (routes.length === 0) continue;
 
   const content = generateManifest(routes);
-  const outPath = resolve(modulePath, 'routes.ts');
+  const outPath = resolve(modulePath, 'api', 'routes.ts');
 
   if (WRITE) {
     writeFileSync(outPath, content, 'utf8');
