@@ -1,12 +1,19 @@
 import { existsSync, readdirSync } from 'fs';
 import { basename, dirname, join } from 'path';
 import { jsonParse } from '../util/jsonParse.js';
+import type { Route } from './Router.js';
 
-function startWith(str, prefix) {
+type ScannedRoute = Omit<Route, 'isAdmin' | 'name'> & { name: string };
+
+function startWith(str: string, prefix: string): boolean {
   return str.slice(0, prefix.length) === prefix;
 }
 
-function validateRoute(methods, path, routePath) {
+function validateRoute(
+  methods: string[],
+  path: string,
+  routePath: string
+): boolean {
   if (methods.length === 0) {
     throw new Error(
       `Method is required. Please check the route defined at ${routePath}`
@@ -14,9 +21,7 @@ function validateRoute(methods, path, routePath) {
   }
   const check = methods.find(
     (m) =>
-      ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(
-        m
-      ) === false
+      ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(m) === false
   );
   if (check !== undefined) {
     throw new Error(
@@ -28,66 +33,71 @@ function validateRoute(methods, path, routePath) {
       `Path ${path} must be started with '/'. Please check the route defined at ${routePath}`
     );
   }
-
   return true;
 }
 
-export function parseRoute(jsonPath, isAdmin = false, isApi = false) {
+export function parseRoute(
+  jsonPath: string,
+  isAdmin = false,
+  isApi = false
+): ScannedRoute | null {
   const routeId = basename(dirname(jsonPath));
   if (/^[a-zA-Z]+$/.test(routeId) === false) {
     throw new Error(
       `Route folder ${routeId} is invalid. It must contains only characters.`
     );
   }
-  const routeJson = jsonParse(jsonPath);
-  const methods = routeJson?.methods.map((m) => m.toUpperCase()) || [];
-  let routePath = routeJson?.path;
+  const routeJson = jsonParse(jsonPath) as {
+    methods?: string[];
+    path?: string;
+    name?: string;
+    access?: string;
+  };
+  const methods = routeJson?.methods?.map((m) => m.toUpperCase()) ?? [];
+  let routePath = routeJson?.path ?? '';
+
   if (validateRoute(methods, routePath, routePath) === true) {
     if (isApi === true) {
       routePath = `/api${routePath}`;
     }
-    // Load the validation schema
-    let payloadSchema;
+
+    let payloadSchema: object | undefined;
     if (existsSync(join(dirname(jsonPath), 'payloadSchema.json'))) {
-      payloadSchema = jsonParse(join(dirname(jsonPath), 'payloadSchema.json'));
+      payloadSchema = jsonParse(join(dirname(jsonPath), 'payloadSchema.json')) as object;
     }
 
     return {
       id: routeId,
-      name: routeJson?.name || routeId,
+      name: routeJson?.name ?? routeId,
       method: methods,
       path: routePath,
-      isAdmin,
       isApi,
       folder: dirname(jsonPath),
       payloadSchema,
-      access: routeJson?.access || 'private'
+      access: routeJson?.access ?? 'private',
     };
-  } else {
-    return null;
   }
+
+  return null;
 }
 
-/**
- * Scan for routes base on module path.
- */
-export function scanForRoutes(path, isAdmin, isApi) {
-  const scanedRoutes = readdirSync(path, { withFileTypes: true })
+export function scanForRoutes(
+  path: string,
+  isAdmin: boolean,
+  isApi: boolean
+): ScannedRoute[] {
+  const scannedRoutes = readdirSync(path, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
-  return scanedRoutes
+
+  return scannedRoutes
     .map((r) => {
       if (/^[A-Za-z.]+$/.test(r) === true) {
         if (existsSync(join(path, r, 'route.json'))) {
-          return (
-            parseRoute(join(path, r, 'route.json'), isAdmin, isApi) || false
-          );
-        } else {
-          return false;
+          return parseRoute(join(path, r, 'route.json'), isAdmin, isApi) ?? false;
         }
-      } else {
-        return false;
       }
+      return false as const;
     })
-    .filter((e) => e !== false);
+    .filter((e): e is ScannedRoute => e !== false);
 }

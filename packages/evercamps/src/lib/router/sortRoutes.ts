@@ -1,13 +1,12 @@
-export function sortRoutes(routes) {
+export function sortRoutes<T extends { path: string }>(routes: T[]): T[] {
   return routes.sort((a, b) => {
     const aSpecificity = calculateRouteSpecificity(a.path);
     const bSpecificity = calculateRouteSpecificity(b.path);
-
     return bSpecificity - aSpecificity;
   });
 }
 
-function calculateRouteSpecificity(path) {
+function calculateRouteSpecificity(path: string): number {
   let specificity = 0;
 
   if (!path.includes(':')) {
