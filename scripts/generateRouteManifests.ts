@@ -239,7 +239,7 @@ function generateManifest(routes: RouteDefinition[]): string {
   });
 
   return (
-    `import type { RouteDefinition } from '../../lib/middleware/types.js';\n\n` +
+    `import type { RouteDefinition } from '../../../lib/middleware/types.js';\n\n` +
     `export const routes: RouteDefinition[] = [\n` +
     blocks.join(',\n\n') +
     `\n];\n`
