@@ -9,7 +9,7 @@
  *   tsx scripts/generateRouteManifests.ts --write
  */
 
-import { existsSync, readdirSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import { basename, resolve } from 'path';
 import Topo from '@hapi/topo';
 
@@ -29,6 +29,9 @@ type Region = 'api' | 'admin' | 'frontStore' | 'global';
 interface RouteDefinition {
   routeId: string | string[] | null;
   region: Region;
+  path?: string;
+  methods?: string[];
+  access?: string;
   middleware: MiddlewareEntry[];
 }
 
@@ -184,7 +187,19 @@ function collectRoutes(modulePath: string): RouteDefinition[] {
         .map((e) => applyDefaults(e, 'api'));
 
       if (entries.length > 0) {
-        routes.push({ routeId, region: 'api', middleware: topoSort(entries) });
+        const routeDef: RouteDefinition = { routeId, region: 'api', middleware: topoSort(entries) };
+
+        if (routeId !== null) {
+          const routeJsonPath = resolve(dirPath, 'route.json');
+          if (existsSync(routeJsonPath)) {
+            const routeJson = JSON.parse(readFileSync(routeJsonPath, 'utf8'));
+            if (routeJson.path) routeDef.path = routeJson.path;
+            if (routeJson.methods?.length) routeDef.methods = routeJson.methods.map((m: string) => m.toUpperCase());
+            if (routeJson.access && routeJson.access !== 'private') routeDef.access = routeJson.access;
+          }
+        }
+
+        routes.push(routeDef);
       }
     }
   }
@@ -212,13 +227,15 @@ function generateManifest(routes: RouteDefinition[]): string {
 
   const blocks = routes.map((route) => {
     const entries = route.middleware.map(renderEntry).join(',\n');
-    return (
+    let block =
       `  {\n` +
       `    routeId: ${renderRouteId(route.routeId)},\n` +
-      `    region: '${route.region}',\n` +
-      `    middleware: [\n${entries},\n    ],\n` +
-      `  }`
-    );
+      `    region: '${route.region}',\n`;
+    if (route.path) block += `    path: '${route.path}',\n`;
+    if (route.methods?.length) block += `    methods: [${route.methods.map((m) => `'${m}'`).join(', ')}],\n`;
+    if (route.access) block += `    access: '${route.access}',\n`;
+    block += `    middleware: [\n${entries},\n    ],\n  }`;
+    return block;
   });
 
   return (

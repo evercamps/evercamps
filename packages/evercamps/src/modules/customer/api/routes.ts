@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -92,6 +92,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createCustomer',
     region: 'api',
+    path: '/customers',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createCustomer', after: ['bodyParser'], before: ['apiResponse'] },
@@ -101,6 +104,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createCustomerAddress',
     region: 'api',
+    path: '/customers/:customer_id/addresses',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createCustomerAddress', after: ['bodyParser'], before: ['apiResponse'] },
@@ -110,6 +116,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteCustomer',
     region: 'api',
+    path: '/customers/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteCustomer', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -118,6 +126,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteCustomerAddress',
     region: 'api',
+    path: '/customers/:customer_id/addresses/:address_id',
+    methods: ['DELETE'],
+    access: 'public',
     middleware: [
       { id: 'deleteCustomerAddress', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -134,6 +145,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'resetPassword',
     region: 'api',
+    path: '/customers/reset-password',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'resetPassword', after: ['bodyParser'], before: ['apiResponse'] },
@@ -143,6 +157,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateCustomer',
     region: 'api',
+    path: '/customers/:id',
+    methods: ['PATCH'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateCustomer', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -152,6 +169,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateCustomerAddress',
     region: 'api',
+    path: '/customers/:customer_id/addresses/:address_id',
+    methods: ['PATCH'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateCustomerAddress', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -161,6 +181,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updatePassword',
     region: 'api',
+    path: '/customers/password',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updatePassword', after: ['bodyParser'], before: ['apiResponse'] },

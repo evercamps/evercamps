@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -28,6 +28,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'couponApply',
     region: 'api',
+    path: '/carts/:cart_id/coupons',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'validateCouponCode', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -38,6 +41,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createCoupon',
     region: 'api',
+    path: '/coupons',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createCoupon', after: ['escapeHtml'], before: ['finish'] },
@@ -48,6 +53,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteCoupon',
     region: 'api',
+    path: '/coupons/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteCoupon', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -56,6 +63,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateCoupon',
     region: 'api',
+    path: '/coupons/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateCoupon', after: ['escapeHtml'], before: ['finish'] },

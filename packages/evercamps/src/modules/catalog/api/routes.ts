@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -126,6 +126,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'addProductToCategory',
     region: 'api',
+    path: '/categories/:category_id/products',
+    methods: ['POST'],
     middleware: [
       { id: 'addProducts', after: ['escapeHtml'], before: ['apiResponse'] },
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
@@ -135,6 +137,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'addProductToCollection',
     region: 'api',
+    path: '/collections/:collection_id/products',
+    methods: ['POST'],
     middleware: [
       { id: 'addProducts', after: ['escapeHtml'], before: ['apiResponse'] },
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
@@ -144,6 +148,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'addVariantItem',
     region: 'api',
+    path: '/variantGroups/:id/items',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'addItem', after: ['bodyParser'], before: ['apiResponse'] },
@@ -153,6 +159,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createAttribute',
     region: 'api',
+    path: '/attributes',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createAttribute', after: ['escapeHtml'], before: ['finish'] },
@@ -163,6 +171,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createAttributeGroup',
     region: 'api',
+    path: '/attributeGroups',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'saveGroup', after: ['bodyParser'], before: ['apiResponse'] },
@@ -172,6 +182,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createCategory',
     region: 'api',
+    path: '/categories',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createCategory', after: ['escapeHtml'], before: ['finish'] },
@@ -182,6 +194,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createCollection',
     region: 'api',
+    path: '/collections',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createCollection', after: ['escapeHtml'], before: ['finish'] },
@@ -192,6 +206,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createProduct',
     region: 'api',
+    path: '/products',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createProduct', after: ['escapeHtml'], before: ['finish'] },
@@ -202,6 +218,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createVariantGroup',
     region: 'api',
+    path: '/variantGroups',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'saveGroup', after: ['bodyParser'], before: ['apiResponse'] },
@@ -211,6 +229,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteAttribute',
     region: 'api',
+    path: '/attributes/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteAttribute', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -219,6 +239,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteAttributeGroup',
     region: 'api',
+    path: '/attributeGroups/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteAttributeGroup', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -227,6 +249,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteCategory',
     region: 'api',
+    path: '/categories/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteCategory', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -235,6 +259,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteCollection',
     region: 'api',
+    path: '/collections/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteCollection', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -243,6 +269,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteProduct',
     region: 'api',
+    path: '/products/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteProduct', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -251,6 +279,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'removeProductFromCategory',
     region: 'api',
+    path: '/categories/:category_id/products/:product_id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'removeProducts', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -260,6 +290,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'removeProductFromCollection',
     region: 'api',
+    path: '/collections/:collection_id/products/:product_id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'removeProducts', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -269,6 +301,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'unlinkVariant',
     region: 'api',
+    path: '/variants/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'multerNone', after: ['context'], before: ['auth'] },
       { id: 'unlinkVariants', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -278,6 +312,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateAttribute',
     region: 'api',
+    path: '/attributes/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateAttribute', after: ['escapeHtml'], before: ['finish'] },
@@ -288,6 +324,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateAttributeGroup',
     region: 'api',
+    path: '/attributeGroups/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'saveGroup', after: ['bodyParser'], before: ['apiResponse'] },
@@ -297,6 +335,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateCategory',
     region: 'api',
+    path: '/categories/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateCategory', after: ['escapeHtml'], before: ['finish'] },
@@ -307,6 +347,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateCollection',
     region: 'api',
+    path: '/collections/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateCollection', after: ['escapeHtml'], before: ['finish'] },
@@ -317,6 +359,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateProduct',
     region: 'api',
+    path: '/products/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateProduct', after: ['escapeHtml'], before: ['finish'] },
@@ -327,6 +371,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'variantSearch',
     region: 'api',
+    path: '/variants',
+    methods: ['GET'],
     middleware: [
       { id: 'loadVariants', after: ['escapeHtml'], before: ['apiResponse'] },
     ],

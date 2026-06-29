@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -20,6 +20,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'paypalAuthorizePayment',
     region: 'api',
+    path: '/paypal/authorizedTransactions',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'authorize', after: ['bodyParser'], before: ['apiResponse'] },
@@ -29,6 +32,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'paypalCaptureAuthorizedPayment',
     region: 'api',
+    path: '/paypal/authorizations/capture',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'capture', after: ['bodyParser'], before: ['apiResponse'] },
@@ -38,6 +44,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'paypalCapturePayment',
     region: 'api',
+    path: '/paypal/captureTransactions',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'capture', after: ['bodyParser'], before: ['apiResponse'] },
@@ -47,6 +56,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'paypalCreateOrder',
     region: 'api',
+    path: '/paypal/orders',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createOrder', after: ['bodyParser'], before: ['apiResponse'] },

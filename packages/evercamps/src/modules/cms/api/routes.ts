@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -93,6 +93,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createCmsPage',
     region: 'api',
+    path: '/pages',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createPage', after: ['escapeHtml'], before: ['finish'] },
@@ -103,6 +105,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createWidget',
     region: 'api',
+    path: '/widgets',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createWidget', after: ['escapeHtml'], before: ['finish'] },
@@ -113,6 +117,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteCmsPage',
     region: 'api',
+    path: '/pages/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteCmsPage', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -121,6 +127,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'deleteWidget',
     region: 'api',
+    path: '/widgets/:id',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteWidget', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
@@ -129,6 +137,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'fileBrowser',
     region: 'api',
+    path: '/files/*',
+    methods: ['GET'],
     middleware: [
       { id: 'browFiles', after: ['escapeHtml'], before: ['apiResponse'] },
       { id: 'validatePath', after: ['context'], before: ['auth'] },
@@ -138,6 +148,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'fileDelete',
     region: 'api',
+    path: '/files/*',
+    methods: ['DELETE'],
     middleware: [
       { id: 'deleteFile', after: ['escapeHtml'], before: ['apiResponse'] },
       { id: 'validatePath', after: ['context'], before: ['auth'] },
@@ -147,6 +159,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'fileUpload',
     region: 'api',
+    path: '/files/*',
+    methods: ['POST'],
     middleware: [
       { id: 'validatePath', after: ['context'], before: ['multerFile'] },
       { id: 'multerFile', after: ['context'], before: ['auth'] },
@@ -157,6 +171,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'folderCreate',
     region: 'api',
+    path: '/folders',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createFolder', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -167,6 +183,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'imageUpload',
     region: 'api',
+    path: '/images/*',
+    methods: ['POST'],
     middleware: [
       { id: 'validatePath', after: ['context'], before: ['multerFile'] },
       { id: 'multerFile', after: ['context'], before: ['auth'] },
@@ -178,6 +196,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateCmsPage',
     region: 'api',
+    path: '/pages/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updatePage', after: ['escapeHtml'], before: ['finish'] },
@@ -188,6 +208,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'updateWidget',
     region: 'api',
+    path: '/widgets/:id',
+    methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateWidget', after: ['escapeHtml'], before: ['finish'] },

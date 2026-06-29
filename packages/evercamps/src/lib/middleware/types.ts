@@ -5,7 +5,11 @@ export interface MiddlewareEntry {
 }
 
 export interface RouteDefinition {
-  routeId: string | string[] | null;           // string[] replaces the + directory convention
+  routeId: string | string[] | null;
   region: 'api' | 'admin' | 'frontStore' | 'global';
+  // HTTP metadata — for api routes, replaces route.json
+  path?: string;          // e.g. '/addCartAddress'  (/api prefix added by runtime)
+  methods?: string[];     // e.g. ['POST']
+  access?: 'public' | 'private';  // default: 'private'
   middleware: MiddlewareEntry[];
 }

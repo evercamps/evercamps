@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -12,6 +12,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'capturePaymentIntent',
     region: 'api',
+    path: '/stripe/paymentIntents/capture',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'capturePaymentIntent', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -21,6 +23,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'createPaymentIntent',
     region: 'api',
+    path: '/stripe/paymentIntents',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'createPaymentIntent', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -30,6 +35,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'refundPaymentIntent',
     region: 'api',
+    path: '/stripe/paymentIntents/refund',
+    methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'refundPaymentIntent', after: ['escapeHtml'], before: ['apiResponse'] },
@@ -39,6 +46,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'stripeWebHook',
     region: 'api',
+    path: '/stripe/webhook',
+    methods: ['POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyJson', after: ['escapeHtml'], before: ['apiResponse'] },
       { id: 'webhook', after: ['bodyJson'], before: ['apiResponse'] },

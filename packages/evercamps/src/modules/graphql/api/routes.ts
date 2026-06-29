@@ -1,4 +1,4 @@
-import type { RouteDefinition } from '../../lib/middleware/types.js';
+import type { RouteDefinition } from '../../../lib/middleware/types.js';
 
 export const routes: RouteDefinition[] = [
   {
@@ -14,6 +14,8 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'adminGraphql',
     region: 'api',
+    path: '/admin/graphql',
+    methods: ['GET', 'POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'graphql', after: ['bodyParser'], before: ['apiResponse'] },
@@ -23,6 +25,9 @@ export const routes: RouteDefinition[] = [
   {
     routeId: 'graphql',
     region: 'api',
+    path: '/graphql',
+    methods: ['GET', 'POST'],
+    access: 'public',
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'removeUser', after: ['auth'], before: ['graphql'] },
