@@ -8,14 +8,14 @@ export function addFrontStoreRoute(app: Application, event: Event) {
   try {
     const jsonPath = event.path.toString();
     const route = parseRoute(jsonPath, false, false);
-    if (hasRoute(route?.id)) {
+    if (route?.id && hasRoute(route?.id)) {
       warning(`Route ${route?.id} already exists. Skipping adding new route.`);
-    } else {
+    } else if(route) {
       addRoute(route);
     }
   } catch (error) {
     warning(
-      `Failed to add new route from ${event.path}: ${error.message}. Skipping.`
+      `Failed to add new route from ${event.path}: ${(error as Error).message}. Skipping.`
     );
   }
 }

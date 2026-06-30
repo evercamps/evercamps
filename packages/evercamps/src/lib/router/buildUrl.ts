@@ -1,6 +1,5 @@
 import { compile } from '../pathToRegexp.js';
-import { getRoutes } from './Router.js';
-import type { Route } from '../../types/route.js';
+import { getRoutes, Route } from './Router.js';
 
 /**
  * This function take a route ID, list of params and return the url
@@ -25,6 +24,6 @@ export const buildUrl = (
     const url = toPath(params);
     return url;
   } catch (e) {
-    throw new Error(`Could not build url for route ${routeId}. ${e.message}`);
+    throw new Error(`Could not build url for route ${routeId}. ${(e as Error).message}`);
   }
 };

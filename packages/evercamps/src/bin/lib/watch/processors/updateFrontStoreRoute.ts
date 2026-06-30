@@ -13,8 +13,11 @@ export function updateFrontStoreRoute(app: Application, event: Event) {
       false,
       false
     );
+     if(!route) {
+      throw new Error("route is empty")
+    }
     addRoute(route);
   } catch (error) {
-    warning(`Failed to update route from ${event.path}: ${error.message}`);
+    warning(`Failed to update route from ${event.path}: ${(error as Error).message}`);
   }
 }
