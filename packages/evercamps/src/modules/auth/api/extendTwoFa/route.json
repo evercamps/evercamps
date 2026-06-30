@@ -1,6 +1,0 @@
-{
-  "methods": ["POST"],
-  "path": "/admin/2fa/extend/:userId",
-  "access": "private",
-  "id": "extend2FA"
-}
