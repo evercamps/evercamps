@@ -1,6 +1,8 @@
+import type { Request, NextFunction } from 'express';
+import type { EvercampsResponse } from '../../../../types/response.js';
 import isErrorHandlerTriggered from '../../../../lib/middleware/isErrorHandlerTriggered.js';
 
-export default async (request, response, next) => {
+export default async (request: Request, response: EvercampsResponse, next: NextFunction) => {
   try {
     /** If a rejected middleware called next(error) without throwing an error */
     if (isErrorHandlerTriggered(response)) {

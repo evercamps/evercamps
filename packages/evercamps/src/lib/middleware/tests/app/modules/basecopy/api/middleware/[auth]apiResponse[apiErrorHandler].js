@@ -1,3 +1,3 @@
-import apiResponse from '../../../../../../../../modules/base/api/global/[auth]apiResponse[apiErrorHandler].js';
+import apiResponse from '../../../../../../../../modules/base/api/middleware/apiResponse.js';
 
 export default apiResponse;

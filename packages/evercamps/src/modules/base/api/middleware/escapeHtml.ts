@@ -1,6 +1,7 @@
+import type { Request, Response, NextFunction } from 'express';
 import escapePayload from '../../services/escapePayload.js';
 
-export default (request, response, next) => {
+export default (request: Request, response: Response, next: NextFunction) => {
   // return next();
   if (request.method === 'GET') {
     next();

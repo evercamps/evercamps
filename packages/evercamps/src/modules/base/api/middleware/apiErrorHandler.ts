@@ -1,8 +1,9 @@
+import type { Request, Response, NextFunction } from 'express';
 import { error } from '../../../../lib/log/logger.js';
 import { INTERNAL_SERVER_ERROR } from '../../../../lib/util/httpStatus.js';
 import isDevelopmentMode from '../../../../lib/util/isDevelopmentMode.js';
 
-export default async (err, request, response, next) => {
+export default async (err: Error, request: Request, response: Response, next: NextFunction) => {
   if (isDevelopmentMode() || process.argv.includes('--debug')) {
     error(err);
   }

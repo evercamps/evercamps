@@ -1,21 +1,27 @@
 import { sep } from 'path';
 
-export function getRouteFromPath(path) {
+interface RouteInfo {
+  region: string;
+  scope: string;
+  routeId: string | string[] | null;
+}
+
+export function getRouteFromPath(path: string): RouteInfo {
   const parts = path.split(sep).reverse();
 
   // Check if current path is an api path
   if (parts[2] === 'api') {
     return {
       region: 'api',
-      scope: parts[1] === 'global' ? 'app' : parts[1],
-      routeId: parts[1] === 'global' ? null : parts[1]
+      scope: parts[1] === 'middleware' ? 'app' : parts[1],
+      routeId: parts[1] === 'middleware' ? null : parts[1]
     };
   }
 
   // Current path is a page path
-  let scope;
-  let routeId;
-  let region;
+  let scope: string;
+  let routeId: string | string[] | null;
+  let region: string;
   region = parts[3];
   if (parts[1] === 'global') {
     scope = 'app';

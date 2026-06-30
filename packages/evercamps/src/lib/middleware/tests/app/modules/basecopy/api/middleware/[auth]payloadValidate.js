@@ -1,3 +1,3 @@
-import payloadValidate from '../../../../../../../../modules/base/api/global/[auth]payloadValidate.js';
+import payloadValidate from '../../../../../../../../modules/base/api/middleware/payloadValidate.js';
 
 export default payloadValidate;

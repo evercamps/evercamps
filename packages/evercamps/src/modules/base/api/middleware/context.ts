@@ -1,12 +1,14 @@
+import type { Response } from 'express';
 import { pool } from '../../../../lib/postgres/connection.js';
 import { getConfig } from '../../../../lib/util/getConfig.js';
 import {
   hasContextValue,
   setContextValue
 } from '../../../graphql/services/contextHelper.js';
+import { EvercampsRequest } from '../../../../types/request.js';
 
-export default (request, response) => {
-  response.context = {};
+export default (request: EvercampsRequest, response: Response) => {
+  (response as any).context = {};
   /** Some default context value */
   if (!hasContextValue(request, 'pool')) {
     setContextValue(request.app, 'pool', pool);

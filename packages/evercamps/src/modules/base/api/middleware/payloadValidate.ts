@@ -1,3 +1,5 @@
+import type { Response, NextFunction } from 'express';
+import type { EvercampsRequest } from '../../../../types/request.js';
 import { INVALID_PAYLOAD } from '../../../../lib/util/httpStatus.js';
 import { getAjv } from '../../services/getAjv.js';
 import markSkipEscape from '../../services/markSkipEscape.js';
@@ -8,8 +10,8 @@ const ajv = getAjv();
 ajv.addKeyword({
   keyword: 'skipEscape',
   modifying: true,
-  compile(sch, parentSchema) {
-    return (data, t) => {
+  compile(sch: boolean, parentSchema: any) {
+    return (data: unknown, t: any) => {
       if (parentSchema.type === 'string' && sch === true) {
         // Mark the data as skip escape
         markSkipEscape(t.rootData, t.instancePath);
@@ -21,7 +23,7 @@ ajv.addKeyword({
   }
 });
 
-export default (request, response, next) => {
+export default (request: EvercampsRequest, response: Response, next: NextFunction) => {
   // Get the current route
   const { currentRoute } = request;
   // Get the payload schema
@@ -38,7 +40,7 @@ export default (request, response, next) => {
       response.json({
         error: {
           status: INVALID_PAYLOAD,
-          message: validate.errors[0].message
+          message: validate.errors![0].message
         }
       });
     }

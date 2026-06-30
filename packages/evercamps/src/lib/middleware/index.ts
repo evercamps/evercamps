@@ -5,22 +5,23 @@ import { addMiddleware } from './addMiddleware.js';
 import { Handler } from './Handler.js';
 import { scanForMiddlewareFunctions } from './scanForMiddlewareFunctions.js';
 import { sortMiddlewares } from './sort.js';
+import type { MiddlewareEntry } from './types.js';
 
 const middlewareList = Handler.middlewares;
 
-export function getAdminMiddlewares(routeId) {
+export function getAdminMiddlewares(routeId: string | null) {
   return sortMiddlewares(
     middlewareList.filter(
-      (m) =>
+      (m: any) =>
         m.routeId === 'admin' || m.routeId === routeId || m.routeId === null
     )
   );
 }
 
-export function getFrontMiddlewares(routeId) {
+export function getFrontMiddlewares(routeId: string | null) {
   return sortMiddlewares(
     middlewareList.filter(
-      (m) =>
+      (m: any) =>
         m.routeId === 'frontStore' ||
         m.routeId === routeId ||
         m.routeId === null
@@ -34,12 +35,12 @@ export function getFrontMiddlewares(routeId) {
  * @param   {string}  path  The path of the module
  *
  */
-export async function getModuleMiddlewares(path) {
+export async function getModuleMiddlewares(path: string): Promise<void> {
   if (existsSync(resolve(path, 'pages'))) {
     // Scan for the application level middleware
     if (existsSync(resolve(path, 'pages', 'global'))) {
       scanForMiddlewareFunctions(resolve(path, 'pages', 'global')).forEach(
-        (m) => {
+        (m: any) => {
           addMiddleware(m);
         }
       );
@@ -54,7 +55,7 @@ export async function getModuleMiddlewares(path) {
       routes.forEach((route) => {
         scanForMiddlewareFunctions(
           resolve(path, 'pages', 'admin', route)
-        ).forEach((m) => {
+        ).forEach((m: any) => {
           addMiddleware(m);
         });
       });
@@ -70,7 +71,7 @@ export async function getModuleMiddlewares(path) {
       routes.forEach((route) => {
         scanForMiddlewareFunctions(
           resolve(path, 'pages', 'frontStore', route)
-        ).forEach((m) => {
+        ).forEach((m: any) => {
           addMiddleware(m);
         });
       });
@@ -86,14 +87,15 @@ export async function getModuleMiddlewares(path) {
       const { routes } = await import(pathToFileURL(routesJsPath).href);
 
       // Build ordering map keyed by "routeIdKey:middlewareId"
-      const orderingMap = new Map();
+      const orderingMap = new Map<string, MiddlewareEntry>();
       for (const routeDef of routes) {
         if (routeDef.region !== 'api') continue;
-        const routeIdKey = routeDef.routeId === null
-          ? 'null'
-          : Array.isArray(routeDef.routeId)
-            ? routeDef.routeId.join('+')
-            : String(routeDef.routeId);
+        const routeIdKey =
+          routeDef.routeId === null
+            ? 'null'
+            : Array.isArray(routeDef.routeId)
+              ? routeDef.routeId.join('+')
+              : String(routeDef.routeId);
         for (const mEntry of routeDef.middleware) {
           orderingMap.set(`${routeIdKey}:${mEntry.id}`, mEntry);
         }
@@ -104,8 +106,8 @@ export async function getModuleMiddlewares(path) {
         .map((dirent) => dirent.name);
 
       apiDirs.forEach((routeDir) => {
-        const routeIdKey = routeDir === 'global' ? 'null' : routeDir;
-        scanForMiddlewareFunctions(resolve(path, 'api', routeDir)).forEach((m) => {
+        const routeIdKey = routeDir === 'middleware' ? 'null' : routeDir;
+        scanForMiddlewareFunctions(resolve(path, 'api', routeDir)).forEach((m: any) => {
           const ordering = orderingMap.get(`${routeIdKey}:${m.id}`);
           if (ordering) {
             m.before = ordering.before;
@@ -119,7 +121,7 @@ export async function getModuleMiddlewares(path) {
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name);
       routes.forEach((route) => {
-        scanForMiddlewareFunctions(resolve(path, 'api', route)).forEach((m) => {
+        scanForMiddlewareFunctions(resolve(path, 'api', route)).forEach((m: any) => {
           addMiddleware(m);
         });
       });

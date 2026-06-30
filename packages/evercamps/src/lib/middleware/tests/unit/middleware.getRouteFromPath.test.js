@@ -11,7 +11,7 @@ describe('Test getRouteFromPath function', () => {
       }
     );
 
-    expect(getRouteFromPath(resolve('/cms/api/global/title.js'))).toEqual({
+    expect(getRouteFromPath(resolve('/cms/api/middleware/title.js'))).toEqual({
       region: 'api',
       scope: 'app',
       routeId: null

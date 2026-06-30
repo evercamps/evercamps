@@ -1,3 +1,3 @@
-import apiErrorHandler from '../../../../../../../../modules/base/api/global/[apiResponse]apiErrorHandler.js';
+import apiErrorHandler from '../../../../../../../../modules/base/api/middleware/apiErrorHandler.js';
 
 export default apiErrorHandler;
