@@ -2,7 +2,7 @@ import { sortRoutes } from './sortRoutes.js';
 
 export interface Route {
   id: string;
-  method: string | string[];
+  method: string[];
   path: string;
   name: string;
   isAdmin: boolean;

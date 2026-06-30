@@ -1,3 +1,4 @@
+import type { Express } from 'express';
 import express from 'express';
 import { error } from '../../lib/log/logger.js';
 import { Handler } from '../../lib/middleware/Handler.js';
@@ -8,46 +9,35 @@ import { getEnabledExtensions } from '../extension/index.js';
 import { addDefaultMiddlewareFuncs } from './addDefaultMiddlewareFuncs.js';
 import { getCoreModules } from './loadModules.js';
 
-export const createApp = () => {
-  /** Create express app */
+export const createApp = async (): Promise<Express> => {
   const app = express();
-  // Enable trust proxy
   app.enable('trust proxy');
-  /* Loading modules and initilize routes, components and services */
   const modules = getCoreModules();
 
-  // Load routes and middleware functions
-  modules.forEach((module) => {
+  for (const module of modules) {
     try {
-      // Load middleware functions
-      getModuleMiddlewares(module.path);
-      // Load routes
+      await getModuleMiddlewares(module.path);
       loadModuleRoutes(module.path);
     } catch (e) {
       error(e);
       process.exit(0);
     }
-  });
+  }
 
-  /** Load extensions */
   const extensions = getEnabledExtensions();
-  extensions.forEach((extension) => {
+  for (const extension of extensions) {
     try {
-      // Load middleware functions
-      getModuleMiddlewares(extension.path);
-      // Load routes
+      await getModuleMiddlewares(extension.path);
       loadModuleRoutes(extension.path);
     } catch (e) {
       error(e);
       process.exit(0);
     }
-  });
+  }
 
-  // Adding default middlewares
   addDefaultMiddlewareFuncs(app);
   const routes = getRoutes();
   routes.forEach((route) => {
-    // app.all(route.path, Handler.middleware());
     route.method.forEach((method) => {
       switch (method.toUpperCase()) {
         case 'GET':

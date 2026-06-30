@@ -2,7 +2,7 @@ import { addRoute } from './Router.js';
 
 export function registerFrontStoreRoute(
   id: string,
-  method: string | string[],
+  method: string[],
   path: string,
   name: string,
   isApi = false,

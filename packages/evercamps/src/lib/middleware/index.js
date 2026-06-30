@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'fs';
 import { resolve } from 'path';
+import { pathToFileURL } from 'url';
 import { addMiddleware } from './addMiddleware.js';
 import { Handler } from './Handler.js';
 import { scanForMiddlewareFunctions } from './scanForMiddlewareFunctions.js';
@@ -33,7 +34,7 @@ export function getFrontMiddlewares(routeId) {
  * @param   {string}  path  The path of the module
  *
  */
-export function getModuleMiddlewares(path) {
+export async function getModuleMiddlewares(path) {
   if (existsSync(resolve(path, 'pages'))) {
     // Scan for the application level middleware
     if (existsSync(resolve(path, 'pages', 'global'))) {
@@ -78,14 +79,51 @@ export function getModuleMiddlewares(path) {
 
   // Scan for the api middleware
   if (existsSync(resolve(path, 'api'))) {
-    const routes = readdirSync(resolve(path, 'api'), { withFileTypes: true })
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name);
-    routes.forEach((route) => {
-      scanForMiddlewareFunctions(resolve(path, 'api', route)).forEach((m) => {
-        addMiddleware(m);
+    const routesJsPath = resolve(path, 'api', 'routes.js');
+
+    if (existsSync(routesJsPath)) {
+      // routes.ts-based: use explicit ordering from routes.js instead of filename defaults
+      const { routes } = await import(pathToFileURL(routesJsPath).href);
+
+      // Build ordering map keyed by "routeIdKey:middlewareId"
+      const orderingMap = new Map();
+      for (const routeDef of routes) {
+        if (routeDef.region !== 'api') continue;
+        const routeIdKey = routeDef.routeId === null
+          ? 'null'
+          : Array.isArray(routeDef.routeId)
+            ? routeDef.routeId.join('+')
+            : String(routeDef.routeId);
+        for (const mEntry of routeDef.middleware) {
+          orderingMap.set(`${routeIdKey}:${mEntry.id}`, mEntry);
+        }
+      }
+
+      const apiDirs = readdirSync(resolve(path, 'api'), { withFileTypes: true })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name);
+
+      apiDirs.forEach((routeDir) => {
+        const routeIdKey = routeDir === 'global' ? 'null' : routeDir;
+        scanForMiddlewareFunctions(resolve(path, 'api', routeDir)).forEach((m) => {
+          const ordering = orderingMap.get(`${routeIdKey}:${m.id}`);
+          if (ordering) {
+            m.before = ordering.before;
+            m.after = ordering.after;
+          }
+          addMiddleware(m);
+        });
       });
-    });
+    } else {
+      const routes = readdirSync(resolve(path, 'api'), { withFileTypes: true })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name);
+      routes.forEach((route) => {
+        scanForMiddlewareFunctions(resolve(path, 'api', route)).forEach((m) => {
+          addMiddleware(m);
+        });
+      });
+    }
   }
 }
 
