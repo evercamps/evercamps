@@ -3,7 +3,6 @@ import { hookAfter } from '../../lib/util/hookable.js';
 import { registerPaymentMethod } from '../checkout/services/getAvailablePaymentMethos.js';
 import { getSetting } from '../setting/services/setting.js';
 import { cancelPaymentIntent } from './services/cancelPayment.js';
-import { MollieConfig } from './types/mollieConfig.js';
 
 type Order = {
   payment_method: string;
@@ -26,7 +25,7 @@ export default async () => {
       methodName: await getSetting('mollieDisplayName', 'Mollie')
     }),
     validator: async () => {
-      const mollieConfig = getConfig<MollieConfig>('system.mollie', {});
+      const mollieConfig = getConfig('system.mollie', {});
       let mollieStatus: string | number;
       if (mollieConfig.molliePaymentStatus) {
         mollieStatus = mollieConfig.molliePaymentStatus;

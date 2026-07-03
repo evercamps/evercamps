@@ -66,7 +66,7 @@ export default async (): Promise<void> => {
 
     validator: async () => {
       // TODO: fix any with real model
-      const stripeConfig = getConfig<any>('system.stripe', {});
+      const stripeConfig = getConfig('system.stripe', {});
       let stripeStatus: any;
 
       if (stripeConfig.status) {

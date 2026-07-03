@@ -1,11 +1,9 @@
 import { getConfig } from '../../../../../lib/util/getConfig.js';
 import type { Setting } from '../../../../setting/services/setting.js';
-import { MollieConfig } from '../../../types/mollieConfig.js';
-
 export default {
   Setting: {
     mollieLiveApiKey: (setting: Setting[]) => {
-      const mollieConfig = getConfig<MollieConfig>('system.mollie', {});
+      const mollieConfig = getConfig('system.mollie', {});
       if (mollieConfig.mollieLiveApiKey) {
         return `${mollieConfig.mollieLiveApiKey.substr(0, 5)}*******************************`;
       }
@@ -13,7 +11,7 @@ export default {
       return mollieLiveApiKey ? mollieLiveApiKey.value : null;
     },
     mollieTestApiKey: (setting: Setting[]) => {
-      const mollieConfig = getConfig<MollieConfig>('system.mollie', {});
+      const mollieConfig = getConfig('system.mollie', {});
       if (mollieConfig.mollieTestApiKey) {
         return `${mollieConfig.mollieTestApiKey.substr(0, 5)}*******************************`;
       }

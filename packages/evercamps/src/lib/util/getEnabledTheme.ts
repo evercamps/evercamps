@@ -13,7 +13,7 @@ export type Theme = {
 };
 
 export function getEnabledTheme(): Theme | null {
-  const themeConfig = getConfig('system.theme') as string | undefined;
+  const themeConfig = getConfig('system.theme');
   if (!themeConfig) {
     return null;
   }

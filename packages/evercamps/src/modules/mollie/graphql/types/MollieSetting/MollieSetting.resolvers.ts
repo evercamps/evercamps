@@ -1,15 +1,10 @@
 import { getConfig } from '../../../../../lib/util/getConfig.js';
 import type { Setting } from '../../../../setting/services/setting.js';
 
-type MollieConfig = {
-  molliePaymentStatus?: string | number;
-  molliePaymentMode?: string | number;
-};
-
 export default {
   Setting: {
     molliePaymentStatus: (setting: Setting[]) => {
-      const mollieConfig = getConfig<MollieConfig>('system.mollie', {});
+      const mollieConfig = getConfig('system.mollie', {});
       if (mollieConfig.molliePaymentStatus) {
         return mollieConfig.molliePaymentStatus;
       }
@@ -21,7 +16,7 @@ export default {
       return mollieDisplayName ? mollieDisplayName.value : 'Mollie';
     },
     molliePaymentMode: (setting: Setting[]) => {
-      const mollieConfig = getConfig<MollieConfig>('system.mollie', {});
+      const mollieConfig = getConfig('system.mollie', {});
       if (mollieConfig.molliePaymentMode) {
         return mollieConfig.molliePaymentMode;
       }

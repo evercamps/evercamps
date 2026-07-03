@@ -29,7 +29,7 @@ export default async (): Promise<void> => {
 
     validator: async () => {
       // TODO: fix any with real model
-      const paypalConfig = getConfig<any>('system.paypal', {});
+      const paypalConfig = getConfig('system.paypal', {});
       let paypalStatus: any;
 
       if (paypalConfig.status) {

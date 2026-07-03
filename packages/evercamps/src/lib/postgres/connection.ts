@@ -9,7 +9,7 @@ const connectionSetting: PoolConfig = {
   host: process.env.DB_HOST || getConfig('system.database.host'),
   port:
     (process.env.DB_PORT as unknown as number) ||
-    (getConfig('system.database.port') as unknown as number),
+    getConfig('system.database.port'),
   user: process.env.DB_USER || getConfig('system.database.user'),
   password: process.env.DB_PASSWORD || getConfig('system.database.password'),
   database: process.env.DB_NAME || getConfig('system.database.database'),

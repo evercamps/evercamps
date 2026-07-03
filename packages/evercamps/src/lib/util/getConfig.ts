@@ -1,8 +1,9 @@
 import config from 'config';
+import type { ConfigPathValue, ConfigPaths } from './config.js';
 
-/**
- * Get the configuration value base on path. Return the default value if the path is not found.
- */
-export function getConfig<T>(path: string, defaultValue?: T): T {
-  return config.has(path) ? config.get<T>(path) : (defaultValue as T);
+export function getConfig<P extends ConfigPaths>(
+  path: P,
+  defaultValue?: ConfigPathValue<P>
+): ConfigPathValue<P> {
+  return config.has(path) ? config.get(path) : (defaultValue as ConfigPathValue<P>);
 }

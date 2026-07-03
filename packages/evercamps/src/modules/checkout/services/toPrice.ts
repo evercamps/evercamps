@@ -6,7 +6,7 @@ export function toPrice(value: string | number, forDisplay: boolean = false) {
   if (Number.isNaN(price)) {
     throw new Error('Price is not a number');
   }
-  const rounding = getConfig('pricing.rounding', 'round') as RoundType;
+  const rounding = getConfig('pricing.rounding', 'round');
   const precision = getConfig('pricing.precision', 2);
   const precisionFix = 10 ** precision;
   switch (rounding) {
