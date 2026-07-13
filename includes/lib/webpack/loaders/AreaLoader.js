@@ -2,8 +2,8 @@ import fs from 'fs';
 import { pathToFileURL } from 'url';
 import { inspect } from 'util';
 import JSON5 from 'json5';
-import { getEnabledWidgets } from '../../../lib/widget/widgetManager.js';
-import { error } from '../../log/logger.js';
+import { getEnabledWidgets } from '../../../../dist/lib/widget/widgetManager.js';
+import { error } from '../../../../dist/lib/log/logger.js';
 import { generateComponentKey } from '../util/keyGenerator.js';
 
 export default function AreaLoader(c) {

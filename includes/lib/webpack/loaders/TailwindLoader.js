@@ -2,10 +2,10 @@ import { join } from 'path';
 import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
 import tailwindcss from 'tailwindcss';
-import { getEnabledExtensions } from '../../../bin/extension/index.js';
-import { getConfig } from '../../../lib/util/getConfig.js';
-import { getEnabledTheme } from '../../../lib/util/getEnabledTheme.js';
-import { CONSTANTS } from '../../helpers.js';
+import { getEnabledExtensions } from '../../../../dist/bin/extension/index.js';
+import { getConfig } from '../../../../dist/lib/util/getConfig.js';
+import { getEnabledTheme } from '../../../../dist/lib/util/getEnabledTheme.js';
+import { CONSTANTS } from '../../../../dist/lib/helpers.js';
 import { getTailwindConfig } from '../util/getTailwindConfig.js';
 
 export default async function TailwindLoader(c) {

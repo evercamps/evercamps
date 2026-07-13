@@ -1,13 +1,15 @@
 import fs from 'fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
-import { getEnabledTheme } from '../../../lib/util/getEnabledTheme.js';
+import { getEnabledTheme } from '../../../../dist/lib/util/getEnabledTheme.js';
 
 export async function getTailwindConfig(route) {
   const defaultTailwindConfig = route.isAdmin
-    ? await import('../../../modules/cms/services/tailwind.admin.config.js')
+    ? await import(
+        '../../../../dist/modules/cms/services/tailwind.admin.config.js'
+      )
     : await import(
-        '../../../modules/cms/services/tailwind.frontStore.config.js'
+        '../../../../dist/modules/cms/services/tailwind.frontStore.config.js'
       );
 
   let tailwindConfig = {};
