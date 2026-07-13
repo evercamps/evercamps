@@ -10,8 +10,9 @@ export function getSrcPaths(): PathLike[] {
   return extensions
     .filter((ext) => ext.srcPath)
     .map((ext) => ext.srcPath as PathLike)
-    .concat(
-      path.resolve(CONSTANTS.ROOTPATH, 'packages/evercamps/src/') as PathLike
-    )
+    .concat([
+      CONSTANTS.COREPATH,
+      path.resolve(CONSTANTS.ROOTPATH, 'includes')
+    ] as PathLike[])
     .concat(theme?.srcPath ? (theme.srcPath as PathLike) : []);
 }

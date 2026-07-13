@@ -17,10 +17,10 @@ import isDevelopmentMode from '../../lib/util/isDevelopmentMode.js';
 import isProductionMode from '../../lib/util/isProductionMode.js';
 import { createConfigClient } from '../../lib/webpack/dev/createConfigClient.js';
 import { isBuildRequired } from '../../lib/webpack/isBuildRequired.js';
-import { getAdminSessionCookieName } from '../../../packages/evercamps/src/modules/auth/services/getAdminSessionCookieName.js';
-import { getCookieSecret } from '../../../packages/evercamps/src/modules/auth/services/getCookieSecret.js';
-import { getFrontStoreSessionCookieName } from '../../../packages/evercamps/src/modules/auth/services/getFrontStoreSessionCookieName.js';
-import { setContextValue } from '../../../packages/evercamps/src/modules/graphql/services/contextHelper.js';
+import { getAdminSessionCookieName } from '../../modules/auth/services/getAdminSessionCookieName.js';
+import { getCookieSecret } from '../../modules/auth/services/getCookieSecret.js';
+import { getFrontStoreSessionCookieName } from '../../modules/auth/services/getFrontStoreSessionCookieName.js';
+import { setContextValue } from '../../modules/graphql/services/contextHelper.js';
 import { findRoute } from './findRoute.js';
 
 export function addDefaultMiddlewareFuncs(app) {

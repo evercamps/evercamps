@@ -29,8 +29,8 @@ export default async function TailwindLoader(c) {
   const mergedTailwindConfig = await getTailwindConfig(route);
   const enabledExtensions = getEnabledExtensions();
   mergedTailwindConfig.content = [
-    // All file in packages/evercamps/dist and name is capitalized
-    join(CONSTANTS.ROOTPATH, 'packages', 'evercamps', 'dist', '**', '[A-Z]*.js'),
+    // All file in dist and name is capitalized
+    join(CONSTANTS.ROOTPATH, 'dist', '**', '[A-Z]*.js'),
     // All file in node_modules/@evershop/evercamps/dist and name is capitalized
     join(
       CONSTANTS.ROOTPATH,
