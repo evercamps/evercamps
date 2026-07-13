@@ -18,7 +18,7 @@ dist
 .vscode
 npm-debug.log
 /package-log.json
-/media
+/content/media
 /public
 .DS_Store
 .log

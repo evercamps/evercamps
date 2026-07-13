@@ -15,9 +15,9 @@ export const CONSTANTS = Object.freeze({
   LIBPATH: path.resolve(__dirname),
   MODULESPATH: path.resolve(__dirname, '..', 'modules'),
   PUBLICPATH: path.resolve(rootPath, 'public'),
-  MEDIAPATH: path.resolve(rootPath, 'media'),
+  MEDIAPATH: path.resolve(rootPath, 'content', 'media'),
   NODEMODULEPATH: path.resolve(rootPath, 'node_modules'),
-  THEMEPATH: path.resolve(rootPath, 'themes'),
+  THEMEPATH: path.resolve(rootPath, 'content', 'themes'),
   CACHEPATH: path.resolve(rootPath, 'evercamps'),
   BUILDPATH: path.resolve(rootPath, 'evercamps', 'build'),
   ADMIN_COLLECTION_SIZE: getConfig('admin_collection_size', 20)
