@@ -4,9 +4,21 @@ import { Application } from 'express';
 import { error } from '../../../lib/log/logger.js';
 import { compileSwc } from './compileSwc.js';
 import { applyEffects, detectEffect, Effect } from './effect.js';
+import { getSrcPaths } from './getSrcPaths.js';
 import { isDist } from './isDist.js';
 import { isSrc } from './isSrc.js';
 import { restartProcess } from './processors/restart.js';
+
+function getDistPathForSrcFile(srcFilePath: string): string {
+  const srcRoot = getSrcPaths()
+    .map((p) => p.toString())
+    .find((root) => srcFilePath.startsWith(root + path.sep));
+  const distRoot = path.resolve(srcRoot as string, '..', 'dist');
+  return path
+    .join(distRoot, path.relative(srcRoot as string, srcFilePath))
+    .replace(/\.tsx?$/, '.js')
+    .replace(/\.jsx$/, '.js');
+}
 
 export type Event = {
   path: PathLike;
@@ -60,20 +72,14 @@ export async function watchHandler(events: Event[], app: Application) {
       continue;
     }
     if (isSrc(event.path)) {
-      const distPath = event.path
-        .toString()
-        .replace('src', 'dist')
-        .replace(/\.ts$/, '.js')
-        .replace(/\.tsx$/, '.js')
-        .replace(/\.jsx$/, '.js'); // Ensure the path ends with .js
+      const distPath = getDistPathForSrcFile(event.path.toString());
 
       event.jsPath = distPath; // Set the compiled JS path
       if (event.type === 'delete') {
         // Delete whatever is necessary in the dist folder
         rmSync(distPath as string, { recursive: true, force: true });
       } else {
-        // Run swc to compile the files
-        // Get the dist path from the event by replacing the first 'src' with 'dist' and ts to js if this is a ts file
+        // Run swc to compile the changed file into its dist counterpart
         await compileSwc(event.path, distPath);
       }
     }

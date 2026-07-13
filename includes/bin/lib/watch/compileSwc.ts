@@ -7,8 +7,10 @@ import { error, warning } from '../../../lib/log/logger.js';
 
 export async function compileSwc(
   srcPath: PathLike,
-  distPath: PathLike
+  distPath: PathLike,
+  options: { clean?: boolean } = {}
 ): Promise<void> {
+  const { clean = true } = options;
   // Check if the source is a file or directory
   if (!fs.existsSync(srcPath)) {
     warning(`Source path ${srcPath} does not exist.`);
@@ -52,8 +54,10 @@ export async function compileSwc(
     }
 
     try {
-      // Delete the dist directory if it exists using rimraf
-      await fsp.rm(distPath as string, { recursive: true, force: true });
+      if (clean) {
+        // Delete the dist directory if it exists using rimraf
+        await fsp.rm(distPath as string, { recursive: true, force: true });
+      }
       await execa('swc', cliOptions, {
         cwd: path.resolve(srcPath as string, '..')
       });
