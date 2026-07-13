@@ -1,4 +1,4 @@
-import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
+import ProductNoThumbnail from '@components/ProductNoThumbnail';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../lib/locale/translate/_.js';

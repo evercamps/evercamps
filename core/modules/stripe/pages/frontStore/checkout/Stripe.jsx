@@ -1,4 +1,4 @@
-import { useCheckout } from '@components/common/context/checkout';
+import { useCheckout } from '@components/context/checkout';
 import CheckoutForm from '@components/frontStore/stripe/checkout/CheckoutForm';
 import StripeLogo from '@components/frontStore/stripe/StripeLogo';
 import { Elements } from '@stripe/react-stripe-js';

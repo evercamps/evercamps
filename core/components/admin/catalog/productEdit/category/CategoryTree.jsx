@@ -1,4 +1,4 @@
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useQuery } from 'urql';

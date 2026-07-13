@@ -1,6 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
 import type { ParticipantCheckoutField } from '../../../../../types/checkout';
 
 interface BaseRegistration {

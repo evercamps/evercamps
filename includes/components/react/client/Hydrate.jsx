@@ -1,6 +1,6 @@
-import Area from '@components/common/Area';
-import { AppProvider } from '@components/common/context/app';
-import { Alert } from '@components/common/modal/Alert';
+import Area from '@components/Area';
+import { AppProvider } from '@components/context/app';
+import { Alert } from '@components/modal/Alert';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Provider } from 'urql';

@@ -1,7 +1,7 @@
-import { useAppDispatch } from '@components/common/context/app';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
+import { useAppDispatch } from '@components/context/app';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

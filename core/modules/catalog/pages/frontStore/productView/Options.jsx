@@ -1,5 +1,5 @@
-import { MultiSelect } from '@components/common/form/fields/MultiSelect';
-import { Select } from '@components/common/form/fields/Select';
+import { MultiSelect } from '@components/form/fields/MultiSelect';
+import { Select } from '@components/form/fields/Select';
 import PropTypes from 'prop-types';
 import React from 'react';
 

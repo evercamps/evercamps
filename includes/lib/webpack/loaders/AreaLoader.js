@@ -61,7 +61,7 @@ export default function AreaLoader(c) {
       }
     };
   });
-  const content = `import { setDefaultComponents } from '@components/common/Area';\r\n${imports.join(
+  const content = `import { setDefaultComponents } from '@components/Area';\r\n${imports.join(
     '\r\n'
   )}\r\nsetDefaultComponents(${inspect(areas, { depth: 5 })
     .replace(/"---/g, '')

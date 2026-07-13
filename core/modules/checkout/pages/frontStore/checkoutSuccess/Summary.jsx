@@ -1,4 +1,4 @@
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import { Items } from '@components/frontStore/checkout/success/summary/items/Items';
 import { OrderSummary } from '@components/frontStore/checkout/success/summary/order/OrderSummary';
 import PropTypes from 'prop-types';

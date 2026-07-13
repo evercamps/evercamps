@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { useAppState } from '@components/common/context/app';
+import { useAppState } from '@components/context/app';
 import { CONSTANTS } from '../../../lib/helpers.js';
 import { get } from '../../../lib/util/get.js';
 

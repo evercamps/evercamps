@@ -1,7 +1,7 @@
 import {
   useCheckout,
   useCheckoutDispatch
-} from '@components/common/context/checkout';
+} from '@components/context/checkout';
 import {
   PaymentElement,
   useElements,
@@ -13,8 +13,8 @@ import { toast } from 'react-toastify';
 import { useQuery } from 'urql';
 
 import './CheckoutForm.scss';
-import RenderIfTrue from '@components/common/RenderIfTrue';
-import Spinner from '@components/common/Spinner';
+import RenderIfTrue from '@components/RenderIfTrue';
+import Spinner from '@components/Spinner';
 import { _ } from '../../../../lib/locale/translate/_.js';
 import TestCards from './TestCards';
 

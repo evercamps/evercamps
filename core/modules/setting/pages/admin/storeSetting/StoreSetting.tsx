@@ -1,8 +1,8 @@
 import { Card } from '@components/admin/cms/Card';
 import SettingMenu from '@components/admin/setting/SettingMenu';
-import Area from '@components/common/Area';
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
+import Area from '@components/Area';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQuery } from 'urql';

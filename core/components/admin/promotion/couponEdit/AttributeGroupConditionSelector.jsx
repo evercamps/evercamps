@@ -1,5 +1,5 @@
 import AttributeGroupSelector from '@components/admin/promotion/couponEdit/AttributeGroupSelector';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import PropTypes from 'prop-types';
 import React from 'react';
 

@@ -2,7 +2,7 @@ import {
   NavigationItem,
   NavigationItemProps
 } from '@components/admin/cms/NavigationItem.jsx';
-import Area from '@components/common/Area.jsx';
+import Area from '@components/Area.jsx';
 import React from 'react';
 import './NavigationItemGroup.scss';
 

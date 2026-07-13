@@ -1,6 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
-import Area from '@components/common/Area';
-import { Field } from '@components/common/form/Field';
+import Area from '@components/Area';
+import { Field } from '@components/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { get } from '../../../../../lib/util/get.js';

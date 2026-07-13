@@ -1,8 +1,8 @@
-import Error from '@components/common/form/fields/Error';
+import Error from '@components/form/fields/Error';
 import React from 'react';
 import '../Field.scss';
-import { _ } from '../../../../lib/locale/translate/_.js';
-import type { SelectOption } from '../../../../types/form';
+import { _ } from '../../../lib/locale/translate/_.js';
+import type { SelectOption } from '../../../types/form';
 
 interface SelectProps {
   name?: string;

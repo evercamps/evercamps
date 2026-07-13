@@ -1,4 +1,4 @@
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import { Methods } from '@components/frontStore/checkout/checkout/payment/paymentMethods/Methods';
 import axios from 'axios';
 import PropTypes from 'prop-types';

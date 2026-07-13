@@ -1,7 +1,7 @@
-import { useCheckout } from '@components/common/context/checkout';
-import { useCheckoutStepsDispatch } from '@components/common/context/checkoutSteps';
-import { Field } from '@components/common/form/Field';
-import { useFormContext } from '@components/common/form/Form';
+import { useCheckout } from '@components/context/checkout';
+import { useCheckoutStepsDispatch } from '@components/context/checkoutSteps';
+import { Field } from '@components/form/Field';
+import { useFormContext } from '@components/form/Form';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import React from 'react';

@@ -1,11 +1,11 @@
 import { Card } from '@components/admin/cms/Card';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { useQuery } from 'urql';
 
 import './Customers.scss';
 import AddCustomer from '@components/admin/camp/participantEdit/AddCustomer.jsx';
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 
 const CustomerQuery = `
   query Query($participantUuid: String!) {

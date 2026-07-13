@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import './GeneralInfo.scss';
 import { Name } from '@components/frontStore/catalog/product/single/Name';
 import { Price } from '@components/frontStore/catalog/product/single/Price';

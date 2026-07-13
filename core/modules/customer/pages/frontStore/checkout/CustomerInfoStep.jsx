@@ -1,8 +1,8 @@
-import { useCheckout } from '@components/common/context/checkout';
+import { useCheckout } from '@components/context/checkout';
 import {
   useCheckoutSteps,
   useCheckoutStepsDispatch
-} from '@components/common/context/checkoutSteps';
+} from '@components/context/checkoutSteps';
 import { Edit } from '@components/frontStore/customer/checkout/Edit';
 import PropTypes from 'prop-types';
 import React from 'react';

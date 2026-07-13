@@ -1,11 +1,11 @@
-import Button from '@components/common/form/Button';
+import Button from '@components/form/Button';
 import PubSub from 'pubsub-js';
 import React, { useState } from 'react';
-import { FORM_SUBMIT, FORM_VALIDATED } from '../../../lib/util/events';
-import { serializeForm } from '../../../lib/util/formToJson';
-import { get } from '../../../lib/util/get.js';
+import { FORM_SUBMIT, FORM_VALIDATED } from '../../lib/util/events';
+import { serializeForm } from '../../lib/util/formToJson';
+import { get } from '../../lib/util/get.js';
 import { validator } from './validator';
-import type { ValidationRule } from '../../../types/form';
+import type { ValidationRule } from '../../types/form';
 
 interface FormField {
   name: string;

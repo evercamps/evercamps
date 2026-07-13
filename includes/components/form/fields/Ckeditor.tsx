@@ -1,6 +1,6 @@
-import Button from '@components/common/form/Button';
-import { Input } from '@components/common/form/fields/Input';
-import Spinner from '@components/common/Spinner';
+import Button from '@components/form/Button';
+import { Input } from '@components/form/fields/Input';
+import Spinner from '@components/Spinner';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import {
   BlockQuote,

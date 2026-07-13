@@ -1,7 +1,7 @@
 import { Setting } from '@components/admin/promotion/couponEdit/Setting';
-import Area from '@components/common/Area';
-import { Field } from '@components/common/form/Field';
-import { Toggle } from '@components/common/form/fields/Toggle';
+import Area from '@components/Area';
+import { Field } from '@components/form/Field';
+import { Toggle } from '@components/form/fields/Toggle';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { get } from '../../../../../lib/util/get.js';

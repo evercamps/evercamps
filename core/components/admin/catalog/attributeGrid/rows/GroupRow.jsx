@@ -1,6 +1,6 @@
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
-import { useAlertContext } from '@components/common/modal/Alert';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
+import { useAlertContext } from '@components/modal/Alert';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

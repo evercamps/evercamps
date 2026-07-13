@@ -1,5 +1,5 @@
-import { useAppState } from '@components/common/context/app';
-import Meta from '@components/common/Meta';
+import { useAppState } from '@components/context/app';
+import Meta from '@components/Meta';
 import React from 'react';
 import { get } from '../../../lib/util/get.js';
 

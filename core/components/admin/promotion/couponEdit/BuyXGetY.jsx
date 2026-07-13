@@ -1,5 +1,5 @@
-import { Field } from '@components/common/form/Field';
-import { useModal } from '@components/common/modal/useModal';
+import { Field } from '@components/form/Field';
+import { useModal } from '@components/modal/useModal';
 import PropTypes from 'prop-types';
 import PubSub from 'pubsub-js';
 import React from 'react';

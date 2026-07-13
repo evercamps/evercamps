@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import Area from '@components/common/Area';
-import { Circle } from '@components/common/Circle';
+import Area from '@components/Area';
+import { Circle } from '@components/Circle';
 import './Items.scss';
 import { Card } from '@components/admin/cms/Card';
 import { Name } from '@components/admin/oms/orderEdit/items/Name';

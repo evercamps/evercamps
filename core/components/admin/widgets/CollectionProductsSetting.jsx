@@ -1,7 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
-import { Field } from '@components/common/form/Field';
-import { SimplePageination } from '@components/common/SimplePagination';
-import Spinner from '@components/common/Spinner';
+import { Field } from '@components/form/Field';
+import { SimplePageination } from '@components/SimplePagination';
+import Spinner from '@components/Spinner';
 import CheckIcon from '@heroicons/react/outline/CheckIcon';
 import PropTypes from 'prop-types';
 import React from 'react';

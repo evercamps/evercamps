@@ -1,5 +1,5 @@
 
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 import MinusSmall from '@heroicons/react/outline/MinusSmIcon';
 import PlusSmall from '@heroicons/react/outline/PlusSmIcon';
 import PropTypes from 'prop-types';

@@ -1,8 +1,8 @@
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
 import React, { useState } from 'react';
 import './LoginForm.scss';
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 
 interface Props {
   authUrl: string;

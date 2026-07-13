@@ -1,21 +1,21 @@
-import { Checkbox } from '@components/common/form/fields/Checkbox';
-import { Date } from '@components/common/form/fields/Date';
-import { DateTime } from '@components/common/form/fields/DateTime';
-import { Hidden } from '@components/common/form/fields/Hidden';
-import { Input } from '@components/common/form/fields/Input';
-import { MultiSelect } from '@components/common/form/fields/MultiSelect';
-import { Password } from '@components/common/form/fields/Password';
-import { Radio } from '@components/common/form/fields/Radio';
-import { Select } from '@components/common/form/fields/Select';
-import { TextArea } from '@components/common/form/fields/Textarea';
-import { Toggle } from '@components/common/form/fields/Toggle';
-import { useFormContext } from '@components/common/form/Form';
+import { Checkbox } from '@components/form/fields/Checkbox';
+import { Date } from '@components/form/fields/Date';
+import { DateTime } from '@components/form/fields/DateTime';
+import { Hidden } from '@components/form/fields/Hidden';
+import { Input } from '@components/form/fields/Input';
+import { MultiSelect } from '@components/form/fields/MultiSelect';
+import { Password } from '@components/form/fields/Password';
+import { Radio } from '@components/form/fields/Radio';
+import { Select } from '@components/form/fields/Select';
+import { TextArea } from '@components/form/fields/Textarea';
+import { Toggle } from '@components/form/fields/Toggle';
+import { useFormContext } from '@components/form/Form';
 import PubSub from 'pubsub-js';
 import React from 'react';
 import isEqual from 'react-fast-compare';
 import './Field.scss';
-import { FORM_FIELD_UPDATED } from '../../../lib/util/events';
-import type { SelectOption, ValidationRule } from '../../../types/form';
+import { FORM_FIELD_UPDATED } from '../../lib/util/events';
+import type { SelectOption, ValidationRule } from '../../types/form';
 
 type FieldType =
   | 'text'

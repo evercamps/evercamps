@@ -1,8 +1,8 @@
 import {
   useCheckout,
   useCheckoutDispatch
-} from '@components/common/context/checkout';
-import RenderIfTrue from '@components/common/RenderIfTrue';
+} from '@components/context/checkout';
+import RenderIfTrue from '@components/RenderIfTrue';
 import PaypalLogo from '@components/frontStore/paypal/PaypalLogo';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';

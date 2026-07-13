@@ -1,6 +1,6 @@
-import { useCheckout, useCheckoutDispatch } from '@components/common/context/checkout';
+import { useCheckout, useCheckoutDispatch } from '@components/context/checkout';
 import MollieLogo from '@components/frontStore/mollie/MollieLogo';
-import RenderIfTrue from '@components/common/RenderIfTrue';
+import RenderIfTrue from '@components/RenderIfTrue';
 import React, { useState } from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import { PaymentMethodOption } from '../../../../../types/checkout.js';

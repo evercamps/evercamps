@@ -1,4 +1,4 @@
-import Error from '@components/common/form/fields/Error';
+import Error from '@components/form/fields/Error';
 import PropTypes from 'prop-types';
 import React from 'react';
 import '../Field.scss';

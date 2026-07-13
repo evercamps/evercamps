@@ -1,7 +1,7 @@
 import { CreateVariant } from '@components/admin/catalog/productEdit/variants/CreateVariant';
 import { Variant } from '@components/admin/catalog/productEdit/variants/Variant';
 import { Card } from '@components/admin/cms/Card';
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useQuery } from 'urql';

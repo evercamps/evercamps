@@ -1,7 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
-import Area from '@components/common/Area';
-import { Field } from '@components/common/form/Field';
-import { Input } from '@components/common/form/fields/Input';
+import Area from '@components/Area';
+import { Field } from '@components/form/Field';
+import { Input } from '@components/form/fields/Input';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Select from 'react-select';

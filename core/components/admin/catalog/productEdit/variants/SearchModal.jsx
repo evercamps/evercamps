@@ -1,6 +1,6 @@
 import { VariantType } from '@components/admin/catalog/productEdit/variants/VariantType';
-import { useAppState } from '@components/common/context/app';
-import { Input } from '@components/common/form/fields/Input';
+import { useAppState } from '@components/context/app';
+import { Input } from '@components/form/fields/Input';
 import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 import { toast } from 'react-toastify';

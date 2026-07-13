@@ -1,6 +1,6 @@
-import { useCheckoutStepsDispatch } from '@components/common/context/checkoutSteps';
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
+import { useCheckoutStepsDispatch } from '@components/context/checkoutSteps';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

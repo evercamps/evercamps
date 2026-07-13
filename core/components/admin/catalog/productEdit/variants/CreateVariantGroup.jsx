@@ -1,6 +1,6 @@
-import { Field } from '@components/common/form/Field';
-import { useFormContext } from '@components/common/form/Form';
-import Spinner from '@components/common/Spinner';
+import { Field } from '@components/form/Field';
+import { useFormContext } from '@components/form/Form';
+import Spinner from '@components/Spinner';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

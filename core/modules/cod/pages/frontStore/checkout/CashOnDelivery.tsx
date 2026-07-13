@@ -1,7 +1,7 @@
 import {
   useCheckout,
   useCheckoutDispatch
-} from '@components/common/context/checkout';
+} from '@components/context/checkout';
 import CODLogo from '@components/frontStore/cod/CODLogo';
 import React, { useEffect } from 'react';
 

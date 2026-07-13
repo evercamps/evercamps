@@ -1,7 +1,7 @@
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
-import { useModal } from '@components/common/modal/useModal';
-import Spinner from '@components/common/Spinner';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
+import { useModal } from '@components/modal/useModal';
+import Spinner from '@components/Spinner';
 import PropTypes from 'prop-types';
 import React from 'react';
 import CreatableSelect from 'react-select/creatable';

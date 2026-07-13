@@ -1,9 +1,9 @@
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
-import Button from '@components/common/form/Button';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
+import Button from '@components/form/Button';
 import React, { useState } from 'react';
 import './TwoFaSetupForm.scss';
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import { toast } from 'react-toastify';
 import type { TwoFASetupResult } from '../../../types/index.js';
 

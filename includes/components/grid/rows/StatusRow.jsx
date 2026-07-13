@@ -1,4 +1,4 @@
-import Dot from '@components/common/Dot';
+import Dot from '@components/Dot';
 import PropTypes from 'prop-types';
 import React from 'react';
 

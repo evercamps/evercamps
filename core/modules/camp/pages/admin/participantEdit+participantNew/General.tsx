@@ -1,7 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
-import { Field } from '@components/common/form/Field';
+import { Field } from '@components/form/Field';
 import { get } from '../../../../../lib/util/get.js';
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import React from 'react';
 
 interface ParticipantCheckoutField {

@@ -1,5 +1,5 @@
-import { useAppDispatch } from '@components/common/context/app';
-import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
+import { useAppDispatch } from '@components/context/app';
+import ProductNoThumbnail from '@components/ProductNoThumbnail';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
@@ -8,8 +8,8 @@ import { ItemVariantOptions } from './ItemVariantOptions';
 import './Items.scss';
 import Quantity from './Quantity';
 import EditParticipantForm from './EditParticipantForm';
-import { useModal } from '@components/common/modal/useModal';
-import { Form } from '@components/common/form/Form';
+import { useModal } from '@components/modal/useModal';
+import { Form } from '@components/form/Form';
 import type { CartItem, CartItemRegistration, CheckoutSetting, ParticipantCheckoutField } from '../../../../../types/checkout';
 
 interface Props {

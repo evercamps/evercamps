@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import './UpdatePasswordForm.scss';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
 function Success() {

@@ -1,6 +1,6 @@
-import { useCheckout } from '@components/common/context/checkout';
-import { AddressSummary } from '@components/common/customer/address/AddressSummary';
-import { Form } from '@components/common/form/Form';
+import { useCheckout } from '@components/context/checkout';
+import { AddressSummary } from '@components/customer/address/AddressSummary';
+import { Form } from '@components/form/Form';
 import CustomerAddressForm from '@components/frontStore/customer/address/addressForm/Index';
 import produce from 'immer';
 import PropTypes from 'prop-types';

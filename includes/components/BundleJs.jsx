@@ -1,5 +1,5 @@
-import { useAppState } from '@components/common/context/app';
-import Script from '@components/common/Script';
+import { useAppState } from '@components/context/app';
+import Script from '@components/Script';
 import React from 'react';
 import { get } from '../../lib/util/get.js';
 

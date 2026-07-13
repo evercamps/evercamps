@@ -1,5 +1,5 @@
-import Area from '@components/common/Area';
-import { Field } from '@components/common/form/Field';
+import Area from '@components/Area';
+import { Field } from '@components/form/Field';
 import { Country } from '@components/frontStore/customer/address/addressForm/Country';
 import { NameAndTelephone } from '@components/frontStore/customer/address/addressForm/NameAndTelephone';
 import { ProvinceAndPostcode } from '@components/frontStore/customer/address/addressForm/ProvinceAndPostcode';

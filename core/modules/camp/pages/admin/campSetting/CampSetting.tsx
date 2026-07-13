@@ -1,6 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
 import SettingMenu from '@components/admin/setting/SettingMenu';
-import { Form } from '@components/common/form/Form';
+import { Form } from '@components/form/Form';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 

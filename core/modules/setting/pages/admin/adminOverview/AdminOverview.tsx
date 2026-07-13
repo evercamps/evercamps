@@ -1,9 +1,9 @@
 import SettingMenu from '@components/admin/setting/SettingMenu';
 import { Card } from '@components/admin/cms/Card';
-import { Form } from '@components/common/form/Form';
-import { Field } from '@components/common/form/Field';
-import Button from '@components/common/form/Button';
-import Pagination from '@components/common/grid/Pagination';
+import { Form } from '@components/form/Form';
+import { Field } from '@components/form/Field';
+import Button from '@components/form/Button';
+import Pagination from '@components/grid/Pagination';
 import React from 'react';
 import { toast } from 'react-toastify';
 import { GraphQLFilter } from '../../../../../types';

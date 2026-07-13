@@ -1,5 +1,5 @@
 import { Card } from '@components/admin/cms/Card';
-import { AddressSummary } from '@components/common/customer/address/AddressSummary';
+import { AddressSummary } from '@components/customer/address/AddressSummary';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';

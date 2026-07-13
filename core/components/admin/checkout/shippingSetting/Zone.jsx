@@ -1,7 +1,7 @@
 import { Methods } from '@components/admin/checkout/shippingSetting/Methods';
 import ZoneForm from '@components/admin/checkout/shippingSetting/ZoneForm';
 import { Card } from '@components/admin/cms/Card';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import MapIcon from '@heroicons/react/solid/esm/LocationMarkerIcon';
 import axios from 'axios';
 import PropTypes from 'prop-types';

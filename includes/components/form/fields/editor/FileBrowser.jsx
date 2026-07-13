@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import Button from '@components/common/form/Button';
-import { Input } from '@components/common/form/fields/Input';
+import Button from '@components/form/Button';
+import { Input } from '@components/form/fields/Input';
 import './FileBrowser.scss';
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 
 function File({ file, select }) {
   const className = file.isSelected === true ? 'selected' : '';

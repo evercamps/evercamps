@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import './Items.scss';
-import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
+import ProductNoThumbnail from '@components/ProductNoThumbnail';
 
 function ItemVariantOptions({ options = [] }) {
   if (!Array.isArray(options) || !options || options.length === 0) {

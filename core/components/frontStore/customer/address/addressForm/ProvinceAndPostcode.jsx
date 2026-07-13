@@ -1,4 +1,4 @@
-import { Field } from '@components/common/form/Field';
+import { Field } from '@components/form/Field';
 import { Province } from '@components/frontStore/customer/address/addressForm/Province';
 import PropTypes from 'prop-types';
 import React from 'react';

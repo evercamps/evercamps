@@ -1,6 +1,6 @@
-import { AddressSummary } from '@components/common/customer/address/AddressSummary';
-import { Form } from '@components/common/form/Form';
-import { useModal } from '@components/common/modal/useModal';
+import { AddressSummary } from '@components/customer/address/AddressSummary';
+import { Form } from '@components/form/Form';
+import { useModal } from '@components/modal/useModal';
 import CustomerAddressForm from '@components/frontStore/customer/address/addressForm/Index';
 import PropTypes from 'prop-types';
 import React from 'react';

@@ -1,5 +1,5 @@
-import Area from '@components/common/Area';
-import { useAppState } from '@components/common/context/app';
+import Area from '@components/Area';
+import { useAppState } from '@components/context/app';
 import React from 'react';
 import { createClient, Provider } from 'urql';
 import { get } from '../../../lib/util/get.js';

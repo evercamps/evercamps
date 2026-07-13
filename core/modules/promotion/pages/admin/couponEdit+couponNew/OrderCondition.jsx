@@ -1,5 +1,5 @@
 import { RequiredProducts } from '@components/admin/promotion/couponEdit/RequireProducts';
-import { Field } from '@components/common/form/Field';
+import { Field } from '@components/form/Field';
 import PropTypes from 'prop-types';
 import React from 'react';
 

@@ -1,8 +1,8 @@
 import { VariantModal } from '@components/admin/catalog/productEdit/variants/VariantModal';
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import { Form } from '@components/common/form/Form';
-import { useAlertContext } from '@components/common/modal/Alert';
+import Button from '@components/form/Button';
+import { Form } from '@components/form/Form';
+import { useAlertContext } from '@components/modal/Alert';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';

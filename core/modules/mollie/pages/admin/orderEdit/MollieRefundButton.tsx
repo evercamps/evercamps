@@ -1,9 +1,9 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
-import { useAlertContext } from '@components/common/modal/Alert';
-import RenderIfTrue from '@components/common/RenderIfTrue';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
+import { useAlertContext } from '@components/modal/Alert';
+import RenderIfTrue from '@components/RenderIfTrue';
 import { toast } from 'react-toastify';
 import { MolliePaymentStatus } from '../../../types/molliePaymentStatus';
 

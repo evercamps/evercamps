@@ -2,7 +2,7 @@ import { ItemVariantOptions } from '@components/frontStore/checkout/cart/items/I
 import PropTypes from 'prop-types';
 import React from 'react';
 import './Items.scss';
-import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
+import ProductNoThumbnail from '@components/ProductNoThumbnail';
 
 function Items({ items, priceIncludingTax }) {
   return (

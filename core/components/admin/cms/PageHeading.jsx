@@ -1,4 +1,4 @@
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import PropTypes from 'prop-types';
 import React from 'react';
 import './PageHeading.scss';

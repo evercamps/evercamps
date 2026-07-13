@@ -1,6 +1,6 @@
 import Method from '@components/admin/checkout/shippingSetting/Method';
 import MethodForm from '@components/admin/checkout/shippingSetting/MethodForm';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import PropTypes from 'prop-types';
 import React from 'react';
 

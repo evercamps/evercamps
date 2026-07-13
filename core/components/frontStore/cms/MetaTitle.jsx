@@ -1,5 +1,5 @@
-import { useAppState } from '@components/common/context/app';
-import Title from '@components/common/Title';
+import { useAppState } from '@components/context/app';
+import Title from '@components/Title';
 import React from 'react';
 import { get } from '../../../lib/util/get.js';
 

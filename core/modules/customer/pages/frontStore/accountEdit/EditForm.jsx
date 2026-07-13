@@ -1,4 +1,4 @@
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import EmailIcon from '@heroicons/react/outline/MailIcon';
 import User from '@heroicons/react/outline/UserIcon';
 import PropTypes from 'prop-types';

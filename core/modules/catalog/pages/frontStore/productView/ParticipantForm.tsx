@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import type { ParticipantCheckoutField } from '../../../../../types/checkout';
 

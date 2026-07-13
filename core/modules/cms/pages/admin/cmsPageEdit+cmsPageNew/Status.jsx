@@ -1,4 +1,4 @@
-import { Toggle } from '@components/common/form/fields/Toggle';
+import { Toggle } from '@components/form/fields/Toggle';
 import PropTypes from 'prop-types';
 import React from 'react';
 

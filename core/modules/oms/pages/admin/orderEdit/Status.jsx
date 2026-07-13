@@ -1,4 +1,4 @@
-import Badge from '@components/common/Badge';
+import Badge from '@components/Badge';
 import PropTypes from 'prop-types';
 import React from 'react';
 

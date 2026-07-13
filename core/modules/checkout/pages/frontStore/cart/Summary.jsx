@@ -1,5 +1,5 @@
-import Area from '@components/common/Area';
-import Button from '@components/common/form/Button';
+import Area from '@components/Area';
+import Button from '@components/form/Button';
 import { Tax } from '@components/frontStore/checkout/checkout/summary/cart/Tax';
 import { Total } from '@components/frontStore/checkout/checkout/summary/cart/Total';
 import PropTypes from 'prop-types';

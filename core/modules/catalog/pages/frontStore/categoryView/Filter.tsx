@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import Area from '@components/common/Area';
-import { useAppDispatch } from '@components/common/context/app';
+import Area from '@components/Area';
+import { useAppDispatch } from '@components/context/app';
 import './Filter.scss';
 import { AttributeFilter } from '@components/frontStore/catalog/categoryView/filter/AttributeFilter';
 import { CategoryFilter } from '@components/frontStore/catalog/categoryView/filter/CategoryFilter';

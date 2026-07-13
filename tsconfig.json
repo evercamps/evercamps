@@ -20,8 +20,9 @@
     "allowArbitraryExtensions": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
+    "rootDirs": ["./core", "./includes"],
     "paths": {
-      "@components/*": ["./core/components/*"]
+      "@components/*": ["./core/components/*", "./includes/components/*"]
     }
   },
   "include": ["includes", "core"]

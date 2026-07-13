@@ -1,5 +1,5 @@
-import Area from '@components/common/Area';
-import { useAppState } from '@components/common/context/app';
+import Area from '@components/Area';
+import { useAppState } from '@components/context/app';
 import { Empty } from '@components/frontStore/checkout/cart/Empty';
 import Items from '@components/frontStore/checkout/cart/items/Items';
 import React from 'react';

@@ -1,8 +1,8 @@
 import CategoryTree from '@components/admin/catalog/productEdit/category/CategoryTree';
 import { Card } from '@components/admin/cms/Card';
-import Area from '@components/common/Area';
-import { Field } from '@components/common/form/Field';
-import Editor from '@components/common/form/fields/Editor';
+import Area from '@components/Area';
+import { Field } from '@components/form/Field';
+import Editor from '@components/form/fields/Editor';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { get } from '../../../../../lib/util/get.js';

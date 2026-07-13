@@ -1,4 +1,4 @@
-import { useAppDispatch } from '@components/common/context/app';
+import { useAppDispatch } from '@components/context/app';
 import PropTypes from 'prop-types';
 import React from 'react';
 import './Pagination.scss';

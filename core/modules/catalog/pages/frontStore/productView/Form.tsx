@@ -1,15 +1,15 @@
-import Area from '@components/common/Area';
-import { useAppDispatch, useAppState } from '@components/common/context/app';
-import Button from '@components/common/form/Button';
-import { Field } from '@components/common/form/Field';
-import { Form } from '@components/common/form/Form';
-import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
+import Area from '@components/Area';
+import { useAppDispatch, useAppState } from '@components/context/app';
+import Button from '@components/form/Button';
+import { Field } from '@components/form/Field';
+import { Form } from '@components/form/Form';
+import ProductNoThumbnail from '@components/ProductNoThumbnail';
 import produce from 'immer';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import './Form.scss';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import ParticipantForm from './ParticipantForm';
 import type { ParticipantCheckoutField, CheckoutSetting } from '../../../../../types/checkout';
 

@@ -1,7 +1,7 @@
-import { useCheckoutSteps, type Step } from '@components/common/context/checkoutSteps';
+import { useCheckoutSteps, type Step } from '@components/context/checkoutSteps';
 import axios from 'axios';
 import React, { useMemo, useState } from 'react';
-import type { PaymentMethodOption } from '../../../types/checkout';
+import type { PaymentMethodOption } from '../../types/checkout';
 
 interface CheckoutContextValue {
   steps: Step[] | undefined;

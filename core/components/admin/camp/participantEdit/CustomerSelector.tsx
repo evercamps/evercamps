@@ -1,7 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import { SimplePageination } from '@components/common/SimplePagination';
-import Spinner from '@components/common/Spinner';
+import Button from '@components/form/Button';
+import { SimplePageination } from '@components/SimplePagination';
+import Spinner from '@components/Spinner';
 import CheckIcon from '@heroicons/react/outline/CheckIcon';
 import React from 'react';
 import { toast } from 'react-toastify';

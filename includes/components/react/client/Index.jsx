@@ -1,6 +1,6 @@
-import Area from '@components/common/Area';
-import { App } from '@components/common/react/client/Client';
-import { HotReload } from '@components/common/react/client/HotReload';
+import Area from '@components/Area';
+import { App } from '@components/react/client/Client';
+import { HotReload } from '@components/react/client/HotReload';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import hot from 'webpack-hot-middleware/client?path=/eHot&reload=true&overlay=true';

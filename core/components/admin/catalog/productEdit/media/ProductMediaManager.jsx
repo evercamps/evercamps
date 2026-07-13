@@ -7,7 +7,7 @@ import uniqid from 'uniqid';
 import { toast } from 'react-toastify';
 import { get } from '../../../../../lib/util/get.js';
 import './ProductMediaManager.scss';
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 
 function Upload({ addImage, productImageUploadUrl }) {
   const [uploading, setUploading] = React.useState(false);

@@ -1,6 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
-import Button from '@components/common/form/Button';
-import RenderIfTrue from '@components/common/RenderIfTrue';
+import Button from '@components/form/Button';
+import RenderIfTrue from '@components/RenderIfTrue';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import React from 'react';

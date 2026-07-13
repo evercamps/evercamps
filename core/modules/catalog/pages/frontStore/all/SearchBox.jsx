@@ -1,4 +1,4 @@
-import { Input } from '@components/common/form/fields/Input';
+import { Input } from '@components/form/fields/Input';
 import XIcon from '@heroicons/react/solid/esm/XIcon';
 import PropTypes from 'prop-types';
 import React, { useRef, useState } from 'react';

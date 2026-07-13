@@ -1,10 +1,10 @@
-import Area from '@components/common/Area';
-import { CheckoutProvider } from '@components/common/context/checkout';
+import Area from '@components/Area';
+import { CheckoutProvider } from '@components/context/checkout';
 import {
   CheckoutSteps,
   useCheckoutSteps,
   useCheckoutStepsDispatch
-} from '@components/common/context/checkoutSteps';
+} from '@components/context/checkoutSteps';
 import Chervon from '@heroicons/react/outline/ChevronRightIcon';
 import PropTypes from 'prop-types';
 import React from 'react';

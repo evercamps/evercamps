@@ -1,8 +1,8 @@
-import Button from '@components/common/form/Button';
+import Button from '@components/form/Button';
 import produce from 'immer';
 import React, { useReducer } from 'react';
 import ReactDOM from 'react-dom';
-import { assign } from '../../../lib/util/assign.js';
+import { assign } from '../../lib/util/assign.js';
 import './Alert.scss';
 import { Card } from '@components/admin/cms/Card';
 

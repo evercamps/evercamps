@@ -1,11 +1,11 @@
 import { Card } from '@components/admin/cms/Card';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { useQuery } from 'urql';
 
 import './Registrations.scss';
 import AddRegistrations from '@components/admin/camp/participantEdit/AddRegistrations.jsx';
-import Spinner from '@components/common/Spinner';
+import Spinner from '@components/Spinner';
 
 const RegistrationsQuery = `
   query Query($participantUuid: String!, $filters: [FilterInput!]) {

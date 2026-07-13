@@ -1,7 +1,7 @@
 import { SearchModal } from '@components/admin/catalog/productEdit/variants/SearchModal';
 import { VariantType } from '@components/admin/catalog/productEdit/variants/VariantType';
-import { Input } from '@components/common/form/fields/Input';
-import { useAlertContext } from '@components/common/modal/Alert';
+import { Input } from '@components/form/fields/Input';
+import { useAlertContext } from '@components/modal/Alert';
 import PropTypes from 'prop-types';
 import React from 'react';
 

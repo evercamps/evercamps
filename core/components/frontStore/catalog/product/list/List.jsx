@@ -1,4 +1,4 @@
-import Area from '@components/common/Area';
+import Area from '@components/Area';
 import { Name } from '@components/frontStore/catalog/product/list/item/Name';
 import { Price } from '@components/frontStore/catalog/product/list/item/Price';
 import { Thumbnail } from '@components/frontStore/catalog/product/list/item/Thumbnail';

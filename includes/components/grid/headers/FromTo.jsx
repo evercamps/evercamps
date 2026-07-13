@@ -1,4 +1,4 @@
-import { Input } from '@components/common/form/fields/Input';
+import { Input } from '@components/form/fields/Input';
 import PropTypes from 'prop-types';
 import React from 'react';
 

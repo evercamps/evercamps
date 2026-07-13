@@ -1,4 +1,4 @@
-import { Select } from '@components/common/form/fields/Select';
+import { Select } from '@components/form/fields/Select';
 import PropTypes from 'prop-types';
 import React from 'react';
 

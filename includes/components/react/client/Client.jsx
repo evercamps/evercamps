@@ -1,7 +1,7 @@
-import Area from '@components/common/Area';
-import { AppProvider } from '@components/common/context/app';
-import { Alert } from '@components/common/modal/Alert';
-import Head from '@components/common/react/Head';
+import Area from '@components/Area';
+import { AppProvider } from '@components/context/app';
+import { Alert } from '@components/modal/Alert';
+import Head from '@components/react/Head';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { createClient, Provider } from 'urql';

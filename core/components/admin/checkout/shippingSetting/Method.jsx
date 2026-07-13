@@ -1,5 +1,5 @@
 import MethodForm from '@components/admin/checkout/shippingSetting/MethodForm';
-import { useModal } from '@components/common/modal/useModal';
+import { useModal } from '@components/modal/useModal';
 import CogIcon from '@heroicons/react/outline/CogIcon';
 import PropTypes from 'prop-types';
 import React from 'react';
