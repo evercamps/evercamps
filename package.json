@@ -12,7 +12,6 @@
     "build": "node ./dist/bin/build/index.js",
     "setup": "node ./dist/bin/install/index.js",
     "compile": "rimraf ./dist && swc ./includes -d dist --config-file .swcrc --copy-files --strip-leading-paths && swc ./core -d dist --config-file .swcrc --copy-files --strip-leading-paths",
-    "compile:tsc": "rimraf ./dist && tsc -p tsconfig.includes.json && copyfiles -u 1 \"includes/**/*.{graphql,scss,json}\" dist && tsc -p tsconfig.core.json && copyfiles -u 1 \"core/**/*.{graphql,scss,json}\" dist",
     "start:debug": "node ./dist/bin/start/index.js --debug",
     "user:create": "node ./dist/bin/user/create.js",
     "user:changePassword": "node ./dist/bin/user/changePassword.js",
