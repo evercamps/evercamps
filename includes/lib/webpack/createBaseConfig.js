@@ -121,7 +121,8 @@ export function createBaseConfig(isServer) {
 
   // Resolve aliases
   const alias = {
-    '@evercamps/evercamps/components': path.resolve(__dirname, '../../components')
+    '@evercamps/evercamps/components': path.resolve(__dirname, '../../components'),
+    '@evercamps/evercamps/lib': path.resolve(__dirname, '../../lib')
   };
   if (theme) {
     alias['@components'] = [path.resolve(theme.path, 'dist/components')];

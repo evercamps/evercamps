@@ -9,9 +9,10 @@ import { isDevelopmentMode } from '../../../lib/util/isDevelopmentMode.js';
 export async function buildResolvers(isAdmin = false) {
   const typeSources = [
     path.join(
-      CONSTANTS.COREPATH,
+      CONSTANTS.ROOTPATH,
+      'dist',
       'modules',
-      '*/graphql/types/**/*.resolvers.{js,ts}'
+      '*/graphql/types/**/*.resolvers.js'
     )
   ];
 

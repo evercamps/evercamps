@@ -6,7 +6,7 @@ import { CONSTANTS } from '../../../lib/helpers.js';
 
 export function buildTypeDefs(isAdmin = false) {
   const typeSources = [
-    path.join(CONSTANTS.COREPATH, 'modules', '*/graphql/types/**/*.graphql')
+    path.join(CONSTANTS.ROOTPATH, 'dist', 'modules', '*/graphql/types/**/*.graphql')
   ];
 
   const extensions = getEnabledExtensions();

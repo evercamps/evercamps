@@ -1,5 +1,5 @@
-import { Field } from '@components/common/form/Field';
-import { validator } from '@components/common/form/validator';
+import { Field } from '@components/form/Field';
+import { validator } from '@components/form/validator';
 import React from 'react';
 import { _ } from '@evercamps/evercamps/lib/locale/translate/_';
 import { isValidNationalNumber, isTruthyFlag } from '../../../lib/nationalNumber.js';

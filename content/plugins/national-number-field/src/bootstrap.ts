@@ -1,4 +1,4 @@
-import { addProcessor } from '@evercamps/evercamps/lib/util/registry';
+import { addProcessor } from '../../../../dist/lib/util/registry.js';
 import { isValidNationalNumber, isTruthyFlag } from './lib/nationalNumber.js';
 
 interface ParticipantData {
