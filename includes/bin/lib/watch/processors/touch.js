@@ -4,6 +4,6 @@ import { CONSTANTS } from '../../../../lib/helpers.js';
 
 export function justATouch() {
   touch(
-    resolve(CONSTANTS.MODULESPATH, '../components/common/react/client/Index.js')
+    resolve(CONSTANTS.LIBPATH, '../components/react/client/Index.jsx')
   );
 }

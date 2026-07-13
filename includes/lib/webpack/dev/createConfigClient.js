@@ -91,8 +91,8 @@ export function createConfigClient(route) {
     entry[route.id] = [
       ...getComponentsByRoute(route),
       path.resolve(
-        CONSTANTS.MODULESPATH,
-        '../components/common/react/client/Index.js'
+        CONSTANTS.LIBPATH,
+        '../components/react/client/Index.jsx'
       ),
       `webpack-hot-middleware/client?path=/eHot/${route.id}&reload=true&overlay=true`
     ];
