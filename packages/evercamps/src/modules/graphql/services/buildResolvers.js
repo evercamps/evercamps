@@ -2,7 +2,7 @@ import path from 'path';
 import url from 'url';
 import { loadFiles } from '@graphql-tools/load-files';
 import { mergeResolvers } from '@graphql-tools/merge';
-import { getEnabledExtensions } from '../../../bin/extension/index.js';
+import { getEnabledExtensions } from '../../../../../../includes/bin/extension/index.js';
 import { CONSTANTS } from '../../../lib/helpers.js';
 import { isDevelopmentMode } from '../../../lib/util/isDevelopmentMode.js';
 
