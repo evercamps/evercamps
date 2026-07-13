@@ -8,7 +8,7 @@
   "license": "ISC",
   "description": "Adds a validated Belgian national number field to the participant form, with an opt-out checkbox for non-Belgian participants.",
   "scripts": {
-    "compile": "swc src -d dist --config-file ../../packages/evercamps/.swcrc --copy-files --strip-leading-paths",
+    "compile": "swc src -d dist --config-file ../../../.swcrc --copy-files --strip-leading-paths",
     "typecheck": "tsc --noEmit"
   }
 }

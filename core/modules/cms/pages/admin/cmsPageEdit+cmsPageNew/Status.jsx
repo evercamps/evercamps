@@ -1,0 +1,36 @@
+import { Toggle } from '@components/form/fields/Toggle';
+import PropTypes from 'prop-types';
+import React from 'react';
+
+export default function Status({ cmsPage = null }) {
+  return (
+    <div className="form-field-container">
+      <Toggle
+        id="status"
+        name="status"
+        label="Status"
+        value={cmsPage?.status}
+      />
+    </div>
+  );
+}
+
+Status.propTypes = {
+  cmsPage: PropTypes.shape({
+    status: PropTypes.number,
+    includeInNave: PropTypes.number
+  })
+};
+
+export const layout = {
+  areaId: 'pageEditGeneral',
+  sortOrder: 15
+};
+
+export const query = `
+  query Query {
+    cmsPage(id: getContextValue("cmsPageId", null)) {
+      status
+    }
+  }
+`;

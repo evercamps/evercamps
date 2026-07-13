@@ -1,0 +1,47 @@
+import { Field } from '@components/form/Field';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { _ } from '../../../../../lib/locale/translate/_.js';
+
+export function Country({
+  allowCountries,
+  selectedCountry = null,
+  setSelectedCountry,
+  fieldName = 'country'
+}) {
+  const onChange = (e) => {
+    setSelectedCountry(e.target.value);
+  };
+
+  return (
+    <div style={{ marginTop: '1rem' }}>
+      <Field
+        type="select"
+        value={selectedCountry || ''}
+        label={_('Country')}
+        name={fieldName}
+        placeholder={_('Country')}
+        onChange={onChange}
+        validationRules={[
+          {
+            rule: 'notEmpty',
+            message: _('Country is required')
+          }
+        ]}
+        options={allowCountries.map((c) => ({ value: c.code, text: c.name }))}
+      />
+    </div>
+  );
+}
+
+Country.propTypes = {
+  allowCountries: PropTypes.arrayOf(
+    PropTypes.shape({
+      code: PropTypes.string,
+      name: PropTypes.string
+    })
+  ).isRequired,
+  selectedCountry: PropTypes.string,
+  setSelectedCountry: PropTypes.func.isRequired,
+  fieldName: PropTypes.string
+};

@@ -1,0 +1,81 @@
+import { Card } from '@components/admin/cms/Card';
+import { Field } from '@components/form/Field';
+import PropTypes from 'prop-types';
+import React from 'react';
+
+export default function Status({ product = {
+  status: 1,
+  visibility: 1,
+  manageRegistrations: 1
+} }) {
+  return (
+    <Card title="Product status" subdued>
+      <Card.Session>
+        <Field
+          id="status"
+          name="status"
+          value={product?.status === undefined ? 1 : product.status}
+          label="Status"
+          options={[
+            { value: 0, text: 'Disabled' },
+            { value: 1, text: 'Enabled' }
+          ]}
+          type="radio"
+        />
+      </Card.Session>
+      <Card.Session>
+        <Field
+          id="visibility"
+          name="visibility"
+          value={product?.visibility === undefined ? 1 : product.visibility}
+          label="Visibility"
+          options={[
+            { value: 0, text: 'Not visible' },
+            { value: 1, text: 'Visible' }
+          ]}
+          type="radio"
+        />
+      </Card.Session>
+      <Card.Session>
+        <Field
+          id="manageRegistrations"
+          name="manage_registrations"
+          value={product?.manageRegistrations === undefined ? 1 : product.manageRegistrations}
+          label="Manage Registrations"
+          options={[
+            { value: 0, text: 'Disabled' },
+            { value: 1, text: 'Enabled' }
+          ]}
+          type="radio"
+        />
+      </Card.Session>
+    </Card>
+  );
+}
+
+Status.propTypes = {
+  product: PropTypes.shape({
+    status: PropTypes.number.isRequired,
+    visibility: PropTypes.number.isRequired,
+    manageRegistrations: PropTypes.number.isRequired
+  })
+};
+
+export const layout = {
+  areaId: 'rightSide',
+  sortOrder: 10
+};
+
+export const query = `
+  query Query {
+    product(id: getContextValue("productId", null)) {
+      status
+      visibility
+      manageRegistrations
+      category {
+        value: categoryId
+        label: name
+      }
+    }
+  }
+`;

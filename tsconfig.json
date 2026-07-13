@@ -8,7 +8,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "declaration": true,
-    "rootDir": "./packages/evercamps",
+    "rootDir": ".",
     "declarationDir": "./dist/types",
     "sourceMap": true,
     "allowJs": true,
@@ -20,9 +20,10 @@
     "allowArbitraryExtensions": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
+    "rootDirs": ["./core", "./includes"],
     "paths": {
-      "@components/*": ["./packages/evercamps/src/components/*"]
+      "@components/*": ["./core/components/*", "./includes/components/*"]
     }
   },
-  "include": ["./packages/evercamps/src"]
+  "include": ["includes", "core"]
 }
