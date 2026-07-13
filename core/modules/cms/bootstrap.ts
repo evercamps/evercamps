@@ -120,12 +120,12 @@ export default (): void => {
   registerWidget({
     type: 'text_block',
     settingComponent: path.resolve(
-      CONSTANTS.LIBPATH,
-      '../components/admin/widgets/TextBlockSetting.js'
+      CONSTANTS.ROOTPATH,
+      'dist/components/admin/widgets/TextBlockSetting.js'
     ),
     component: path.resolve(
-      CONSTANTS.LIBPATH,
-      '../components/frontStore/widgets/TextBlock.js'
+      CONSTANTS.ROOTPATH,
+      'dist/components/frontStore/widgets/TextBlock.js'
     ),
     name: 'Text block',
     description: 'A text block widget',
@@ -138,13 +138,13 @@ export default (): void => {
   registerWidget({
     type: 'basic_menu',
     settingComponent: path.resolve(
-      CONSTANTS.LIBPATH,
-      '../components/admin/widgets/BasicMenuSetting.js'
+      CONSTANTS.ROOTPATH,
+      'dist/components/admin/widgets/BasicMenuSetting.js'
     ),
     defaultSettings: {},
     component: path.resolve(
-      CONSTANTS.LIBPATH,
-      '../components/frontStore/widgets/BasicMenu.js'
+      CONSTANTS.ROOTPATH,
+      'dist/components/frontStore/widgets/BasicMenu.js'
     ),
     name: 'Menu',
     description: 'A menu widget',

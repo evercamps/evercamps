@@ -11,6 +11,29 @@ import { getRouteBuildPath } from '../../lib/webpack/getRouteBuildPath.js';
 import { generateComponentKey } from '../../lib/webpack/util/keyGenerator.js';
 import { parseGraphql } from '../../lib/webpack/util/parseGraphql.js';
 import { getEnabledWidgets } from '../../lib/widget/widgetManager.js';
+
+const areaModuleUrl = pathToFileURL(
+  path.resolve(CONSTANTS.ROOTPATH, 'includes/components/Area.tsx')
+).toString();
+const hydrateAdminModuleUrl = pathToFileURL(
+  path.resolve(
+    CONSTANTS.ROOTPATH,
+    'includes/components/react/client/HydrateAdmin.jsx'
+  )
+).toString();
+const hydrateFrontStoreModuleUrl = pathToFileURL(
+  path.resolve(
+    CONSTANTS.ROOTPATH,
+    'includes/components/react/client/HydrateFrontStore.jsx'
+  )
+).toString();
+const renderHtmlModuleUrl = pathToFileURL(
+  path.resolve(
+    CONSTANTS.ROOTPATH,
+    'includes/components/react/server/render.jsx'
+  )
+).toString();
+
 /**
  * Only pass the page routes, not api routes
  */
@@ -61,10 +84,10 @@ export async function buildEntry(routes, clientOnly = false) {
       let contentClient = `
       import React from 'react';
       import { hydrateRoot } from 'react-dom/client';
-      import { Area, setDefaultComponents } from '@evercamps/evercamps/components/common';
+      import { Area, setDefaultComponents } from '${areaModuleUrl}';
       import {${
         route.isAdmin ? 'HydrateAdmin' : 'HydrateFrontStore'
-      }} from '@evercamps/evercamps/components/common';
+      }} from '${route.isAdmin ? hydrateAdminModuleUrl : hydrateFrontStoreModuleUrl}';
       `;
       areas['*'] = areas['*'] || {};
       widgets.forEach((widget) => {
@@ -114,9 +137,9 @@ export async function buildEntry(routes, clientOnly = false) {
         contentServer += '\r\n';
         contentServer += `import { hydrateRoot } from 'react-dom/client';`;
         contentServer += '\r\n';
-        contentServer += `import { Area, setDefaultComponents } from '@evercamps/evercamps/components/common';`;
+        contentServer += `import { Area, setDefaultComponents } from '${areaModuleUrl}';`;
         contentServer += '\r\n';
-        contentServer += `import { renderHtml } from '@evercamps/evercamps/components/common';\r\n`;
+        contentServer += `import { renderHtml } from '${renderHtmlModuleUrl}';\r\n`;
         contentServer += imports.join('\r\n');
         contentServer += '\r\n';
         contentServer += `export default renderHtml;\r\n`;

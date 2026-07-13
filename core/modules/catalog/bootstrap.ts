@@ -169,12 +169,12 @@ export default (): void => {
     name: 'Collection products',
     description: 'A list of products from a collection',
     settingComponent: path.resolve(
-      CONSTANTS.LIBPATH,
-      '../components/admin/widgets/CollectionProductsSetting.js'
+      CONSTANTS.ROOTPATH,
+      'dist/components/admin/widgets/CollectionProductsSetting.js'
     ),
     component: path.resolve(
-      CONSTANTS.LIBPATH,
-      '../components/frontStore/widgets/CollectionProducts.js'
+      CONSTANTS.ROOTPATH,
+      'dist/components/frontStore/widgets/CollectionProducts.js'
     ),
     defaultSettings: {
       collection: null,
