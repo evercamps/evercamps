@@ -12,6 +12,7 @@ export async function loadCsvTranslationFiles(): Promise<
     const language = getConfig('shop.language', 'en');
     const folderPath = path.resolve(
       CONSTANTS.ROOTPATH,
+      'content',
       'translations',
       language
     );

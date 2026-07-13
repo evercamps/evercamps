@@ -5,7 +5,7 @@
   "description": "A sports camp platform with Express, React and Postgres",
   "workspaces": [
     "packages/*",
-    "extensions/*"
+    "content/plugins/*"
   ],
   "scripts": {
     "dev": "node ./packages/evercamps/dist/bin/dev/index.js",
