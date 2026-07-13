@@ -11,6 +11,7 @@ dist
 !extensions/resend
 !extensions/sendgrid
 !extensions/product_review
+!extensions/national-number-field
 /themes
 .idea/*
 /evercamps

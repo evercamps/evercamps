@@ -1,0 +1,4 @@
+extend type Participant {
+  nationalNumber: String
+  nationalNumberNotApplicable: Boolean
+}
