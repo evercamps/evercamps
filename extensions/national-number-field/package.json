@@ -1,0 +1,14 @@
+{
+  "name": "evercamps-national-number-field",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Adds a validated Belgian national number field to the participant form, with an opt-out checkbox for non-Belgian participants.",
+  "scripts": {
+    "compile": "swc src -d dist --config-file ../../packages/evercamps/.swcrc --copy-files --strip-leading-paths",
+    "typecheck": "tsc --noEmit"
+  }
+}
