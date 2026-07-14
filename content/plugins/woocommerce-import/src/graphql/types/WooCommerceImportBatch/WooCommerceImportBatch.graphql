@@ -9,6 +9,7 @@ type WooCommerceImportBatch {
   startedAt: String
   finishedAt: String
   rollbackApi: String
+  failuresApi: String
 }
 
 extend type Query {

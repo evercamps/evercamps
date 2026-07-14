@@ -43,5 +43,15 @@ export const routes: RouteDefinition[] = [
     middleware: [
       { id: 'rollbackBatch', after: ['escapeHtml'], before: ['apiResponse'] }
     ]
+  },
+
+  {
+    routeId: 'batchFailures',
+    region: 'api',
+    path: '/wc-import/batches/:id/failures',
+    methods: ['GET'],
+    middleware: [
+      { id: 'batchFailures', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
   }
 ];

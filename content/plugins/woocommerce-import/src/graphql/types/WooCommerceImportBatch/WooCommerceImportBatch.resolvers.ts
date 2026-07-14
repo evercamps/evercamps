@@ -16,6 +16,7 @@ export default {
     errorMessage: (batch: ImportBatchSummary) => batch.error_message,
     startedAt: (batch: ImportBatchSummary) => batch.started_at,
     finishedAt: (batch: ImportBatchSummary) => batch.finished_at,
-    rollbackApi: (batch: ImportBatchSummary) => buildUrl('rollbackBatch', { id: batch.uuid })
+    rollbackApi: (batch: ImportBatchSummary) => buildUrl('rollbackBatch', { id: batch.uuid }),
+    failuresApi: (batch: ImportBatchSummary) => buildUrl('batchFailures', { id: batch.uuid })
   }
 };

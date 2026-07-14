@@ -2,6 +2,8 @@ import { Card } from '@components/admin/cms/Card';
 import SettingMenu from '@components/admin/setting/SettingMenu';
 import { Field } from '@components/form/Field';
 import { Form } from '@components/form/Form';
+import Modal from '@components/modal/Modal';
+import { useModal } from '@components/modal/useModal';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -22,6 +24,12 @@ interface ImportBatch {
   startedAt: string;
   finishedAt?: string | null;
   rollbackApi: string;
+  failuresApi: string;
+}
+
+interface FailedProduct {
+  externalProductId: number;
+  errorMessage: string | null;
 }
 
 interface Props {
@@ -62,13 +70,77 @@ function ImportAction({ importProductsApi }: { importProductsApi: string }) {
       <p>Fetch every product from the configured WooCommerce store and create or update it here.</p>
       <button
         type="button"
-        className="btn btn-primary"
+        className="button primary"
         disabled={isImporting}
         onClick={() => runImport()}
       >
         {isImporting ? 'Importing…' : 'Import products now'}
       </button>
     </Card.Session>
+  );
+}
+
+function FailedCount({ batch }: { batch: ImportBatch }) {
+  const modal = useModal();
+  const [isLoading, setIsLoading] = useState(false);
+  const [failures, setFailures] = useState<FailedProduct[] | null>(null);
+
+  const showFailures = async () => {
+    modal.openModal();
+    if (failures !== null) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await axios.get(batch.failuresApi, {
+        validateStatus: () => true
+      });
+      if (response.status !== 200) {
+        throw new Error(response.data?.error?.message ?? 'Could not load failures');
+      }
+      setFailures(response.data.data);
+    } catch (e) {
+      toast.error((e as Error).message);
+      setFailures([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (batch.totalFailed === 0) {
+    return <>{batch.totalFailed}</>;
+  }
+
+  return (
+    <>
+      <button type="button" className="text-critical underline" onClick={() => showFailures()}>
+        {batch.totalFailed}
+      </button>
+      {modal.state.showing && (
+        <Modal modal={modal} title="Failed products">
+          {isLoading && <p>Loading…</p>}
+          {!isLoading && failures?.length === 0 && <p>No failure details found for this batch.</p>}
+          {!isLoading && failures && failures.length > 0 && (
+            <table className="table table-auto w-full">
+              <thead>
+                <tr>
+                  <th>WooCommerce product ID</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                {failures.map((failure) => (
+                  <tr key={failure.externalProductId}>
+                    <td>{failure.externalProductId}</td>
+                    <td>{failure.errorMessage}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Modal>
+      )}
+    </>
   );
 }
 
@@ -124,7 +196,9 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
               <td>{batch.status}</td>
               <td>{batch.totalCreated}</td>
               <td>{batch.totalUpdated}</td>
-              <td>{batch.totalFailed}</td>
+              <td>
+                <FailedCount batch={batch} />
+              </td>
               <td>
                 {(batch.status === 'failed' || batch.status === 'partial') && (
                   <button
@@ -231,6 +305,7 @@ export const query = `
       startedAt
       finishedAt
       rollbackApi
+      failuresApi
     }
   }
 `;

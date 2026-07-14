@@ -1,0 +1,5 @@
+{
+  "methods": ["GET"],
+  "path": "/wc-import/batches/:id/failures",
+  "access": "private"
+}

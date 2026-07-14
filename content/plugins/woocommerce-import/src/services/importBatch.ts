@@ -126,6 +126,27 @@ export async function listBatches(limit = 20): Promise<ImportBatchSummary[]> {
   return query.execute(pool);
 }
 
+export interface FailedProductRow {
+  external_product_id: number;
+  error_message: string | null;
+}
+
+export async function listFailedRows(batchUuid: string): Promise<FailedProductRow[]> {
+  const batch = await select()
+    .from('woocommerce_import_batch')
+    .where('uuid', '=', batchUuid)
+    .load(pool);
+  if (!batch) {
+    throw new Error('Import batch not found.');
+  }
+
+  return select('external_product_id', 'error_message')
+    .from('woocommerce_product_map')
+    .where('last_batch_id', '=', batch.woocommerce_import_batch_id)
+    .and('status', '=', 'failed')
+    .execute(pool);
+}
+
 export async function rollbackBatch(
   uuid: string,
   context: Record<string, unknown>
