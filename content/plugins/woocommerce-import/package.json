@@ -1,0 +1,14 @@
+{
+  "name": "evercamps-woocommerce-import",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Imports and updates products from a WooCommerce store via the WooCommerce REST API.",
+  "scripts": {
+    "compile": "swc src -d dist --config-file ../../../.swcrc --copy-files --strip-leading-paths",
+    "typecheck": "tsc --noEmit"
+  }
+}
