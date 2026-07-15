@@ -17,7 +17,7 @@ export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
     throw new Error(`WooCommerce product ${wcProduct.id} has an invalid price.`);
   }
 
-  const weight = wcProduct.weight ? parseFloat(wcProduct.weight) : undefined;
+  const weight = wcProduct.weight ? parseFloat(wcProduct.weight) : 0;
 
   return {
     name: wcProduct.name,
@@ -33,7 +33,7 @@ export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
     manage_stock: wcProduct.manage_stock ? 1 : 0,
     stock_availability: wcProduct.stock_status === 'outofstock' ? 0 : 1,
     status: wcProduct.status === 'publish' ? 1 : 0,
-    weight: Number.isNaN(weight as number) ? undefined : weight,
+    weight: Number.isNaN(weight) ? 0 : weight,
     images: (wcProduct.images || []).map((image) => image.src),
     group_id: DEFAULT_ATTRIBUTE_GROUP_ID,
     visibility: 1,

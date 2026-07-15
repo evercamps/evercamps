@@ -21,7 +21,7 @@ function Modal({ modal, title, children, primaryAction = null }) {
                   <Button
                     title="Close"
                     variant="secondary"
-                    onAction={modal.closeModal()}
+                    onAction={modal.closeModal}
                   />
                   {primaryAction && (
                     <Button

@@ -197,7 +197,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
               <td>{batch.totalCreated}</td>
               <td>{batch.totalUpdated}</td>
               <td>
-                <FailedCount batch={batch} /> (not working)
+                <FailedCount batch={batch} />
               </td>
               <td>
                 {(batch.status === 'failed' || batch.status === 'partial') && (
