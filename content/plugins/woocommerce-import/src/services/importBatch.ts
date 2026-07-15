@@ -75,6 +75,7 @@ export async function recordCreated(
 
 export async function recordUpdated(
   mapId: number,
+  productId: number,
   batchId: number,
   externalUpdatedAt?: string
 ): Promise<void> {
@@ -84,7 +85,8 @@ export async function recordUpdated(
       status: 'success',
       error_message: null,
       external_updated_at: externalUpdatedAt ?? null,
-      updated_at: new Date()
+      updated_at: new Date(),
+      product_id: productId
     })
     .where('woocommerce_product_map_id', '=', mapId)
     .execute(pool);

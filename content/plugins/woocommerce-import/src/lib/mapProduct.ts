@@ -9,7 +9,7 @@ const DEFAULT_ATTRIBUTE_GROUP_ID = 1;
 
 export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
   if (!wcProduct.sku) {
-    throw new Error(`WooCommerce product ${wcProduct.id} has no SKU, skipping.`);
+    wcProduct.sku = `wc_product_${wcProduct.id}`;
   }
 
   const price = parseFloat(wcProduct.regular_price || wcProduct.price || '0');
@@ -21,7 +21,12 @@ export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
 
   return {
     name: wcProduct.name,
-    url_key: wcProduct.slug,
+    url_key: wcProduct.slug ? wcProduct.slug : wcProduct.name.toLowerCase()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, ''),            // Trim - from end of text,
     sku: wcProduct.sku,
     price,
     qty: wcProduct.manage_stock ? (wcProduct.stock_quantity ?? 0) : 0,

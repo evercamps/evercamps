@@ -13,3 +13,4 @@ export { setContextValue } from '../../../../dist/modules/graphql/services/conte
 export { default as createProduct } from '../../../../dist/modules/catalog/services/product/createProduct.js';
 export { default as updateProduct } from '../../../../dist/modules/catalog/services/product/updateProduct.js';
 export { default as deleteProduct } from '../../../../dist/modules/catalog/services/product/deleteProduct.js';
+export { debug, error } from '../../../../dist/lib/log/logger.js';

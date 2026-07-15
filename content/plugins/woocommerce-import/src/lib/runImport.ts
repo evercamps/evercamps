@@ -1,4 +1,4 @@
-import { createProduct, updateProduct } from '../core.js';
+import { createProduct, debug, error, updateProduct } from '../core.js';
 import {
   findMapByExternalId,
   finishBatch,
@@ -47,19 +47,30 @@ export async function runImport(): Promise<ImportBatchSummary> {
 
         try {
           if (!existing || !existing.product_id) {
+            debug('creating product');
             const product = await createProduct(data, { routeId: 'importProducts' });
-            await recordCreated(batchId, wcProduct.id, product.product_id, wcProduct.date_modified);
+            if(existing && !existing.product_id) {
+              debug('udpating record');
+              await recordUpdated(existing.woocommerce_product_map_id, product.product_id, batchId, wcProduct.date_modified);
+            }
+            else{
+              debug('creating record');
+              await recordCreated(batchId, wcProduct.id, product.product_id, wcProduct.date_modified);
+            }
             totalCreated += 1;
           } else {
             const uuid = await getProductUuid(existing.product_id);
             if (!uuid) {
               throw new Error(`Local product ${existing.product_id} no longer exists.`);
             }
+            debug('updating product');
             await updateProduct(uuid, data, { routeId: 'importProducts' });
-            await recordUpdated(existing.woocommerce_product_map_id, batchId, wcProduct.date_modified);
+            await recordUpdated(existing.woocommerce_product_map_id, existing.product_id, batchId, wcProduct.date_modified);
             totalUpdated += 1;
           }
         } catch (e) {
+          
+          debug('failed updating record ' + (e as Error).message + ' ' +JSON.stringify(wcProduct));
           totalFailed += 1;
           await recordFailed(
             batchId,
