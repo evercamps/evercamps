@@ -10,6 +10,7 @@ import {
 } from '../services/importBatch.js';
 import { getWooCommerceSettings } from '../services/settings.js';
 import type { ImportBatchSummary } from '../types.js';
+import { resolveProductImages } from './importImages.js';
 import { mapProduct } from './mapProduct.js';
 import { createWooCommerceClient, fetchAllProducts } from './woocommerceClient.js';
 
@@ -46,6 +47,8 @@ export async function runImport(): Promise<ImportBatchSummary> {
         const existing = await findMapByExternalId(wcProduct.id);
 
         try {
+          data.images = await resolveProductImages(wcProduct.id, wcProduct.images || []);
+
           if (!existing || !existing.product_id) {
             debug('creating product');
             const product = await createProduct(data, { routeId: 'importProducts' });

@@ -34,7 +34,9 @@ export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
     stock_availability: wcProduct.stock_status === 'outofstock' ? 0 : 1,
     status: wcProduct.status === 'publish' ? 1 : 0,
     weight: Number.isNaN(weight) ? 0 : weight,
-    images: (wcProduct.images || []).map((image) => image.src),
+    // Populated by resolveProductImages() in runImport.ts - local media URLs,
+    // not the external WooCommerce ones, so this stays a placeholder here.
+    images: [],
     group_id: DEFAULT_ATTRIBUTE_GROUP_ID,
     visibility: 1,
     manage_registrations: 0
