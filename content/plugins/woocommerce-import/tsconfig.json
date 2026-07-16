@@ -17,7 +17,9 @@
     "strictNullChecks": true,
     "isolatedModules": false,
     "paths": {
-      "@components/*": ["../../../core/components/*", "../../../includes/components/*"]
+      "@components/*": ["../../../core/components/*", "../../../includes/components/*"],
+      "@includes/types": ["../../../includes/types/index.ts"],
+      "@includes/types/*": ["../../../includes/types/*"]
     }
   },
   "include": ["src"]

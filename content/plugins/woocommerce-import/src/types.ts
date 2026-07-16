@@ -1,3 +1,5 @@
+import type { ProductData } from '@includes/types/product';
+
 export interface WooCommerceSettings {
   storeUrl: string;
   consumerKey: string;
@@ -24,21 +26,24 @@ export interface WooCommerceProduct {
   images: WooCommerceProductImage[];
 }
 
-export interface ProductImportData {
-  name: string;
+// ProductData (core's type for createProduct/updateProduct) types status,
+// manage_stock, stock_availability, visibility and manage_registrations as
+// string/boolean, but productDataSchema.json actually accepts (and mapProduct
+// produces) the 0|1 numeric form for all of them - so those fields are
+// narrowed here instead of inherited as-is.
+export interface ProductImportData
+  extends Omit<
+    ProductData,
+    'status' | 'manage_stock' | 'stock_availability' | 'visibility' | 'manage_registrations'
+  > {
   url_key: string;
   status: 0 | 1;
-  sku: string;
-  price: number;
-  qty: number;
   manage_stock: 0 | 1;
   stock_availability: 0 | 1;
   weight?: number;
-  group_id: number;
   visibility: 0 | 1;
   manage_registrations: 0 | 1;
   images: string[];
-  [key: string]: unknown;
 }
 
 export type BatchStatus = 'running' | 'completed' | 'partial' | 'failed';

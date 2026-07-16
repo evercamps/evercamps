@@ -39,6 +39,14 @@ interface Props {
   wooCommerceImportBatches: ImportBatch[];
 }
 
+// startedAt comes through GraphQL's String scalar from a JS Date (started_at is
+// a timestamptz column), which serializes it as its epoch-ms valueOf() rather
+// than a readable date - so it has to be re-parsed as a number here.
+function formatDate(value: string): string {
+  const date = /^\d+$/.test(value) ? new Date(Number(value)) : new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
 function ImportAction({ importProductsApi }: { importProductsApi: string }) {
   const [isImporting, setIsImporting] = useState(false);
 
@@ -192,7 +200,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
         <tbody>
           {batches.map((batch) => (
             <tr key={batch.uuid}>
-              <td>{batch.startedAt}</td>
+              <td>{formatDate(batch.startedAt)}</td>
               <td>{batch.status}</td>
               <td>{batch.totalCreated}</td>
               <td>{batch.totalUpdated}</td>

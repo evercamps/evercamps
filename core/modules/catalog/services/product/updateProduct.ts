@@ -18,7 +18,7 @@ import {
   getValueSync
 } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
-import type { ProductAttributeData, ProductData, ProductInventoryData } from './createProduct.js';
+import type { ProductAttributeData, ProductData, ProductInventoryData } from '../../../../../includes/types/product.js';
 import productDataSchema from './productDataSchema.json' with { type: 'json' };
 
 function validateProductDataBeforeUpdate(data: ProductData) {
