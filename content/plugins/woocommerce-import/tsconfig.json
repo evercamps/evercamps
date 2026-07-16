@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ES2018",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "allowArbitraryExtensions": true,
+    "strictNullChecks": true,
+    "isolatedModules": false,
+    "paths": {
+      "@components/*": ["../../../core/components/*", "../../../includes/components/*"],
+      "@includes/types": ["../../../includes/types/index.ts"],
+      "@includes/types/*": ["../../../includes/types/*"]
+    }
+  },
+  "include": ["src"]
+}

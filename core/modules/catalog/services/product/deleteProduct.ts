@@ -8,7 +8,7 @@ import {
 import type { PoolClient } from '@evershop/postgres-query-builder';
 import { getConnection } from '../../../../lib/postgres/connection.js';
 import { hookable } from '../../../../lib/util/hookable.js';
-import { ProductData } from './createProduct.js';
+import type { ProductData } from '../../../../../includes/types/product.js';
 
 async function deleteProductData(uuid: string, connection: PoolClient) {
   await del('product').where('uuid', '=', uuid).execute(connection);

@@ -1,0 +1,5 @@
+{
+  "methods": ["DELETE"],
+  "path": "/wc-import/batches/:id",
+  "access": "private"
+}

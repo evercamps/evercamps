@@ -1,0 +1,4 @@
+extend type Setting {
+  wooCommerceStoreUrl: String
+  wooCommerceConsumerKey: String
+}

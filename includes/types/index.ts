@@ -10,3 +10,4 @@ export * from './graphqlFilter.js';
 export * from './collectionFilter.js';
 export * from './form.js';
 export * from './checkout.js';
+export * from './product.js';

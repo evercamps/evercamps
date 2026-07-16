@@ -1,0 +1,17 @@
+type WooCommerceImportBatch {
+  uuid: String
+  status: String
+  totalFetched: Int
+  totalCreated: Int
+  totalUpdated: Int
+  totalFailed: Int
+  errorMessage: String
+  startedAt: String
+  finishedAt: String
+  rollbackApi: String
+  failuresApi: String
+}
+
+extend type Query {
+  wooCommerceImportBatches: [WooCommerceImportBatch]
+}
