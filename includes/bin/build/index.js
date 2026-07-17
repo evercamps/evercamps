@@ -9,7 +9,7 @@ import { lockHooks } from '../../lib/util/hookable.js';
 import { lockRegistry } from '../../lib/util/registry.js';
 import { validateConfiguration } from '../../lib/util/validateConfiguration.js';
 import { isBuildRequired } from '../../lib/webpack/isBuildRequired.js';
-import { getEnabledExtensions } from '../extension/index.js';
+import { getEnabledExtensions, initExtensions } from '../extension/index.js';
 import { loadBootstrapScript } from '../lib/bootstrap/bootstrap.js';
 import { buildEntry } from '../lib/buildEntry.js';
 import { getCoreModules } from '../lib/loadModules.js';
@@ -17,6 +17,7 @@ import { compile } from './complie.js';
 import './initEnvBuild.js';
 
 /* Loading modules and initilize routes, components */
+await initExtensions();
 const modules = [...getCoreModules(), ...getEnabledExtensions()];
 
 /** Loading routes  */

@@ -1,0 +1,19 @@
+"""
+A core module or a registered content/plugins/* extension, along with its
+enabled/disabled state.
+"""
+type Plugin {
+  name: String!
+  source: String!
+  resolve: String
+  priority: Int
+  declaredEnabled: Boolean!
+  effectiveEnabled: Boolean!
+  runningEnabled: Boolean!
+  restartRequired: Boolean!
+  toggleable: Boolean!
+}
+
+extend type Query {
+  plugins: [Plugin!]!
+}

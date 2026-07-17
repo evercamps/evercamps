@@ -5,7 +5,7 @@ import { error, debug } from '../../lib/log/logger.js';
 import { lockHooks } from '../../lib/util/hookable.js';
 import { lockRegistry } from '../../lib/util/registry.js';
 import { validateConfiguration } from '../../lib/util/validateConfiguration.js';
-import { getEnabledExtensions } from '../extension/index.js';
+import { getEnabledExtensions, initExtensions } from '../extension/index.js';
 import { createApp } from './app.js';
 import { type BootstrapContext, loadBootstrapScript } from './bootstrap/bootstrap.js';
 import { migrate } from './bootstrap/migrate.js';
@@ -20,6 +20,7 @@ export const start = async function start(
   context: BootstrapContext,
   cb?: () => void
 ): Promise<void> {
+  await initExtensions();
   const app = await createApp();
   const server = http.createServer(app);
   const modules = [...getCoreModules(), ...getEnabledExtensions()];

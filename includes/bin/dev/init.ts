@@ -1,10 +1,12 @@
 import './register.js';
 import './initEnvDev.js';
 import { debug, error } from '../../lib/log/logger.js';
+import { initExtensions } from '../extension/index.js';
 import { start } from '../lib/startUp.js';
 import { compileTs } from './compileTs.js';
 import enableWatcher from './enableWatcher.js';
 
+await initExtensions();
 await compileTs();
 enableWatcher();
 start({

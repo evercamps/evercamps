@@ -7,10 +7,11 @@ import { isDevelopmentMode } from '../../lib/util/isDevelopmentMode.js';
 import { isProductionMode } from '../../lib/util/isProductionMode.js';
 import { Extension } from '../../types/extension.js';
 import { getCoreModules } from '../lib/loadModules.js';
+import { getPluginEnabledOverrides } from './pluginOverrides.js';
 
 let extensions: Extension[] | undefined = undefined;
 
-function loadExtensions(): Extension[] {
+function loadExtensions(overrides: Record<string, boolean> = {}): Extension[] {
   const coreModules = getCoreModules();
   const list = getConfig('system.extensions', []) as Extension[];
   const extensions: Extension[] = [];
@@ -23,7 +24,13 @@ function loadExtensions(): Extension[] {
         `Extension ${extension.name} is invalid. extension name must be unique.`
       );
     }
-    if (extension.enabled !== true) {
+    const enabled = Object.prototype.hasOwnProperty.call(
+      overrides,
+      extension.name
+    )
+      ? overrides[extension.name]
+      : extension.enabled;
+    if (enabled !== true) {
       warning(`Extension ${extension.name} is not enabled. Skipping.`);
       return;
     }
@@ -82,6 +89,20 @@ function loadExtensions(): Extension[] {
 export function getEnabledExtensions() {
   if (extensions === undefined) {
     extensions = loadExtensions();
+  }
+  return extensions;
+}
+
+/**
+ * Warms the extension memo using the DB-stored enabled/disabled overrides.
+ * Must be called once, before anything else touches getEnabledExtensions(),
+ * so bootstrap/migrations/routing/GraphQL schema/webpack all agree on the
+ * same list for the lifetime of the process.
+ */
+export async function initExtensions(): Promise<Extension[]> {
+  if (extensions === undefined) {
+    const overrides = await getPluginEnabledOverrides();
+    extensions = loadExtensions(overrides);
   }
   return extensions;
 }
