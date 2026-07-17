@@ -3,7 +3,7 @@ import { setContextValue } from '../../../../graphql/services/contextHelper.js';
 
 export default (request: Request): void => {
   setContextValue(request, 'pageInfo', {
-    title: 'Plugin Management',
+    title: 'Plugins',
     description: 'Activate or deactivate registered plugins'
   });
 };
