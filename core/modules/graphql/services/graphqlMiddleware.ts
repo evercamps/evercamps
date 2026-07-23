@@ -1,11 +1,20 @@
 import { execute, parse, validateSchema } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
+import type { Response, NextFunction } from 'express';
+
 import { OK } from '../../../lib/util/httpStatus.js';
 import { getContext } from './contextHelper.js';
+import { EvercampsRequest } from '../../../types/request.js';
 
-export const graphqlMiddleware = (schema) =>
-  async function graphqlMiddleware(request, response, next) {
+export const graphqlMiddleware = (schema: GraphQLSchema) =>
+  async function graphqlMiddleware(
+    request: EvercampsRequest,
+    response: Response,
+    next: NextFunction
+  ): Promise<void> {
     const { body } = request;
     const { query, variables } = body;
+
     try {
       if (!query) {
         response.status(OK).json({
@@ -15,8 +24,9 @@ export const graphqlMiddleware = (schema) =>
       }
 
       const document = parse(query);
-      // Validate the query
-      const validationErrors = validateSchema(schema, document);
+
+      const validationErrors = validateSchema(schema);
+
       if (validationErrors.length > 0) {
         next(new Error(validationErrors[0].message));
       } else {
@@ -26,8 +36,8 @@ export const graphqlMiddleware = (schema) =>
           document,
           variableValues: variables
         });
+
         if (data.errors) {
-          // Create an Error instance with message and stack trace
           next(data.errors[0]);
         } else {
           response.status(OK).json({
