@@ -5,17 +5,21 @@ import {
   setContextValue
 } from '../../../graphql/services/contextHelper.js';
 
-export default (request, response) => {
+export default (request: any, response: any) => {
   response.context = {}; // TODO: Fix this
+
   /** Some default context value */
   if (!hasContextValue(request, 'pool')) {
     setContextValue(request.app, 'pool', pool);
   }
+
   setContextValue(request, 'pool', pool);
+
   const homeUrl = getConfig(
     'shop.homeUrl',
     `${request.protocol}://${request.get('host')}`
   );
+
   setContextValue(request.app, 'homeUrl', homeUrl);
   setContextValue(request, 'currentUrl', `${homeUrl}${request.originalUrl}`);
   setContextValue(request, 'baseUrl', request.baseUrl);

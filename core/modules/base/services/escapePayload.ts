@@ -1,17 +1,18 @@
 import secret from '../../../modules/base/services/secret.js';
 
-function escapeHtmlTags(str) {
+function escapeHtmlTags(str: string): string {
   const regex = /<([a-zA-Z]+)(?:\s[^>]*)?>|<\/([a-zA-Z]+)>/g;
-  const replacements = {
+  const replacements: Record<string, string> = {
     '<': '&lt;',
     '>': '&gt;'
   };
+
   return str.replace(regex, (match) =>
     match.replace(/[<>&"']/g, (char) => replacements[char] || char)
   );
 }
 
-export default function escapePayload(obj) {
+export default function escapePayload(obj: Record<string, any>): void {
   for (const prop in obj) {
     if (typeof obj[prop] === 'string') {
       // Check if we found the secret string at the end of value

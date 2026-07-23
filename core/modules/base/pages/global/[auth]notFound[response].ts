@@ -1,7 +1,11 @@
 import { translate } from '../../../../lib/locale/translate/translate.js';
 import { setContextValue } from '../../../graphql/services/contextHelper.js';
 
-export default async (request, response, next) => {
+export default async (
+  request: any,
+  response: any,
+  next: () => void
+) => {
   if (response.statusCode !== 404) {
     next();
   } else {
@@ -9,6 +13,7 @@ export default async (request, response, next) => {
       title: translate('Not found'),
       description: translate('Page not found')
     });
+
     next();
   }
 };
