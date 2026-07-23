@@ -25,6 +25,7 @@ export interface EvercampsRequest extends ExpressRequest {
       updated_at: Date;
     };
     context?: Record<string, any>;
+    webpackMatchedRoute?: Route;
   };
   loginCustomerWithEmail: (
     email: string,

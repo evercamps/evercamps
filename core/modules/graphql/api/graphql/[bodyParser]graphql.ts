@@ -4,11 +4,13 @@ import schema, {
 } from '../../services/buildStoreFrontSchema.js';
 import { graphqlMiddleware } from '../../services/graphqlMiddleware.js';
 
-let middleware;
+let middleware: ReturnType<typeof graphqlMiddleware>;
+
 if (isDevelopmentMode()) {
   const devSchema = await rebuildStoreFrontSchema();
   middleware = graphqlMiddleware(devSchema);
 } else {
   middleware = graphqlMiddleware(schema);
 }
+
 export default middleware;

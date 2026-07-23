@@ -2,6 +2,8 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import JSON5 from 'json5';
 import uniqid from 'uniqid';
+import type { Response, NextFunction } from 'express';
+
 import { CONSTANTS } from '../../../../lib/helpers.js';
 import { error } from '../../../../lib/log/logger.js';
 import { getRoutes } from '../../../../lib/router/Router.js';
@@ -12,12 +14,17 @@ import { getRouteBuildPath } from '../../../../lib/webpack/getRouteBuildPath.js'
 import { getEnabledWidgets } from '../../../../lib/widget/widgetManager.js';
 import { loadWidgetInstances } from '../../../cms/services/widget/loadWidgetInstances.js';
 import { getContextValue } from '../../services/contextHelper.js';
+import type { EvercampsRequest } from '../../../../types/request.js';
 
-export default async (request, response, next) => {
-  let query;
+export default async (
+  request: EvercampsRequest,
+  response: Response,
+  next: NextFunction
+) => {
+  let query: string | undefined;
   getContextValue(request, 'dummy', null);
   if (isDevelopmentMode()) {
-    let route;
+    let route: any;
     if (response.statusCode === 404) {
       if (request.currentRoute?.isAdmin) {
         route = getRoutes().find((r) => r.id === 'adminNotFound');
@@ -26,7 +33,10 @@ export default async (request, response, next) => {
       }
     } else {
       // Get the 'query.graphql' from webpack compiler
-      route = request.locals.webpackMatchedRoute;
+      route = request.locals?.webpackMatchedRoute;
+    }
+    if (!route) {
+      return next();
     }
     const devMiddleware = route.webpackMiddleware;
     const { outputFileSystem } = devMiddleware.context;
@@ -48,6 +58,9 @@ export default async (request, response, next) => {
       }
     } else {
       route = request.currentRoute;
+    }
+    if (!route) {
+      return next();
     }
 
     const subPath = getRouteBuildPath(route);
@@ -78,9 +91,9 @@ export default async (request, response, next) => {
       return value;
     });
     try {
-      const json = JSON5.parse(query);
+      const json: any = JSON5.parse(query);
       // We need to get the list of applicable widgets and remove all the queries and variable that are not used
-      let applicableWidgets = [];
+      let applicableWidgets: any[] = [];
       const { currentRoute } = request;
       if (
         currentRoute?.isAdmin === false ||
@@ -91,11 +104,11 @@ export default async (request, response, next) => {
             (enabledWidget) => enabledWidget.type === widget.type
           );
           const componentPath = currentRoute?.isAdmin
-            ? widgetSpecs.settingComponent
-            : widgetSpecs.component;
+            ? widgetSpecs?.settingComponent
+            : widgetSpecs?.component;
           const componentKey = currentRoute?.isAdmin
-            ? widgetSpecs.settingComponentKey
-            : widgetSpecs.componentKey;
+            ? widgetSpecs?.settingComponentKey
+            : widgetSpecs?.componentKey;
           return {
             uuid: widget.uuid,
             type: widget.type,
@@ -110,7 +123,13 @@ export default async (request, response, next) => {
       const { fragments } = json;
       const { propsMap } = json;
       let queryStr = '';
-      let variables;
+      let variables: {
+        values: Record<string, any>;
+        defs: any[];
+      } = {
+        values: {},
+        defs: []
+      };
       if (applicableWidgets.length > 0) {
         applicableWidgets.forEach((widget) => {
           const widgetKey = widget.componentKey;
@@ -120,7 +139,7 @@ export default async (request, response, next) => {
             JSON.stringify(json.variables[widgetKey])
           );
           const regex = /\\"getWidgetSetting_([a-zA-Z0-9+/=]*)\\"/g;
-          widgetQuery = widgetQuery.replace(regex, (match, p1) => {
+          widgetQuery = widgetQuery.replace(regex, (match: string, p1: string) => {
             const base64 = p1;
             const decoded = Buffer.from(base64, 'base64').toString('ascii');
             // Accept max 2 arguments from the decoded string, the fist one is the path to the setting object (a.b.c) and the second one is the default value
@@ -140,9 +159,9 @@ export default async (request, response, next) => {
           // Use regex to find if there is any variable inside the query by checking if there is any string started with `$variable_` and no special character after that. If there is a match, we will replace it with the another unique name to make it unique
           const variableRegex = /\$variable_([a-zA-Z0-9]+)/g;
           const variableMatch = widgetQuery.match(variableRegex);
-          const variableList = [];
+          const variableList: any[] = [];
           if (variableMatch) {
-            widgetQuery = widgetQuery.replace(variableRegex, (match, p1) => {
+            widgetQuery = widgetQuery.replace(variableRegex, (match: string, p1: string) => {
               const newId = `${uniqid()}`;
               variableList.push({
                 origin: `variable_${p1}`,
@@ -164,7 +183,7 @@ export default async (request, response, next) => {
           // Now we need to process the widgetVariables.values and widgetVariables.defs
           const widgetVariablesValues = Object.keys(
             widgetVariables.values
-          ).reduce((acc, key) => {
+          ).reduce<Record<string, any>>((acc, key) => {
             const check = variableList.find(
               (variable) => variable.origin === key
             );
@@ -201,10 +220,11 @@ export default async (request, response, next) => {
             return acc;
           }, {});
           const widgetVariablesDefs = widgetVariables.defs.reduce(
-            (acc, variable) => {
+            (acc: any[], variable: any) => {
               const check = variableList.find(
-                (v) => v.origin === variable.alias
+                (v: any) => v.origin === variable.alias
               );
+
               if (check) {
                 acc.push({
                   ...variable,
@@ -213,9 +233,10 @@ export default async (request, response, next) => {
               } else {
                 acc.push(variable);
               }
+
               return acc;
             },
-            []
+            [] as any[]
           );
           widgetVariables = {
             values: widgetVariablesValues,
@@ -224,7 +245,7 @@ export default async (request, response, next) => {
           const originPropsMap = propsMap[widgetKey]; // [{origin: 'real field name', alias: 'bbbb'}, {origin: 'real field name', alias: 'ccc'}]
           const widgetUUID = `e${widget.uuid.replace(/-/g, '')}`;
           propsMap[widgetUUID] = [];
-          originPropsMap.forEach((prop) => {
+          originPropsMap.forEach((prop: any) => {
             const newAlias = `e${uniqid()}`;
             widgetQuery = widgetQuery.replace(prop.alias, newAlias);
             propsMap[widgetUUID].push({
@@ -250,7 +271,13 @@ export default async (request, response, next) => {
 
           // Now we merge the variables
           variables = Object.keys(json.variables).reduce(
-            (acc, key) => {
+            (
+              acc: {
+                values: Record<string, any>;
+                defs: any[];
+              },
+              key: string
+            ) => {
               if (
                 !enabledWidgets.find(
                   (widget) =>
@@ -261,9 +288,16 @@ export default async (request, response, next) => {
                 acc.values = { ...acc.values, ...json.variables[key].values };
                 acc.defs = [...acc.defs, ...json.variables[key].defs];
               }
+
               return acc;
             },
-            { values: {}, defs: [] }
+            {
+              values: {},
+              defs: []
+            } as {
+              values: Record<string, any>;
+              defs: any[];
+            }
           );
         });
       } else {
@@ -284,7 +318,13 @@ export default async (request, response, next) => {
         }, '');
 
         variables = Object.keys(json.variables).reduce(
-          (acc, key) => {
+          (
+            acc: {
+              values: Record<string, any>;
+              defs: any[];
+            },
+            key: string
+          ) => {
             if (
               enabledWidgets.find(
                 (widget) =>
@@ -297,9 +337,16 @@ export default async (request, response, next) => {
               acc.values = { ...acc.values, ...json.variables[key].values };
               acc.defs = [...acc.defs, ...json.variables[key].defs];
             }
+
             return acc;
           },
-          { values: {}, defs: [] }
+          {
+            values: {},
+            defs: []
+          } as {
+            values: Record<string, any>;
+            defs: any[];
+          }
         );
       }
       if (variables.defs.length > 0) {
@@ -335,8 +382,8 @@ export default async (request, response, next) => {
       request.body.propsMap = propsMap;
       next();
     } catch (e) {
-      error(e);
-      throw error;
+      error(e instanceof Error ? e.message : String(e));
+      throw e;
     }
   }
 };
