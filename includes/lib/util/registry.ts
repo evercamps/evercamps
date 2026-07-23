@@ -258,7 +258,7 @@ export async function getValue<T>(
 export function getValueSync<T>(
   name: string,
   initialization: T | SyncProcessor<T>,
-  context: Record<string, any>,
+  context?: Record<string, any>,
   validator?: (value: T) => boolean
 ): T {
   let initValue;

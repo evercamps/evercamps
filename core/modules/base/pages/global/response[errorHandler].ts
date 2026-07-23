@@ -5,7 +5,11 @@ import isDevelopmentMode from '../../../../lib/util/isDevelopmentMode.js';
 import { loadWidgetInstances } from '../../../cms/services/widget/loadWidgetInstances.js';
 import { getNotifications } from '../../services/notifications.js';
 
-export default async (request, response, next) => {
+export default async (
+  request: any,
+  response: any,
+  next: (error?: any) => void
+) => {
   try {
     /** If a rejected middleware called next(error) without throwing an error */
     if (isErrorHandlerTriggered(response)) {
@@ -24,26 +28,34 @@ export default async (request, response, next) => {
           isApi: route.isApi,
           isAdmin: route.isAdmin
         };
-        let widgetInstances;
+
+        let widgetInstances : any[];
+
         // Check if we are in the test mode
         if (process.env.NODE_ENV === 'test') {
           widgetInstances = [];
         } else {
           widgetInstances = await loadWidgetInstances(request);
         }
+
         widgetInstances = widgetInstances.map((widget) => {
-          const newWidget = {
+          const newWidget: any = {
             sortOrder: widget.sortOrder,
             areaId: widget.areaId,
             type: widget.type
           };
+
           newWidget.id = `e${widget.uuid.replace(/-/g, '')}`;
+
           if (route.isAdmin) {
             newWidget.areaId = 'widget_setting_form';
           }
+
           return newWidget;
         });
+
         response.locals.widgets = widgetInstances;
+
         if (
           (isDevelopmentMode() &&
             request.query &&
@@ -67,9 +79,6 @@ export default async (request, response, next) => {
   } catch (error) {
     if (!isErrorHandlerTriggered(response)) {
       next(error);
-    } else {
-      // Do nothing here since the next(error) is already called
-      // when the error is thrown on each middleware
     }
   }
 };

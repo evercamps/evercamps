@@ -22,7 +22,6 @@
   "license": "GNU GENERAL PUBLIC LICENSE 3.0",
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.2.0",
-    "ckeditor5": "^48",
     "@editorjs/editorjs": "^2.30.2",
     "@editorjs/header": "^2.8.7",
     "@editorjs/list": "^1.10.0",
@@ -51,6 +50,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.0",
     "boxen": "^5.1.2",
+    "ckeditor5": "^48",
     "clean-css": "^5.3.1",
     "config": "^3.3.6",
     "connect-pg-simple": "^9.0.0",
@@ -127,6 +127,7 @@
     "@types/express": "^5.0.1",
     "@types/express-session": "^1.19.0",
     "@types/jest": "^29.5.14",
+    "@types/luxon": "^3.7.2",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.14.1",
     "@types/node-cron": "^3.0.11",

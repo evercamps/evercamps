@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 import ajvErrors from 'ajv-errors';
 import addFormats from 'ajv-formats';
 
-export function getAjv() {
+export function getAjv(): Ajv {
   // Initialize the ajv instance
   const ajv = new Ajv({
     strict: false,

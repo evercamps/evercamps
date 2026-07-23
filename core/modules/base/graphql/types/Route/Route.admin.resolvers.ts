@@ -4,6 +4,7 @@ export default {
   Query: {
     routes: () => {
       const routes = getRoutes();
+
       return routes.filter((route) => route.name);
     }
   }
