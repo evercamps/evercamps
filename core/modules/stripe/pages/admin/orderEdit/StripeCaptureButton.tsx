@@ -2,58 +2,69 @@ import { Card } from '@components/admin/cms/Card';
 import Button from '@components/form/Button';
 import RenderIfTrue from '@components/RenderIfTrue';
 import axios from 'axios';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
+
+interface StripeCaptureButtonProps {
+  captureAPI: string;
+  order: {
+    paymentStatus: {
+      code: string;
+    };
+    uuid: string;
+    paymentMethod: string;
+  };
+}
 
 export default function StripeCaptureButton({
   captureAPI,
   order: { paymentStatus, uuid, paymentMethod }
-}) {
+}: StripeCaptureButtonProps) {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const onAction = async () => {
     setIsLoading(true);
-    // Use Axios to call the capture API
-    const response = await axios.post(
-      captureAPI,
-      { order_id: uuid },
-      { validateStatus: false }
-    );
-    if (!response.data.error) {
-      // Reload the page
-      window.location.reload();
-    } else {
-      toast.error(response.data.error.message);
+
+    try {
+      const response = await axios.post(
+        captureAPI,
+        { order_id: uuid },
+        { validateStatus: () => true }
+      );
+
+      if (!response.data.error) {
+        window.location.reload();
+      } else {
+        toast.error(response.data.error.message);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Something went wrong'
+      );
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
     <RenderIfTrue
       condition={
-        paymentStatus.code === 'authorized' && paymentMethod === 'stripe'
+        paymentStatus.code === 'authorized' &&
+        paymentMethod === 'stripe'
       }
     >
       <Card.Session>
         <div className="flex justify-end">
-          <Button title="Capture" onAction={onAction} isLoading={isLoading} />
+          <Button
+            title="Capture"
+            onAction={onAction}
+            isLoading={isLoading}
+          />
         </div>
       </Card.Session>
     </RenderIfTrue>
   );
 }
-
-StripeCaptureButton.propTypes = {
-  captureAPI: PropTypes.string.isRequired,
-  order: PropTypes.shape({
-    paymentStatus: PropTypes.shape({
-      code: PropTypes.string.isRequired
-    }).isRequired,
-    uuid: PropTypes.string.isRequired,
-    paymentMethod: PropTypes.string.isRequired
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'orderPaymentActions',

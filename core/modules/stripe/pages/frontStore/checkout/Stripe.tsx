@@ -2,19 +2,43 @@ import { useCheckout } from '@components/context/checkout';
 import CheckoutForm from '@components/frontStore/stripe/checkout/CheckoutForm';
 import StripeLogo from '@components/frontStore/stripe/StripeLogo';
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import PropTypes from 'prop-types';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import React from 'react';
 import smallUnit from 'zero-decimal-currencies';
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 
-// Make sure to call loadStripe outside of a component’s render to avoid
-// recreating the Stripe object on every render.
-// loadStripe is initialized with your real test publishable API key.
-let stripe;
-const stripeLoader = (publishKey) => {
+interface StripeAppProps {
+  total: number;
+  currency: string;
+  stripePublishableKey: string;
+  returnUrl: string;
+  createPaymentIntentApi: string;
+  stripePaymentMode: string;
+}
+
+interface StripeMethodProps {
+  setting: {
+    stripeDisplayName: string;
+    stripePublishableKey: string;
+    stripePaymentMode: string;
+  };
+  cart: {
+    grandTotal: {
+      value: number;
+    };
+    currency: string;
+  };
+  returnUrl: string;
+  createPaymentIntentApi: string;
+}
+
+let stripe: Promise<Stripe | null> | undefined;
+
+const stripeLoader = (publishKey: string) => {
   if (!stripe) {
     stripe = loadStripe(publishKey);
   }
+
   return stripe;
 };
 
@@ -25,17 +49,21 @@ function StripeApp({
   returnUrl,
   createPaymentIntentApi,
   stripePaymentMode
-}) {
-  const options = {
+}: StripeAppProps) {
+    const options: StripeElementsOptions = {
     mode: 'payment',
     currency: currency.toLowerCase(),
     amount: Number(smallUnit(total, currency)),
     capture_method:
       stripePaymentMode === 'capture' ? 'automatic_async' : 'manual'
   };
+
   return (
     <div className="stripe__app">
-      <Elements stripe={stripeLoader(stripePublishableKey)} options={options}>
+      <Elements
+        stripe={stripeLoader(stripePublishableKey)}
+        options={options}
+      >
         <CheckoutForm
           stripePublishableKey={stripePublishableKey}
           returnUrl={returnUrl}
@@ -46,27 +74,22 @@ function StripeApp({
   );
 }
 
-StripeApp.propTypes = {
-  stripePublishableKey: PropTypes.string.isRequired,
-  returnUrl: PropTypes.string.isRequired,
-  createPaymentIntentApi: PropTypes.string.isRequired,
-  stripePaymentMode: PropTypes.string.isRequired,
-  total: PropTypes.number.isRequired,
-  currency: PropTypes.string.isRequired
-};
-
 export default function StripeMethod({
   setting,
   cart: { grandTotal, currency },
   returnUrl,
   createPaymentIntentApi
-}) {
+}: StripeMethodProps) {
   const checkout = useCheckout();
+    if (!checkout) {
+    return null;
+  }
+
   const { paymentMethods, setPaymentMethods } = checkout;
-  // Get the selected payment method
-  const selectedPaymentMethod = paymentMethods
-    ? paymentMethods.find((paymentMethod) => paymentMethod.selected)
-    : undefined;
+
+  const selectedPaymentMethod = paymentMethods?.find(
+    (paymentMethod) => paymentMethod.selected
+  );
 
   return (
     <div>
@@ -77,20 +100,12 @@ export default function StripeMethod({
             href="#"
             onClick={(e) => {
               e.preventDefault();
+
               setPaymentMethods((previous) =>
-                previous.map((paymentMethod) => {
-                  if (paymentMethod.code === 'stripe') {
-                    return {
-                      ...paymentMethod,
-                      selected: true
-                    };
-                  } else {
-                    return {
-                      ...paymentMethod,
-                      selected: false
-                    };
-                  }
-                })
+                previous.map((paymentMethod) => ({
+                  ...paymentMethod,
+                  selected: paymentMethod.code === 'stripe'
+                }))
               );
             }}
           >
@@ -110,7 +125,8 @@ export default function StripeMethod({
             </svg>
           </a>
         )}
-        {selectedPaymentMethod && selectedPaymentMethod.code === 'stripe' && (
+
+        {selectedPaymentMethod?.code === 'stripe' && (
           <div>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -129,43 +145,27 @@ export default function StripeMethod({
             </svg>
           </div>
         )}
+
         <div>
           <StripeLogo width={100} />
         </div>
       </div>
-      <div>
-        {selectedPaymentMethod && selectedPaymentMethod.code === 'stripe' && (
-          <div className="mt-5">
-            <StripeApp
-              total={grandTotal.value}
-              currency={currency}
-              stripePublishableKey={setting.stripePublishableKey}
-              returnUrl={returnUrl}
-              createPaymentIntentApi={createPaymentIntentApi}
-              stripePaymentMode={setting.stripePaymentMode}
-            />
-          </div>
-        )}
-      </div>
+
+      {selectedPaymentMethod?.code === 'stripe' && (
+        <div className="mt-5">
+          <StripeApp
+            total={grandTotal.value}
+            currency={currency}
+            stripePublishableKey={setting.stripePublishableKey}
+            returnUrl={returnUrl}
+            createPaymentIntentApi={createPaymentIntentApi}
+            stripePaymentMode={setting.stripePaymentMode}
+          />
+        </div>
+      )}
     </div>
   );
 }
-
-StripeMethod.propTypes = {
-  setting: PropTypes.shape({
-    stripeDisplayName: PropTypes.string.isRequired,
-    stripePublishableKey: PropTypes.string.isRequired,
-    stripePaymentMode: PropTypes.string.isRequired
-  }).isRequired,
-  cart: PropTypes.shape({
-    grandTotal: PropTypes.shape({
-      value: PropTypes.number
-    }),
-    currency: PropTypes.string
-  }).isRequired,
-  returnUrl: PropTypes.string.isRequired,
-  createPaymentIntentApi: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'checkoutPaymentMethodstripe',
