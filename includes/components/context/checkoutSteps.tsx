@@ -9,6 +9,7 @@ export interface Step {
   sortOrder?: number;
   editable?: boolean;
   preview?: React.ReactNode;
+  previewTitle?: string;
 }
 
 interface CheckoutStepsDispatchValue {
