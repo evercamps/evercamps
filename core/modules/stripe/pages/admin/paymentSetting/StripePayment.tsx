@@ -1,8 +1,18 @@
 import { Card } from '@components/admin/cms/Card';
 import { Field } from '@components/form/Field';
 import { Toggle } from '@components/form/fields/Toggle';
-import PropTypes from 'prop-types';
 import React from 'react';
+
+interface StripePaymentProps {
+  setting: {
+    stripePaymentStatus: number;
+    stripeDisplayName: string;
+    stripePublishableKey: string;
+    stripeSecretKey: string;
+    stripeEndpointSecret: string;
+    stripePaymentMode: string;
+  };
+}
 
 export default function StripePayment({
   setting: {
@@ -13,7 +23,7 @@ export default function StripePayment({
     stripeEndpointSecret,
     stripePaymentMode
   }
-}) {
+}: StripePaymentProps) {
   return (
     <Card title="Stripe Payment">
       <Card.Session>
@@ -22,25 +32,30 @@ export default function StripePayment({
             <h4>Enable?</h4>
           </div>
           <div className="col-span-2">
-            <Toggle name="stripePaymentStatus" value={stripePaymentStatus} />
+            <Toggle
+              name="stripePaymentStatus"
+              value={stripePaymentStatus}
+            />
           </div>
         </div>
       </Card.Session>
+
       <Card.Session>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
-            <h4>Dislay Name</h4>
+            <h4>Display Name</h4>
           </div>
           <div className="col-span-2">
             <Field
               type="text"
               name="stripeDisplayName"
-              placeholder="Dislay Name"
+              placeholder="Display Name"
               value={stripeDisplayName}
             />
           </div>
         </div>
       </Card.Session>
+
       <Card.Session>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
@@ -56,6 +71,7 @@ export default function StripePayment({
           </div>
         </div>
       </Card.Session>
+
       <Card.Session>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
@@ -71,6 +87,7 @@ export default function StripePayment({
           </div>
         </div>
       </Card.Session>
+
       <Card.Session>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
@@ -87,6 +104,7 @@ export default function StripePayment({
           </div>
         </div>
       </Card.Session>
+
       <Card.Session>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
@@ -109,17 +127,6 @@ export default function StripePayment({
     </Card>
   );
 }
-
-StripePayment.propTypes = {
-  setting: PropTypes.shape({
-    stripePaymentStatus: PropTypes.number,
-    stripeDisplayName: PropTypes.string,
-    stripePublishableKey: PropTypes.string,
-    stripeSecretKey: PropTypes.string,
-    stripeEndpointSecret: PropTypes.string,
-    stripePaymentMode: PropTypes.string
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'paymentSetting',

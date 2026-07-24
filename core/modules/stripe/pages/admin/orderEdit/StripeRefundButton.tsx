@@ -4,18 +4,33 @@ import { Field } from '@components/form/Field';
 import { Form } from '@components/form/Form';
 import { useAlertContext } from '@components/modal/Alert';
 import RenderIfTrue from '@components/RenderIfTrue';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { toast } from 'react-toastify';
+
+interface StripeRefundButtonProps {
+  refundAPI: string;
+  order: {
+    paymentStatus: {
+      code: string;
+    };
+    orderId: string;
+    paymentMethod: string;
+    grandTotal: {
+      value: number;
+      currency: string;
+    };
+  };
+}
 
 export default function StripeRefundButton({
   refundAPI,
   order: { paymentStatus, orderId, paymentMethod, grandTotal }
-}) {
+}: StripeRefundButtonProps) {
   const { openAlert, closeAlert, dispatchAlert } = useAlertContext();
+
   return (
     <RenderIfTrue
-      condition={
+      condition={() =>
         paymentMethod === 'stripe' &&
         ['paid', 'partial_refunded'].includes(paymentStatus.code)
       }
@@ -36,38 +51,51 @@ export default function StripeRefundButton({
                       action={refundAPI}
                       submitBtn={false}
                       isJSON
-                      onSuccess={(response) => {
+                      onSuccess={(response: any) => {
                         if (response.error) {
                           toast.error(response.error.message);
+
                           dispatchAlert({
                             type: 'update',
-                            payload: { secondaryAction: { isLoading: false } }
+                            payload: {
+                              secondaryAction: {
+                                isLoading: false
+                              }
+                            }
                           });
                         } else {
-                          // Reload the page
                           window.location.reload();
                         }
                       }}
                       onValidationError={() => {
                         dispatchAlert({
                           type: 'update',
-                          payload: { secondaryAction: { isLoading: false } }
+                          payload: {
+                            secondaryAction: {
+                              isLoading: false
+                            }
+                          }
                         });
                       }}
                     >
                       <div>
                         <Field
-                          formId="stripeRefund"
+                          form="stripeRefund"
                           type="text"
                           name="amount"
                           label="Refund amount"
-                          placeHolder="Refund amount"
+                          placeholder="Refund amount"
                           value={grandTotal.value}
                           validationRules={['notEmpty']}
                           suffix={grandTotal.currency}
                         />
                       </div>
-                      <input type="hidden" name="order_id" value={orderId} />
+
+                      <input
+                        type="hidden"
+                        name="order_id"
+                        value={orderId}
+                      />
                     </Form>
                   </div>
                 ),
@@ -81,12 +109,20 @@ export default function StripeRefundButton({
                   onAction: () => {
                     dispatchAlert({
                       type: 'update',
-                      payload: { secondaryAction: { isLoading: true } }
+                      payload: {
+                        secondaryAction: {
+                          isLoading: true
+                        }
+                      }
                     });
+
                     document
                       .getElementById('stripeRefund')
-                      .dispatchEvent(
-                        new Event('submit', { cancelable: true, bubbles: true })
+                      ?.dispatchEvent(
+                        new Event('submit', {
+                          cancelable: true,
+                          bubbles: true
+                        })
                       );
                   },
                   variant: 'primary',
@@ -100,21 +136,6 @@ export default function StripeRefundButton({
     </RenderIfTrue>
   );
 }
-
-StripeRefundButton.propTypes = {
-  refundAPI: PropTypes.string.isRequired,
-  order: PropTypes.shape({
-    paymentStatus: PropTypes.shape({
-      code: PropTypes.string.isRequired
-    }).isRequired,
-    orderId: PropTypes.string.isRequired,
-    paymentMethod: PropTypes.string.isRequired,
-    grandTotal: PropTypes.shape({
-      value: PropTypes.number.isRequired,
-      currency: PropTypes.string.isRequired
-    }).isRequired
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'orderPaymentActions',
