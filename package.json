@@ -109,7 +109,7 @@
     "webpack": "^5.72.1",
     "webpack-dev-middleware": "^7.4.2",
     "webpack-hot-middleware": "^2.26.1",
-    "webpackbar": "^5.0.2",
+    "webpackbar": "^7.0.0",
     "winston": "^3.3.3",
     "xlsx": "^0.18.5",
     "yargs": "^17.7.2",

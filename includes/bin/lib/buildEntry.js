@@ -13,24 +13,24 @@ import { parseGraphql } from '../../lib/webpack/util/parseGraphql.js';
 import { getEnabledWidgets } from '../../lib/widget/widgetManager.js';
 
 const areaModuleUrl = pathToFileURL(
-  path.resolve(CONSTANTS.ROOTPATH, 'includes/components/Area.tsx')
+  path.resolve(CONSTANTS.ROOTPATH, 'dist/components/Area.js')
 ).toString();
 const hydrateAdminModuleUrl = pathToFileURL(
   path.resolve(
     CONSTANTS.ROOTPATH,
-    'includes/components/react/client/HydrateAdmin.jsx'
+    'dist/components/react/client/HydrateAdmin.js'
   )
 ).toString();
 const hydrateFrontStoreModuleUrl = pathToFileURL(
   path.resolve(
     CONSTANTS.ROOTPATH,
-    'includes/components/react/client/HydrateFrontStore.jsx'
+    'dist/components/react/client/HydrateFrontStore.js'
   )
 ).toString();
 const renderHtmlModuleUrl = pathToFileURL(
   path.resolve(
     CONSTANTS.ROOTPATH,
-    'includes/components/react/server/render.jsx'
+    'dist/components/react/server/render.js'
   )
 ).toString();
 
