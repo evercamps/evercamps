@@ -8,6 +8,7 @@ export default {
   },
   WooCommerceImportBatch: {
     uuid: (batch: ImportBatchSummary) => batch.uuid,
+    type: (batch: ImportBatchSummary) => batch.type,
     status: (batch: ImportBatchSummary) => batch.status,
     totalFetched: (batch: ImportBatchSummary) => batch.total_fetched,
     totalCreated: (batch: ImportBatchSummary) => batch.total_created,

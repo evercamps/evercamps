@@ -1,23 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
 import { INTERNAL_SERVER_ERROR, OK } from '../../core.js';
-import { listFailedRows } from '../../services/importBatch.js';
+import { runOrderImport } from '../../lib/runOrderImport.js';
 
 // The 3rd (unused) `next` param is required - see importProducts.ts for why.
 export default async (request: Request, response: Response, next: NextFunction): Promise<void> => {
   try {
-    const idParam = request.params.id;
-    const id = Array.isArray(idParam) ? idParam[0] : idParam;
-    const rows = await listFailedRows(id);
+    const batch = await runOrderImport();
     response.status(OK);
-    response.json({
-      data: rows.map((row) => {
-        const raw = row as unknown as Record<string, unknown>;
-        return {
-          externalId: raw.external_product_id ?? raw.external_order_id,
-          errorMessage: row.error_message
-        };
-      })
-    });
+    response.json({ data: batch });
   } catch (e) {
     response.status(INTERNAL_SERVER_ERROR);
     response.json({

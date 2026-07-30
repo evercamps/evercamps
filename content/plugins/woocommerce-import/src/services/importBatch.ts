@@ -1,10 +1,10 @@
 import { del, insert, select, update } from '@evershop/postgres-query-builder';
 import { deleteProduct, pool } from '../core.js';
-import type { BatchStatus, ImportBatchSummary } from '../types.js';
+import type { BatchStatus, BatchType, ImportBatchSummary } from '../types.js';
 
-export async function startBatch(): Promise<number> {
+export async function startBatch(type: BatchType = 'products'): Promise<number> {
   const result = await insert('woocommerce_import_batch')
-    .given({ status: 'running' })
+    .given({ status: 'running', type })
     .execute(pool);
   return result.insertId;
 }
@@ -133,7 +133,12 @@ export interface FailedProductRow {
   error_message: string | null;
 }
 
-export async function listFailedRows(batchUuid: string): Promise<FailedProductRow[]> {
+export interface FailedOrderRow {
+  external_order_id: number;
+  error_message: string | null;
+}
+
+async function loadBatch(batchUuid: string): Promise<ImportBatchSummary> {
   const batch = await select()
     .from('woocommerce_import_batch')
     .where('uuid', '=', batchUuid)
@@ -141,7 +146,10 @@ export async function listFailedRows(batchUuid: string): Promise<FailedProductRo
   if (!batch) {
     throw new Error('Import batch not found.');
   }
+  return batch;
+}
 
+async function listFailedProductRows(batch: ImportBatchSummary): Promise<FailedProductRow[]> {
   return select('external_product_id', 'error_message')
     .from('woocommerce_product_map')
     .where('last_batch_id', '=', batch.woocommerce_import_batch_id)
@@ -149,18 +157,25 @@ export async function listFailedRows(batchUuid: string): Promise<FailedProductRo
     .execute(pool);
 }
 
-export async function rollbackBatch(
-  uuid: string,
-  context: Record<string, unknown>
-): Promise<ImportBatchSummary> {
-  const batch = await select()
-    .from('woocommerce_import_batch')
-    .where('uuid', '=', uuid)
-    .load(pool);
-  if (!batch) {
-    throw new Error('Import batch not found.');
-  }
+async function listFailedOrderRows(batch: ImportBatchSummary): Promise<FailedOrderRow[]> {
+  return select('external_order_id', 'error_message')
+    .from('woocommerce_order_map')
+    .where('last_batch_id', '=', batch.woocommerce_import_batch_id)
+    .and('status', '=', 'failed')
+    .execute(pool);
+}
 
+export async function listFailedRows(
+  batchUuid: string
+): Promise<(FailedProductRow | FailedOrderRow)[]> {
+  const batch = await loadBatch(batchUuid);
+  return batch.type === 'orders' ? listFailedOrderRows(batch) : listFailedProductRows(batch);
+}
+
+async function rollbackProductBatch(
+  batch: ImportBatchSummary,
+  context: Record<string, unknown>
+): Promise<void> {
   const rows = await select()
     .from('woocommerce_product_map')
     .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
@@ -181,9 +196,146 @@ export async function rollbackBatch(
   await del('woocommerce_product_map')
     .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
     .execute(pool);
+}
+
+async function rollbackOrderBatch(batch: ImportBatchSummary): Promise<void> {
+  const rows = await select()
+    .from('woocommerce_order_map')
+    .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
+    .execute(pool);
+
+  for (const row of rows) {
+    if (row.order_id) {
+      // order_item/order_activity/payment_transaction/shipment cascade off
+      // "order" - order_address and cart rows don't, so they're cleaned up
+      // explicitly using the ids recorded on the map row at import time.
+      await del('order').where('order_id', '=', row.order_id).execute(pool);
+    }
+    if (row.billing_address_id) {
+      await del('order_address')
+        .where('order_address_id', '=', row.billing_address_id)
+        .execute(pool);
+    }
+    if (row.shipping_address_id && row.shipping_address_id !== row.billing_address_id) {
+      await del('order_address')
+        .where('order_address_id', '=', row.shipping_address_id)
+        .execute(pool);
+    }
+    if (row.cart_id) {
+      await del('cart').where('cart_id', '=', row.cart_id).execute(pool);
+    }
+  }
+
+  await del('woocommerce_order_map')
+    .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
+    .execute(pool);
+}
+
+export async function rollbackBatch(
+  uuid: string,
+  context: Record<string, unknown>
+): Promise<ImportBatchSummary> {
+  const batch = await loadBatch(uuid);
+
+  if (batch.type === 'orders') {
+    await rollbackOrderBatch(batch);
+  } else {
+    await rollbackProductBatch(batch, context);
+  }
+
   await del('woocommerce_import_batch')
     .where('woocommerce_import_batch_id', '=', batch.woocommerce_import_batch_id)
     .execute(pool);
 
   return batch;
+}
+
+export async function findOrderMapByExternalId(externalId: number) {
+  return select()
+    .from('woocommerce_order_map')
+    .where('external_order_id', '=', externalId)
+    .load(pool);
+}
+
+export async function recordOrderCreated(
+  batchId: number,
+  externalId: number,
+  orderId: number,
+  cartId: number,
+  billingAddressId: number | null,
+  shippingAddressId: number | null,
+  externalUpdatedAt?: string,
+  existingMapId?: number
+): Promise<void> {
+  const data = {
+    order_id: orderId,
+    cart_id: cartId,
+    billing_address_id: billingAddressId,
+    shipping_address_id: shippingAddressId,
+    last_batch_id: batchId,
+    status: 'success',
+    error_message: null,
+    external_updated_at: externalUpdatedAt ?? null
+  };
+
+  // A map row can already exist with order_id = null when a previous run
+  // failed to create this order - update that row in place instead of
+  // inserting a second one, since external_order_id is unique.
+  if (existingMapId) {
+    await update('woocommerce_order_map')
+      .given({ ...data, updated_at: new Date() })
+      .where('woocommerce_order_map_id', '=', existingMapId)
+      .execute(pool);
+  } else {
+    await insert('woocommerce_order_map')
+      .given({ ...data, external_order_id: externalId, created_in_batch_id: batchId })
+      .execute(pool);
+  }
+}
+
+export async function recordOrderUpdated(
+  mapId: number,
+  batchId: number,
+  externalUpdatedAt?: string
+): Promise<void> {
+  await update('woocommerce_order_map')
+    .given({
+      last_batch_id: batchId,
+      status: 'success',
+      error_message: null,
+      external_updated_at: externalUpdatedAt ?? null,
+      updated_at: new Date()
+    })
+    .where('woocommerce_order_map_id', '=', mapId)
+    .execute(pool);
+}
+
+export async function recordOrderFailed(
+  batchId: number,
+  externalId: number,
+  errorMessage: string,
+  existingMapId?: number
+): Promise<void> {
+  if (existingMapId) {
+    await update('woocommerce_order_map')
+      .given({
+        last_batch_id: batchId,
+        status: 'failed',
+        error_message: errorMessage,
+        updated_at: new Date()
+      })
+      .where('woocommerce_order_map_id', '=', existingMapId)
+      .execute(pool);
+  } else {
+    await insert('woocommerce_order_map')
+      .given({
+        external_order_id: externalId,
+        order_id: null,
+        created_in_batch_id: batchId,
+        last_batch_id: batchId,
+        status: 'failed',
+        error_message: errorMessage
+      })
+      .execute(pool);
+  }
 }

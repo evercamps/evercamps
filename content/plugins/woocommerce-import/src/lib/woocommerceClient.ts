@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import type { WooCommerceSettings, WooCommerceProduct } from '../types.js';
+import type { WooCommerceSettings, WooCommerceProduct, WooCommerceOrder } from '../types.js';
 
 export function createWooCommerceClient(settings: WooCommerceSettings): AxiosInstance {
   if (!settings.storeUrl) {
@@ -29,6 +29,28 @@ export async function* fetchAllProducts(
   for (;;) {
     const { data } = await client.get<WooCommerceProduct[]>('/products', {
       params: { page, per_page: perPage }
+    });
+    if (!Array.isArray(data) || data.length === 0) {
+      return;
+    }
+    yield data;
+    if (data.length < perPage) {
+      return;
+    }
+    page += 1;
+  }
+}
+
+// WooCommerce's /orders endpoint defaults to status=any, which already
+// excludes 'trash'ed orders - no explicit status filter needed here.
+export async function* fetchAllOrders(
+  client: AxiosInstance,
+  perPage = 50
+): AsyncGenerator<WooCommerceOrder[]> {
+  let page = 1;
+  for (;;) {
+    const { data } = await client.get<WooCommerceOrder[]>('/orders', {
+      params: { page, per_page: perPage, orderby: 'id', order: 'asc' }
     });
     if (!Array.isArray(data) || data.length === 0) {
       return;
