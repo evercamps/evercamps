@@ -4,12 +4,20 @@ import React from 'react';
 import { toast } from 'react-toastify';
 import { get } from '../../../../../lib/util/get.js';
 
-interface Props {
+interface AttributeNewFormProps {
   action: string;
 }
 
-export default function ParticipantNewForm({ action }: Props) {
-  const id = 'participantForm';
+interface Link {
+  rel: string;
+  href: string;
+}
+
+export default function AttributeNewForm({
+  action
+}: AttributeNewFormProps) {
+  const id = 'attributeForm';
+
   return (
     <Form
       method="POST"
@@ -19,22 +27,24 @@ export default function ParticipantNewForm({ action }: Props) {
       }}
       onSuccess={(response: any) => {
         if (response.error) {
-          toast.error(
-            String(
-              get(
-                response,
-                'error.message',
-                'Something wrong. Please reload the page!'
-              )
-            )
+          toast.error(String(
+            get(
+              response,
+              'error.message',
+              'Something wrong. Please reload the page!'
+            ))
           );
         } else {
-          toast.success('Participant saved successfully!');
+          toast.success('Attribute saved successfully!');
+
           setTimeout(() => {
-            const editUrl = response.data.links.find(
-              (link: any) => link.rel === 'edit'
-            ).href;
-            window.location.href = editUrl;
+            const editUrl = response.data?.links?.find(
+              (link : Link) => link.rel === 'edit'
+            )?.href;
+
+            if (editUrl) {
+              window.location.href = editUrl;
+            }
           }, 1500);
         }
       }}
@@ -53,7 +63,7 @@ export const layout = {
 
 export const query = `
   query Query {
-    action: url(routeId: "createParticipant")
-    gridUrl: url(routeId: "participantGrid")
+    action: url(routeId: "createAttribute")
+    gridUrl: url(routeId: "attributeGrid")
   }
 `;
