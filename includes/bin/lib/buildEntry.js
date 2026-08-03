@@ -5,34 +5,23 @@ import { pathToFileURL } from 'url';
 import { inspect } from 'util';
 import JSON5 from 'json5';
 import { getComponentsByRoute } from '../../lib/componee/getComponentsByRoute.js';
-import { CONSTANTS } from '../../lib/helpers.js';
 import { error } from '../../lib/log/logger.js';
 import { getRouteBuildPath } from '../../lib/webpack/getRouteBuildPath.js';
 import { generateComponentKey } from '../../lib/webpack/util/keyGenerator.js';
 import { parseGraphql } from '../../lib/webpack/util/parseGraphql.js';
 import { getEnabledWidgets } from '../../lib/widget/widgetManager.js';
 
-const areaModuleUrl = pathToFileURL(
-  path.resolve(CONSTANTS.ROOTPATH, 'dist/components/Area.js')
-).toString();
-const hydrateAdminModuleUrl = pathToFileURL(
-  path.resolve(
-    CONSTANTS.ROOTPATH,
-    'dist/components/react/client/HydrateAdmin.js'
-  )
-).toString();
-const hydrateFrontStoreModuleUrl = pathToFileURL(
-  path.resolve(
-    CONSTANTS.ROOTPATH,
-    'dist/components/react/client/HydrateFrontStore.js'
-  )
-).toString();
-const renderHtmlModuleUrl = pathToFileURL(
-  path.resolve(
-    CONSTANTS.ROOTPATH,
-    'dist/components/react/server/render.js'
-  )
-).toString();
+/**
+ * These must be imported through the same '@components/...' alias that every
+ * other file uses (resolved by webpack's resolve.alias in createBaseConfig.js).
+ * Importing them via an absolute file:// URL instead makes webpack treat them
+ * as a separate module instance from the one used by Server.jsx/Hydrate.jsx,
+ * so setDefaultComponents() would populate a copy that never actually renders.
+ */
+const areaModuleUrl = '@components/Area';
+const hydrateAdminModuleUrl = '@components/react/client/HydrateAdmin';
+const hydrateFrontStoreModuleUrl = '@components/react/client/HydrateFrontStore';
+const renderHtmlModuleUrl = '@components/react/server/render';
 
 /**
  * Only pass the page routes, not api routes
@@ -113,12 +102,12 @@ export async function buildEntry(routes, clientOnly = false) {
         .replace(/---'/g, '')});`;
       contentClient += '\r\n';
       contentClient += `hydrateRoot(
+        document.getElementById('app'),
         ${
           route.isAdmin
             ? 'React.createElement(HydrateAdmin, null)'
             : 'React.createElement(HydrateFrontStore, null)'
-        },
-        document.getElementById('app')
+        }
       );`;
       if (!fs.existsSync(path.resolve(subPath, 'client'))) {
         await mkdir(path.resolve(subPath, 'client'), { recursive: true });
