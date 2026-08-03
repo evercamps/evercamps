@@ -33,9 +33,10 @@ import { createWooCommerceClient, fetchAllOrders } from './woocommerceClient.js'
 async function resolveLocalProductId(externalProductId: number): Promise<number> {
   const map = await findMapByExternalId(externalProductId);
   if (!map || !map.product_id) {
-    throw new Error(
-      `Order references WooCommerce product ${externalProductId} that has not been imported yet.`
-    );
+    // throw new Error(
+    //   `Order references WooCommerce product ${externalProductId} that has not been imported yet.`
+    // );
+    return 0;
   }
   return map.product_id;
 }
@@ -71,44 +72,30 @@ async function insertAddress(
 // mirroring the trigger's own WHERE clause so it stays a no-op for
 // non-managed products.
 async function compensateStockTrigger(
-  productId: number,
+  productId: number | null,
   qty: number,
   connection: PoolClient
 ): Promise<void> {
+  if(!productId) {
+    return; 
+  }
   await execute(
     connection,
     `UPDATE product_inventory SET qty = qty + ${qty} WHERE product_inventory_product_id = ${productId} AND manage_stock = TRUE`
   );
 }
 
+// "order" carries a NOT NULL cart_id with no FK to "cart" and nothing in the
+// app reads it back, so imported orders point at this placeholder instead of
+// creating a real (and otherwise unused) cart/cart_item row per order.
+const PLACEHOLDER_CART_ID = 0;
+
 async function createOrder(
   mapped: OrderImportData,
-  resolvedItems: { item: OrderItemImportData; productId: number }[],
+  resolvedItems: { item: OrderItemImportData; productId: number | null }[],
   customerId: number | null,
   connection: PoolClient
-): Promise<{ orderId: number; cartId: number; billingAddressId: number | null; shippingAddressId: number | null }> {
-  const cart = await insert('cart')
-    .given({
-      currency: mapped.currency,
-      customer_id: customerId,
-      customer_email: mapped.customer_email,
-      customer_full_name: mapped.customer_full_name,
-      status: false,
-      sub_total: mapped.sub_total,
-      sub_total_incl_tax: mapped.sub_total_incl_tax,
-      sub_total_with_discount: mapped.sub_total_with_discount,
-      sub_total_with_discount_incl_tax: mapped.sub_total_with_discount_incl_tax,
-      total_qty: mapped.total_qty,
-      tax_amount: mapped.tax_amount,
-      tax_amount_before_discount: mapped.tax_amount_before_discount,
-      shipping_tax_amount: mapped.shipping_tax_amount,
-      shipping_fee_excl_tax: mapped.shipping_fee_excl_tax,
-      shipping_fee_incl_tax: mapped.shipping_fee_incl_tax,
-      discount_amount: mapped.discount_amount,
-      grand_total: mapped.grand_total
-    })
-    .execute(connection);
-
+): Promise<{ orderId: number; billingAddressId: number | null; shippingAddressId: number | null }> {
   const billingAddressId = await insertAddress(mapped.billingAddress, connection);
   const shippingAddressId = await insertAddress(mapped.shippingAddress, connection);
 
@@ -118,7 +105,7 @@ async function createOrder(
     .given({
       order_number: mapped.order_number,
       status,
-      cart_id: cart.insertId,
+      cart_id: PLACEHOLDER_CART_ID,
       currency: mapped.currency,
       customer_id: customerId,
       customer_email: mapped.customer_email,
@@ -183,7 +170,6 @@ async function createOrder(
 
   return {
     orderId: order.insertId,
-    cartId: cart.insertId,
     billingAddressId,
     shippingAddressId
   };
@@ -260,7 +246,6 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             batchId,
             wcOrder.id,
             created.orderId,
-            created.cartId,
             created.billingAddressId,
             created.shippingAddressId,
             wcOrder.date_modified,

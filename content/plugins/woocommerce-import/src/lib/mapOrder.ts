@@ -6,7 +6,7 @@ import type {
   WooCommerceOrderAddress,
   WooCommerceOrderLineItem
 } from '../types.js';
-import { createProduct, debug, error, updateProduct } from '../core.js';
+import { debug, error } from '../core.js';
 
 // WooCommerce order statuses mapped to EverShop's separate payment/shipment
 // status axes (oms.order.paymentStatus / oms.order.shipmentStatus config
@@ -52,7 +52,8 @@ function mapAddress(address: WooCommerceOrderAddress | undefined): OrderAddressI
 function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
   debug(JSON.stringify(item));
   if (!item.product_id) {
-    throw new Error(`Order line item "${item.name}" has no WooCommerce product reference.`);
+    item.product_id = 0;
+    // throw new Error(`Order line item "${item.name}" has no WooCommerce product reference.`);
   }
 
   const qty = item.quantity || 0;
@@ -77,7 +78,24 @@ function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
 
   const productPrice = lineTotal / qty;
   const productPriceInclTax = productPrice + lineTotalTax / qty;
-
+  debug(JSON.stringify({
+    externalProductId: item.product_id,
+    product_sku: item.sku || `wc_product_${item.product_id}`,
+    product_name: item.name,
+    qty,
+    product_price: productPrice,
+    product_price_incl_tax: productPriceInclTax,
+    final_price: productPrice,
+    final_price_incl_tax: productPriceInclTax,
+    tax_percent: lineTotal > 0 ? (lineTotalTax / lineTotal) * 100 : 0,
+    tax_amount: lineTotalWithDiscountTax,
+    tax_amount_before_discount: lineTotalTax,
+    discount_amount: discountAmount,
+    line_total: lineTotal,
+    line_total_incl_tax: lineTotal + lineTotalTax,
+    line_total_with_discount: lineTotalWithDiscount,
+    line_total_with_discount_incl_tax: lineTotalWithDiscount + lineTotalWithDiscountTax
+  }));
   return {
     externalProductId: item.product_id,
     product_sku: item.sku || `wc_product_${item.product_id}`,
@@ -99,6 +117,8 @@ function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
 }
 
 export function mapOrder(wcOrder: WooCommerceOrder): OrderImportData {
+  debug("order");
+  debug(JSON.stringify(wcOrder));
   const statusMapping = STATUS_MAP[wcOrder.status];
   if (!statusMapping) {
     throw new Error(`WooCommerce order ${wcOrder.id} has unsupported status "${wcOrder.status}".`);

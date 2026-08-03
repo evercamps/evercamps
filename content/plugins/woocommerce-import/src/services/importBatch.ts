@@ -261,7 +261,6 @@ export async function recordOrderCreated(
   batchId: number,
   externalId: number,
   orderId: number,
-  cartId: number,
   billingAddressId: number | null,
   shippingAddressId: number | null,
   externalUpdatedAt?: string,
@@ -269,7 +268,7 @@ export async function recordOrderCreated(
 ): Promise<void> {
   const data = {
     order_id: orderId,
-    cart_id: cartId,
+    cart_id: null,
     billing_address_id: billingAddressId,
     shipping_address_id: shippingAddressId,
     last_batch_id: batchId,
