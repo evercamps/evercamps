@@ -35,7 +35,7 @@ export interface FieldProps {
   type: FieldType;
   label?: string;
   instruction?: string;
-  value?: string | number | boolean;
+  value?: string | number | boolean | Array<string | number>;
   onChange?: (newValue: unknown, fieldProps?: FieldProps) => void;
   validationRules?: ValidationRule[];
   // shared display props
