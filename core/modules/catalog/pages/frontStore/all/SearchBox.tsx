@@ -1,14 +1,19 @@
 import { Input } from '@components/form/fields/Input';
 import XIcon from '@heroicons/react/solid/esm/XIcon';
-import PropTypes from 'prop-types';
 import React, { useRef, useState } from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import './SearchBox.scss';
 
-export default function SearchBox({ searchPageUrl }) {
-  const InputRef = useRef();
-  // Get the key from the URL
-  const [keyword, setKeyword] = useState(null);
+interface SearchBoxProps {
+  searchPageUrl: string;
+}
+
+export default function SearchBox({
+  searchPageUrl
+}: SearchBoxProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const [keyword, setKeyword] = useState<string | null>(null);
   const [showing, setShowing] = useState(false);
 
   React.useEffect(() => {
@@ -19,7 +24,7 @@ export default function SearchBox({ searchPageUrl }) {
 
   React.useEffect(() => {
     if (showing) {
-      InputRef.current.focus();
+      inputRef.current?.focus();
     }
   }, [showing]);
 
@@ -48,6 +53,7 @@ export default function SearchBox({ searchPageUrl }) {
           />
         </svg>
       </a>
+
       {showing && (
         <div className="search-input-container">
           <div className="search-input">
@@ -61,6 +67,7 @@ export default function SearchBox({ searchPageUrl }) {
             >
               <XIcon width="2rem" height="2rem" />
             </a>
+
             <Input
               prefix={
                 <svg
@@ -79,18 +86,24 @@ export default function SearchBox({ searchPageUrl }) {
                 </svg>
               }
               placeholder={_('Search')}
-              ref={InputRef}
-              value={keyword || ''}
+              ref={inputRef}
+              value={keyword ?? ''}
               onChange={(e) => {
                 setKeyword(e.target.value);
               }}
               onKeyPress={(event) => {
                 if (event.key === 'Enter') {
-                  // Redirect to search page with search query as the keyword in the url
-                  const url = new URL(searchPageUrl, window.location.origin);
-                  url.searchParams.set('keyword', InputRef.current.value);
+                  const url = new URL(
+                    searchPageUrl,
+                    window.location.origin
+                  );
 
-                  window.location.href = url;
+                  url.searchParams.set(
+                    'keyword',
+                    inputRef.current?.value ?? ''
+                  );
+
+                  window.location.href = url.toString();
                 }
               }}
               enterkeyhint="done"
@@ -101,10 +114,6 @@ export default function SearchBox({ searchPageUrl }) {
     </div>
   );
 }
-
-SearchBox.propTypes = {
-  searchPageUrl: PropTypes.string.isRequired
-};
 
 export const layout = {
   areaId: 'icon-wrapper',

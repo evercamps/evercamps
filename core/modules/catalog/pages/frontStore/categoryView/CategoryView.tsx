@@ -1,11 +1,19 @@
 import Area from '@components/Area';
-import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function CategoryView({ category }) {
+interface CategoryViewProps {
+  category: {
+    showProducts?: number;
+  };
+}
+
+export default function CategoryView({
+  category
+}: CategoryViewProps): React.ReactElement | null {
   if (!category.showProducts) {
     return null;
   }
+
   return (
     <div className="page-width grid grid-cols-1 md:grid-cols-4 gap-8">
       <Area id="leftColumn" className="md:col-span-1" />
@@ -13,12 +21,6 @@ export default function CategoryView({ category }) {
     </div>
   );
 }
-
-CategoryView.propTypes = {
-  category: PropTypes.shape({
-    showProducts: PropTypes.number
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'content',
@@ -30,4 +32,5 @@ export const query = `
     category(id: getContextValue('categoryId')) {
       showProducts
     }
-}`;
+  }
+`;

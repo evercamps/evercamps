@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import Area from '@components/Area';
 import './GeneralInfo.scss';
@@ -6,7 +5,25 @@ import { Name } from '@components/frontStore/catalog/product/single/Name';
 import { Price } from '@components/frontStore/catalog/product/single/Price';
 import { Sku } from '@components/frontStore/catalog/product/single/Sku';
 
-export default function GeneralInfo({ product }) {
+interface PriceData {
+  value: number;
+  text: string;
+}
+
+interface Product {
+  name: string;
+  sku: string;
+  price: {
+    regular?: PriceData;
+    special?: PriceData;
+  };
+}
+
+interface GeneralInfoProps {
+  product: Product;
+}
+
+export default function GeneralInfo({ product }: GeneralInfoProps) {
   return (
     <Area
       id="productViewGeneralInfo"
@@ -41,23 +58,6 @@ export default function GeneralInfo({ product }) {
     />
   );
 }
-
-GeneralInfo.propTypes = {
-  product: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    sku: PropTypes.string.isRequired,
-    price: PropTypes.shape({
-      regular: PropTypes.shape({
-        value: PropTypes.number.isRequired,
-        text: PropTypes.string.isRequired
-      }),
-      special: PropTypes.shape({
-        value: PropTypes.number.isRequired,
-        text: PropTypes.string.isRequired
-      })
-    })
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'productPageMiddleRight',

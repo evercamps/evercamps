@@ -1,12 +1,25 @@
 import ProductNoThumbnail from '@components/ProductNoThumbnail';
-import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 
-function Current({ image = null }) {
-  const [height, setHeight] = useState();
+interface ProductImage {
+  alt?: string;
+  thumb?: string;
+  single: string;
+}
+
+interface CurrentProps {
+  image?: ProductImage | null;
+}
+
+function Current({ image = null }: CurrentProps) {
+  const [height, setHeight] = useState<number>();
 
   useEffect(() => {
-    setHeight(document.getElementById('product-current-image').offsetWidth);
+    const element = document.getElementById('product-current-image');
+
+    if (element) {
+      setHeight(element.offsetWidth);
+    }
   }, []);
 
   return (
@@ -23,25 +36,32 @@ function Current({ image = null }) {
   );
 }
 
-Current.propTypes = {
-  image: PropTypes.shape({
-    alt: PropTypes.string,
-    single: PropTypes.string.isRequired
-  })
-};
+interface ImagesProps {
+  product: {
+    uuid: string;
+    image?: ProductImage | null;
+    gallery?: ProductImage[];
+  };
+}
 
-export default function Images({ product: { uuid, image, gallery = [] } }) {
-  const [current, setCurrent] = React.useState(image);
-  const [thumbs, setThumbs] = React.useState(gallery);
+export default function Images({
+  product: { uuid, image, gallery = [] }
+}: ImagesProps) {
+  const [current, setCurrent] = React.useState<ProductImage | null | undefined>(
+    image
+  );
+  const [thumbs, setThumbs] = React.useState<ProductImage[]>(gallery);
 
   React.useEffect(() => {
     setCurrent(image);
+
     setThumbs(() => {
       const gls = [...gallery];
+
       if (image) {
-        // Add image to beginning of gallery
         gls.unshift(image);
       }
+
       return gls;
     });
   }, [uuid]);
@@ -49,6 +69,7 @@ export default function Images({ product: { uuid, image, gallery = [] } }) {
   return (
     <div className="product-single-media">
       <Current image={current} />
+
       <ul className="more-view-thumbnail product-gallery mt-8 grid grid-cols-4 gap-4">
         {thumbs.map((i, j) => (
           <li key={j} className="flex justify-center items-center">
@@ -69,22 +90,6 @@ export default function Images({ product: { uuid, image, gallery = [] } }) {
   );
 }
 
-Images.propTypes = {
-  product: PropTypes.shape({
-    uuid: PropTypes.string.isRequired,
-    image: PropTypes.shape({
-      alt: PropTypes.string,
-      single: PropTypes.string.isRequired
-    }),
-    gallery: PropTypes.arrayOf(
-      PropTypes.shape({
-        alt: PropTypes.string,
-        single: PropTypes.string.isRequired
-      })
-    )
-  }).isRequired
-};
-
 export const layout = {
   areaId: 'productPageMiddleLeft',
   sortOrder: 10
@@ -104,5 +109,6 @@ export const query = `
         thumb
         single
       }
+    }
   }
-}`;
+`;

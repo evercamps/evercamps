@@ -1,44 +1,46 @@
 import ProductList from '@components/frontStore/catalog/product/list/List';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
-export default function Products({ products: { items } = { items: []} }) {
+interface ProductPrice {
+  value?: number;
+  text?: string;
+}
+
+interface Product {
+  name?: string;
+  productId?: number;
+  url?: string;
+  price?: {
+    regular?: ProductPrice;
+    special?: ProductPrice;
+  };
+  image?: {
+    alt?: string;
+    listing?: string;
+  };
+}
+
+interface ProductsProps {
+  products?: {
+    items?: Product[];
+  };
+}
+
+export default function Products({
+  products = { items: [] }
+}: ProductsProps): React.ReactElement {
+  const items = products.items ?? [];
+
   return (
     <div>
       <ProductList products={items} countPerRow={4} />
       <span className="product-count italic block mt-8">
-        {_('${count} products', { count: items.length })}
+        {_('${count} products', { count: items.length.toString() })}
       </span>
     </div>
   );
 }
-
-Products.propTypes = {
-  products: PropTypes.shape({
-    items: PropTypes.arrayOf(
-      PropTypes.shape({
-        name: PropTypes.string,
-        productId: PropTypes.number,
-        url: PropTypes.string,
-        price: PropTypes.shape({
-          regular: PropTypes.shape({
-            value: PropTypes.float,
-            text: PropTypes.string
-          }),
-          special: PropTypes.shape({
-            value: PropTypes.float,
-            text: PropTypes.string
-          })
-        }),
-        image: PropTypes.shape({
-          alt: PropTypes.string,
-          listing: PropTypes.string
-        })
-      })
-    )
-  })
-};
 
 export const layout = {
   areaId: 'oneColumn',

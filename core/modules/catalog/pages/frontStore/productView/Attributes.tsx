@@ -1,11 +1,22 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
+interface Attribute {
+  attributeName: string;
+  attributeCode: string;
+  optionText: string;
+}
 
-function Attributes({ product: { attributes } }) {
+interface AttributesProps {
+  product: {
+    attributes: Attribute[];
+  };
+}
+
+function Attributes({ product: { attributes } }: AttributesProps) {
   if (!attributes.length) {
     return null;
   }
+
   return (
     <div className="specification">
       <ul className="list-disc list-inside">
@@ -19,18 +30,6 @@ function Attributes({ product: { attributes } }) {
     </div>
   );
 }
-
-Attributes.propTypes = {
-  product: PropTypes.shape({
-    attributes: PropTypes.arrayOf(
-      PropTypes.shape({
-        attributeName: PropTypes.string.isRequired,
-        attributeCode: PropTypes.string.isRequired,
-        optionText: PropTypes.string.isRequired
-      })
-    ).isRequired
-  }).isRequired
-};
 
 export const query = `
   query Query {

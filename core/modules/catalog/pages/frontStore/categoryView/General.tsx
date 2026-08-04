@@ -1,20 +1,43 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import './General.scss';
 import Editor from '@components/Editor';
 
+interface EditorColumn {
+  id: string;
+  size: number;
+  data: object;
+}
+
+interface EditorRow {
+  id: string;
+  size: number;
+  columns?: EditorColumn[];
+}
+
+interface CategoryInfoProps {
+  category: {
+    name: string;
+    description?: EditorRow[];
+    image?: {
+      url: string;
+    };
+  };
+}
+
 export default function CategoryInfo({
   category: { name, description, image }
-}) {
+}: CategoryInfoProps): React.ReactElement {
   return (
     <div className="page-width">
       <div className="mb-4 md:mb-8 category__general">
         {image && (
           <img src={image.url} alt={name} className="category__image" />
         )}
+
         <div className="category__info prose prose-base max-w-none">
           <h1 className="category__name">{name}</h1>
+
           <div className="category__description">
             <Editor rows={description} />
           </div>
@@ -23,29 +46,6 @@ export default function CategoryInfo({
     </div>
   );
 }
-
-CategoryInfo.propTypes = {
-  category: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    description: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        size: PropTypes.number.isRequired,
-        columns: PropTypes.arrayOf(
-          PropTypes.shape({
-            id: PropTypes.string.isRequired,
-            size: PropTypes.number.isRequired,
-
-            data: PropTypes.object.isRequired
-          })
-        )
-      })
-    ),
-    image: PropTypes.shape({
-      url: PropTypes.string.isRequired
-    })
-  }).isRequired
-};
 
 export const layout = {
   areaId: 'content',
@@ -62,4 +62,5 @@ export const query = `
         url
       }
     }
-}`;
+  }
+`;

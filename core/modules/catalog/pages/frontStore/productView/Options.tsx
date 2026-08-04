@@ -1,9 +1,29 @@
 import { MultiSelect } from '@components/form/fields/MultiSelect';
 import { Select } from '@components/form/fields/Select';
-import PropTypes from 'prop-types';
 import React from 'react';
 
-export default function Options({ options = [] }) {
+interface OptionValue {
+  valueId: number;
+  value: string;
+  extraPrice: {
+    value: number;
+    text: string;
+  };
+}
+
+interface ProductOption {
+  optionId: number;
+  isRequired: number;
+  optionName: string;
+  optionType: string;
+  values: OptionValue[];
+}
+
+interface OptionsProps {
+  options?: ProductOption[];
+}
+
+export default function Options({ options = [] }: OptionsProps) {
   if (options.length === 0) {
     return null;
   }
@@ -13,71 +33,48 @@ export default function Options({ options = [] }) {
       <div className="product-single-options-title mb-8">
         <strong>Options</strong>
       </div>
+
       {options.map((o, i) => {
         const values = o.values.map((v) => ({
           value: v.valueId,
           text: `${v.value} (+ ${v.extraPrice.text})`
         }));
-        let FieldComponent = '';
+
         switch (o.optionType) {
           case 'select':
-            FieldComponent = (
+            return (
               <Select
                 key={i}
                 name={`product_custom_options[${o.optionId}][]`}
                 options={values}
-                validation_rules={
-                  parseInt(o.isRequired, 10) === 1 ? ['notEmpty'] : []
-                }
-                formId="product-form"
                 label={o.optionName}
               />
             );
-            break;
+
           case 'multiselect':
-            FieldComponent = (
+            return (
               <MultiSelect
                 key={i}
                 name={`product_custom_options[${o.optionId}][]`}
                 options={values}
-                validation_rules={
-                  parseInt(o.isRequired, 10) === 1 ? ['notEmpty'] : []
-                }
-                formId="product-form"
                 label={o.optionName}
               />
             );
-            break;
+
           default:
-            FieldComponent = (
+            return (
               <Select
                 key={i}
                 name={`product_custom_options[${o.optionId}][]`}
                 options={values}
-                validation_rules={
-                  parseInt(o.isRequired, 10) === 1 ? ['notEmpty'] : []
-                }
-                formId="product-form"
                 label={o.optionName}
               />
             );
         }
-        return FieldComponent;
       })}
     </div>
   );
 }
-
-Options.propTypes = {
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      optionId: PropTypes.number,
-      isRequired: PropTypes.number,
-      optionName: PropTypes.string,
-      optionType: PropTypes.string
-    })
-  )
-};
 
 export const layout = {
   areaId: 'productPageMiddleRight',
@@ -102,4 +99,5 @@ export const query = `
         }
       }
     }
-  }`;
+  }
+`;

@@ -1,60 +1,60 @@
 import ProductList from '@components/frontStore/catalog/product/list/List';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 
+interface ProductPrice {
+  value: number;
+  text: string;
+}
+
+interface Product {
+  productId: number;
+  name?: string;
+  sku?: string;
+  url?: string;
+  price?: {
+    regular?: ProductPrice;
+    special?: ProductPrice;
+  };
+  image?: {
+    alt?: string;
+    listing?: string;
+  };
+}
+
+interface ProductsProps {
+  products?: {
+    showProducts?: number;
+    products?: {
+      items?: Product[];
+    };
+  };
+}
+
 export default function Products({
-  products: {
-    showProducts,
-    products: { items }
-  } =  {
+  products = {
     showProducts: 1,
     products: {
       items: []
     }
   }
-}) {
+}: ProductsProps): React.ReactElement | null {
+  const showProducts = products.showProducts;
+  const items = products.products?.items ?? [];
+
   if (!showProducts) {
     return null;
   }
+
   return (
     <div>
       <ProductList products={items} countPerRow={3} />
       <span className="product-count italic block mt-8">
-        {_('${count} products', { count: items.length })}
+        {_('${count} products', { count: items.length.toString() })}
       </span>
     </div>
   );
 }
-
-Products.propTypes = {
-  products: PropTypes.shape({
-    showProducts: PropTypes.number,
-    products: PropTypes.shape({
-      items: PropTypes.arrayOf(
-        PropTypes.shape({
-          name: PropTypes.string,
-          productId: PropTypes.number,
-          url: PropTypes.string,
-          price: PropTypes.shape({
-            regular: PropTypes.shape({
-              value: PropTypes.number,
-              text: PropTypes.string
-            }),
-            special: PropTypes.shape({
-              value: PropTypes.number,
-              text: PropTypes.string
-            })
-          }),
-          image: PropTypes.shape({
-            alt: PropTypes.string,
-            listing: PropTypes.string
-          })
-        })
-      )
-    })
-  })
-};
 
 export const layout = {
   areaId: 'rightColumn',
