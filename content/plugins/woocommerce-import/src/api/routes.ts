@@ -36,6 +36,17 @@ export const routes: RouteDefinition[] = [
   },
 
   {
+    routeId: 'importOrders',
+    region: 'api',
+    path: '/wc-import/orders',
+    methods: ['POST'],
+    middleware: [
+      { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'importOrders', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
+  },
+
+  {
     routeId: 'rollbackBatch',
     region: 'api',
     path: '/wc-import/batches/:id',

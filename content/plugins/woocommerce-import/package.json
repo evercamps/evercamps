@@ -6,7 +6,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Imports and updates products from a WooCommerce store via the WooCommerce REST API.",
+  "description": "Imports and updates products and orders from a WooCommerce store via the WooCommerce REST API.",
   "scripts": {
     "compile": "swc src -d dist --config-file ../../../.swcrc --copy-files --strip-leading-paths",
     "typecheck": "tsc --noEmit"
