@@ -37,10 +37,15 @@ async function migrateModule(module) {
     .filter(
       (dirent) =>
         dirent.isFile() &&
-        dirent.name.match(/^Version-+([1-9].[0-9].[0-9])+.js$/)
+        // Each segment can be more than one digit (e.g. Version-1.0.10.js) -
+        // a single-digit-only pattern here silently drops any migration
+        // whose version reaches double digits.
+        dirent.name.match(/^Version-+([1-9][0-9]*\.[0-9]+\.[0-9]+)\.js$/)
     )
     .map((dirent) => dirent.name.replace('Version-', '').replace('.js', ''))
-    .sort((first, second) => semver.lt(first, second));
+    // semver.lt returns a boolean, not the -1/0/1 Array.sort requires -
+    // semver.compare is the comparator-shaped equivalent.
+    .sort((first, second) => semver.compare(first, second));
 
   const currentInstalledVersion = await getCurrentInstalledVersion(module.name);
 

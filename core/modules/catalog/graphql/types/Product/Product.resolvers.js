@@ -25,6 +25,12 @@ export default {
       }
     },
     description: ({ description }) => {
+      if (!description) {
+        // No description set (e.g. a product created without one) - render
+        // as empty content instead of feeding JSON.parse(null) === null
+        // into <Editor rows={...}>, which expects an array to map over.
+        return [];
+      }
       try {
         return JSON.parse(description);
       } catch (e) {

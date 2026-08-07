@@ -150,7 +150,7 @@ RenderEditorJS.propTypes = {
 export default function Editor({ rows }) {
   return (
     <div className="editor__html">
-      {rows.map((row, index) => {
+      {(rows || []).map((row, index) => {
         const rowClasses = getRowClasses(row.size);
         return (
           <div
