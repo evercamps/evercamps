@@ -6,7 +6,8 @@ import React from 'react';
 export default function Status({ product = {
   status: 1,
   visibility: 1,
-  manageRegistrations: 1
+  type: 'camp',
+  isVirtual: 0
 } }) {
   return (
     <Card title="Product status" subdued>
@@ -38,13 +39,26 @@ export default function Status({ product = {
       </Card.Session>
       <Card.Session>
         <Field
-          id="manageRegistrations"
-          name="manage_registrations"
-          value={product?.manageRegistrations === undefined ? 1 : product.manageRegistrations}
-          label="Manage Registrations"
+          id="type"
+          name="type"
+          value={product?.type === undefined ? 'camp' : product.type}
+          label="Product Type"
           options={[
-            { value: 0, text: 'Disabled' },
-            { value: 1, text: 'Enabled' }
+            { value: 'simple', text: 'Simple product' },
+            { value: 'camp', text: 'Camp (requires registration)' }
+          ]}
+          type="radio"
+        />
+      </Card.Session>
+      <Card.Session>
+        <Field
+          id="isVirtual"
+          name="is_virtual"
+          value={product?.isVirtual === undefined ? 0 : product.isVirtual}
+          label="Shipping"
+          options={[
+            { value: 0, text: 'Requires shipping' },
+            { value: 1, text: "Virtual (doesn't require shipping)" }
           ]}
           type="radio"
         />
@@ -57,7 +71,8 @@ Status.propTypes = {
   product: PropTypes.shape({
     status: PropTypes.number.isRequired,
     visibility: PropTypes.number.isRequired,
-    manageRegistrations: PropTypes.number.isRequired
+    type: PropTypes.string,
+    isVirtual: PropTypes.number
   })
 };
 
@@ -71,7 +86,8 @@ export const query = `
     product(id: getContextValue("productId", null)) {
       status
       visibility
-      manageRegistrations
+      type
+      isVirtual
       category {
         value: categoryId
         label: name

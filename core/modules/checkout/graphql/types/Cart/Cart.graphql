@@ -123,6 +123,7 @@ type CartItem implements ShoppingCartItem {
   productUrl: String!
   registrations: [CartItemRegistration!]
   manageRegistrations: Int
+  isVirtual: Int
   errors: [String!]
 }
 

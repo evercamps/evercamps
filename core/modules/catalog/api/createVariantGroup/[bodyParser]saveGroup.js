@@ -1,107 +1,32 @@
-import { insert, select } from '@evershop/postgres-query-builder';
+import { select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../../lib/postgres/connection.js';
 import { buildUrl } from '../../../../lib/router/buildUrl.js';
 import {
   OK,
-  INTERNAL_SERVER_ERROR,
   INVALID_PAYLOAD
 } from '../../../../lib/util/httpStatus.js';
+import createProductFamily from '../../services/family/createProductFamily.js';
 
 export default async (request, response, next) => {
   const { attribute_codes, attribute_group_id } = request.body;
   try {
-    if (attribute_codes.length === 0) {
-      response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'No attributes provided'
-        }
-      });
-      return;
-    }
+    const family = await createProductFamily(
+      { attribute_codes, attribute_group_id },
+      { routeId: request.currentRoute?.id }
+    );
 
-    if (attribute_codes.length > 5) {
-      response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'We only support up to 5 attributes'
-        }
-      });
-      return;
-    }
+    const attributeIds = [
+      family.attribute_one,
+      family.attribute_two,
+      family.attribute_three,
+      family.attribute_four,
+      family.attribute_five
+    ].filter((a) => a !== null);
 
     const attributes = await select()
       .from('attribute')
-      .where('attribute_code', 'in', attribute_codes)
-      .and('type', '=', 'select')
+      .where('attribute_id', 'in', attributeIds)
       .execute(pool);
-
-    if (attributes.length !== attribute_codes.length) {
-      response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'Attribute must be of type select'
-        }
-      });
-      return;
-    }
-
-    const attributeGroupLinks = await select()
-      .from('attribute_group_link')
-      .where('group_id', '=', attribute_group_id)
-      .and(
-        'attribute_id',
-        'in',
-        attributes.map((a) => a.attribute_id)
-      )
-      .execute(pool);
-
-    if (attributeGroupLinks.length !== attributes.length) {
-      response.status(INVALID_PAYLOAD);
-      response.json({
-        error: {
-          status: INVALID_PAYLOAD,
-          message: 'Attribute must be assigned to the group'
-        }
-      });
-      return;
-    }
-
-    const data = {};
-    attributes.forEach((attribute, index) => {
-      let column;
-      switch (index) {
-        case 0:
-          column = 'attribute_one';
-          break;
-        case 1:
-          column = 'attribute_two';
-          break;
-        case 2:
-          column = 'attribute_three';
-          break;
-        case 3:
-          column = 'attribute_four';
-          break;
-        case 4:
-          column = 'attribute_five';
-          break;
-        default:
-          break;
-      }
-      data[column] = attribute.attribute_id;
-    });
-    data.attribute_group_id = attribute_group_id;
-    // Create a variant group
-    const result = await insert('variant_group').given(data).execute(pool);
-
-    const group = await select()
-      .from('variant_group')
-      .where('variant_group_id', '=', result.insertId)
-      .load(pool);
 
     const promises = attributes.map(async (attribute) => {
       const { attribute_id } = attribute;
@@ -117,18 +42,18 @@ export default async (request, response, next) => {
 
     const results = await Promise.all(promises);
 
-    group.attributes = results;
-    group.addItemApi = buildUrl('addVariantItem', { id: group.uuid });
+    family.attributes = results;
+    family.addItemApi = buildUrl('addVariantItem', { id: family.uuid });
 
     response.status(OK);
     response.json({
-      data: group
+      data: family
     });
   } catch (e) {
-    response.status(INTERNAL_SERVER_ERROR);
+    response.status(INVALID_PAYLOAD);
     response.json({
       error: {
-        status: INTERNAL_SERVER_ERROR,
+        status: INVALID_PAYLOAD,
         message: e.message
       }
     });

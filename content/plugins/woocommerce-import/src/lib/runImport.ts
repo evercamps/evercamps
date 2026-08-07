@@ -12,6 +12,7 @@ import { getWooCommerceSettings } from '../services/settings.js';
 import type { ImportBatchSummary } from '../types.js';
 import { resolveProductImages } from './importImages.js';
 import { mapProduct } from './mapProduct.js';
+import { importVariationsForProduct } from './runVariationImport.js';
 import { createWooCommerceClient, fetchAllProducts } from './woocommerceClient.js';
 
 export async function runImport(): Promise<ImportBatchSummary> {
@@ -34,6 +35,24 @@ export async function runImport(): Promise<ImportBatchSummary> {
     for await (const page of fetchAllProducts(client)) {
       for (const wcProduct of page) {
         totalFetched += 1;
+
+        if (wcProduct.type === 'variable') {
+          try {
+            const variationSummary = await importVariationsForProduct(client, wcProduct, batchId);
+            if (variationSummary) {
+              totalCreated += variationSummary.created;
+              totalUpdated += variationSummary.updated;
+              totalFailed += variationSummary.failed;
+              continue;
+            }
+            // No variation-defining attributes or zero variations - fall
+            // through to the plain simple-product import below.
+          } catch (e) {
+            totalFailed += 1;
+            await recordFailed(batchId, wcProduct.id, (e as Error).message);
+            continue;
+          }
+        }
 
         let data;
         try {

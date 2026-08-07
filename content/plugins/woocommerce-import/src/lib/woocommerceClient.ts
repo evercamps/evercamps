@@ -1,5 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
-import type { WooCommerceSettings, WooCommerceProduct, WooCommerceOrder } from '../types.js';
+import type {
+  WooCommerceSettings,
+  WooCommerceProduct,
+  WooCommerceProductVariation,
+  WooCommerceOrder
+} from '../types.js';
 
 export function createWooCommerceClient(settings: WooCommerceSettings): AxiosInstance {
   if (!settings.storeUrl) {
@@ -30,6 +35,28 @@ export async function* fetchAllProducts(
     const { data } = await client.get<WooCommerceProduct[]>('/products', {
       params: { page, per_page: perPage }
     });
+    if (!Array.isArray(data) || data.length === 0) {
+      return;
+    }
+    yield data;
+    if (data.length < perPage) {
+      return;
+    }
+    page += 1;
+  }
+}
+
+export async function* fetchProductVariations(
+  client: AxiosInstance,
+  productId: number,
+  perPage = 50
+): AsyncGenerator<WooCommerceProductVariation[]> {
+  let page = 1;
+  for (;;) {
+    const { data } = await client.get<WooCommerceProductVariation[]>(
+      `/products/${productId}/variations`,
+      { params: { page, per_page: perPage } }
+    );
     if (!Array.isArray(data) || data.length === 0) {
       return;
     }

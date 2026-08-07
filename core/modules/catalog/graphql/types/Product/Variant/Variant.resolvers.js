@@ -19,8 +19,27 @@ export default {
           .select('attribute_three')
           .select('attribute_four')
           .select('attribute_five')
+          .select('name')
+          .select('url_key')
+          .select('description')
+          .select('short_description')
+          .select('meta_title')
+          .select('meta_description')
+          .select('meta_keywords')
+          .select('default_variant_id')
           .where('variant_group_id', '=', variantGroupId)
           .load(pool);
+
+        // Explicit list, not Object.values(group).filter(Number.isInteger) —
+        // group now also carries default_variant_id, which is an attribute
+        // slot value, not an attribute id.
+        const attributeIds = [
+          group.attribute_one,
+          group.attribute_two,
+          group.attribute_three,
+          group.attribute_four,
+          group.attribute_five
+        ].filter((v) => Number.isInteger(v));
 
         const query = select();
         query
@@ -51,7 +70,7 @@ export default {
         query.andWhere(
           'product_attribute_value_index.attribute_id',
           'IN',
-          Object.values(group).filter((v) => Number.isInteger(v))
+          attributeIds
         );
         if (!user) {
           query.andWhere('status', '=', 1);
@@ -60,11 +79,7 @@ export default {
         const vs = await query.execute(pool);
         const attributes = await select()
           .from('attribute')
-          .where(
-            'attribute_id',
-            'IN',
-            Object.values(group).filter((v) => Number.isInteger(v))
-          )
+          .where('attribute_id', 'IN', attributeIds)
           .execute(pool);
 
         return {
@@ -131,7 +146,15 @@ export default {
                   )
                 };
               }),
-          addItemApi: buildUrl('addVariantItem', { id: group.uuid })
+          addItemApi: buildUrl('addVariantItem', { id: group.uuid }),
+          name: group.name,
+          urlKey: group.url_key,
+          description: group.description,
+          shortDescription: group.short_description,
+          metaTitle: group.meta_title,
+          metaDescription: group.meta_description,
+          metaKeywords: group.meta_keywords,
+          defaultVariantId: group.default_variant_id
         };
       }
     }

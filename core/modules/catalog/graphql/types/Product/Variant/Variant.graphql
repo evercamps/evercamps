@@ -45,6 +45,14 @@ type VariantGroup {
   variantAttributes: [VariantAttribute]!
   items: [Variant]
   addItemApi: String!
+  name: String
+  urlKey: String
+  description: String
+  shortDescription: String
+  metaTitle: String
+  metaDescription: String
+  metaKeywords: String
+  defaultVariantId: ID
 }
 
 extend type Product {

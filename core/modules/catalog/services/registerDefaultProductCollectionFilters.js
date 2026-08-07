@@ -116,10 +116,14 @@ export default async function registerDefaultProductCollectionFilters() {
       }
     },
     {
+      // Filter key kept as `manage_registrations` for backward compatibility
+      // (RegistrationSkuSelector.jsx sends this exact key) even though it
+      // now queries product.type rather than the manage_registrations column.
       key: 'manage_registrations',
       operation: ['eq'],
       callback: (query, operation, value, currentFilters) => {
-        query.andWhere('product.manage_registrations', OPERATION_MAP[operation], value);
+        const isCamp = value === '1' || value === 1 || value === true;
+        query.andWhere('product.type', isCamp ? '=' : '<>', 'camp');
         currentFilters.push({
           key: 'manage_registrations',
           operation,

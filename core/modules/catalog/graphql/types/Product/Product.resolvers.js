@@ -7,6 +7,10 @@ import { ProductCollection } from '../../../../../modules/catalog/services/Produ
 
 export default {
   Product: {
+    // manage_registrations stopped being written once the admin form moved
+    // to writing `type` directly (see Status.jsx) - compute it from `type`
+    // instead of trusting the (now potentially stale) raw column.
+    manageRegistrations: (product) => (product.type === 'camp' ? 1 : 0),
     url: async (product, _, { pool }) => {
       // Get the url rewrite for this product
       const urlRewrite = await select()

@@ -20,6 +20,11 @@ export default {
     }
   },
   Registration: {
+    // Computed off the joined product's `type` (see getRegistrationsBaseQuery.ts)
+    // rather than a raw manage_registrations column, which stopped being
+    // written once the admin form moved to writing `type` directly.
+    manageRegistrations: (registration: { type?: string }) =>
+      registration.type === 'camp' ? 1 : 0,
     product: async (registration: { registrationId: number }, { filters = [] }: { filters: any[] }, { user }: { user: any }, { pool }: { pool: any }) => {
       const row = await getRegistrationsBaseQuery()
         .where("registration_id", "=", registration.registrationId)

@@ -28,12 +28,12 @@ export default function ShipmentStep({
   const [display, setDisplay] = React.useState(false);
   const { canStepDisplay, addStep } = useCheckoutStepsDispatch();
 
-  const allRegistrations = items?.length > 0 && items.every(
-    (item) => item.manageRegistrations === 1
+  const skipShipping = items?.length > 0 && items.every(
+    (item) => item.manageRegistrations === 1 || item.isVirtual === 1
   );
 
   React.useEffect(() => {
-    if (!allRegistrations) {
+    if (!skipShipping) {
       addStep({
         id: 'shipment',
         title: _('Shipment'),
@@ -46,15 +46,15 @@ export default function ShipmentStep({
         editable: true
       });
     }
-  }, [allRegistrations]);
+  }, [skipShipping]);
 
   React.useEffect(() => {
-    if (!allRegistrations) {
+    if (!skipShipping) {
       setDisplay(canStepDisplay(step, steps));
     }
   });
 
-  if (display === false || allRegistrations) {
+  if (display === false || skipShipping) {
     return null;
   }
 
@@ -165,6 +165,7 @@ export const query = `
       addShippingMethodApi
       items {
         manageRegistrations
+        isVirtual
       }
     }      
     setting {

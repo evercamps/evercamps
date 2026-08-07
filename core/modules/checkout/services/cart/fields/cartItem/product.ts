@@ -84,5 +84,13 @@ export const productFields: ItemField[] = [
       }
     ],
     dependencies: ['product_id']
+  },
+  {
+    key: 'isVirtual',
+    resolvers: [
+      async function(value?: any) {
+        return value ?? null;
+      }
+    ]
   }
 ];

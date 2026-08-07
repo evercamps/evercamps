@@ -197,7 +197,8 @@ export async function getCart(uuid: string): Promise<Cart> {
   const cartItems: Item[] = [];
   await Promise.all(
     items.map(async (item) => {
-      const product = await select('product.manage_registrations')
+      const product = await select('product.type')
+        .select('product.is_virtual')
         .from('product')
         .where('product_id', '=', item.product_id)
         .load(pool);
@@ -205,7 +206,8 @@ export async function getCart(uuid: string): Promise<Cart> {
       const cartItem = new Item(cartObject, {
         ...item,
         registrations: registrationsByItem[item.cart_item_id] || [],
-        manageRegistrations: product?.manage_registrations
+        manageRegistrations: product?.type === 'camp' ? 1 : 0,
+        isVirtual: product?.is_virtual
       });
       await cartItem.build();
       cartItems.push(cartItem);

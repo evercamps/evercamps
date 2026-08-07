@@ -84,6 +84,14 @@
       "type": ["integer", "string"],
       "enum": [0, 1, "0", "1"]
     },
+    "type": {
+      "type": "string",
+      "enum": ["simple", "camp"]
+    },
+    "is_virtual": {
+      "type": ["integer", "string"],
+      "enum": [0, 1, "0", "1"]
+    },
     "images": {
       "type": "array",
       "items": {

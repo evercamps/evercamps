@@ -1,184 +1,170 @@
-# Import WooCommerce Product Variations
+# Product Family Model, Virtual Products, Camp Type, and WooCommerce Variations
 
 ## Context
 
-The WooCommerce import plugin (`content/plugins/woocommerce-import/`, see `wordpress-import.md`)
-currently imports simple products only. `lib/mapProduct.ts` hardcodes `group_id = 1`
-(`DEFAULT_ATTRIBUTE_GROUP_ID`) for every product because, per that file's own comment, "WC
-attributes aren't mapped to evercamps' attribute system in v1." A WooCommerce **variable**
-product (e.g. a T-shirt with Color/Size options) is currently imported as one flat product using
-the parent's own (often blank/zero) price and SKU, and its variations — each with its own SKU,
-price, and stock — are never fetched at all.
+This started as a design doc for importing WooCommerce product variations, but analysis along the
+way (kept below as an appendix) concluded evercamps needed a real parent/family product concept
+first — Shopify-style — plus a general "doesn't need shipping" flag, and a proper `camp` product
+type replacing the ad hoc `manage_registrations` boolean. All four have now been **implemented**,
+in this order:
 
-Goal: fetch each variable product's variations via `GET /products/<id>/variations` (a per-product
-HTTP request, same shape as the existing per-product `resolveProductImages` extra-fetch pattern
-in `lib/importImages.ts`), transform them, and store them wired into evercamps' **native variant
-system** — the same mechanism the admin "Create variant group" / "Add variant item" UI already
-builds (`variant_group` table + `product.variant_group_id` + `product_attribute_value_index`; see
-`core/modules/catalog/api/createVariantGroup` and `api/addVariantItem`). This requires a new step
-the plugin doesn't have yet: mapping WooCommerce's per-product attributes (e.g. "Color") into
-evercamps' `attribute` / `attribute_option` / `attribute_group` rows on the fly, since nothing in
-evercamps' native attribute system is WooCommerce-aware today.
+1. **Product family model** — schema + services only, not a storefront/URL cutover (deliberately
+   deferred — see the Appendix's "Migration path" section for what that would still take).
+2. **`is_virtual` flag** — generalizes the shipping-skip behavior `manage_registrations` already
+   did for camps into something any product can use.
+3. **`product.type = 'camp'`**, replacing the `manage_registrations` boolean.
+4. **WooCommerce variations import**, built directly against the new family model rather than the
+   "skip the WC parent row, duplicate content per variation" workaround the original design used.
 
-**Key design decision.** evercamps has no "parent product" concept — a variant family is just N
-independent `product` rows sharing one `variant_group_id`. So when a WooCommerce product is
-`type: 'variable'` and has ≥1 variations, the import **skips** creating a standalone product row
-for the WC parent (it has no real SKU/sellable price anyway) and instead imports each variation as
-its own full product row, using the parent's name/description/images as shared defaults. A
-variable product with zero variations still imports as today (simple product), so nothing is
-silently dropped.
+## Phase 1 — Product family model
 
-All facts below (file paths, line numbers, function signatures, schema fields) were confirmed by
-reading the current code, not assumed.
+`variant_group` was grown into a real family record instead of staying a bare join table.
 
-## New mapping concepts this feature introduces
+- **Schema** (`core/modules/catalog/migration/Version-1.0.9.js`): added `name`, `url_key` (UNIQUE),
+  `description`, `short_description`, `meta_title`, `meta_description`, `meta_keywords`, and
+  `default_variant_id` (nullable FK to `product`, `ON DELETE SET NULL`) to `variant_group`.
+- **Services** (`core/modules/catalog/services/family/`): `createProductFamily.ts` (attribute-slot
+  resolution absorbed from the old `createVariantGroup` route, plus an app-level `url_key`
+  collision check against both `variant_group` and `product_description`), `updateProductFamily.ts`
+  (content-only updates — `attribute_codes`/`attribute_group_id` are fixed at creation),
+  `addProductToFamily.ts` (absorbed from the old `addVariantItem` route; auto-sets
+  `default_variant_id` the first time a product is linked, so it's not left `NULL` forever).
+  `includes/types/productFamily.ts` + `productFamilyDataSchema.json` back these.
+- **Routes**: `createVariantGroup/[bodyParser]saveGroup.js` and `addVariantItem/[bodyParser]addItem.js`
+  are now thin wrappers around the two services above. `unlinkVariant` was left as its original
+  2-line inline `UPDATE`.
+- **Drift guard**: `core/modules/catalog/services/product/updateProduct.ts`'s `updateProductData`
+  now rejects changing a linked product's `group_id` without unlinking it first (previously
+  silently allowed the product's attribute group and its family's to drift apart).
+- **GraphQL**: `Variant.graphql`/`Variant.resolvers.js` expose the new family content fields on
+  `VariantGroup`. (Along the way, fixed a latent bug the new columns would have triggered: the
+  resolver used to derive its attribute-id list via `Object.values(group).filter(Number.isInteger)`,
+  which would have started incorrectly picking up `default_variant_id` as if it were an attribute
+  id — replaced with an explicit list.)
+- **Deferred** (unchanged from the original plan): canonical family URL/routing, PLP price rollup,
+  and switching `ProductCollection.js`'s representative-row pick over to `default_variant_id`. See
+  the Appendix's "Migration path" for that scope.
 
-1. **Attribute mapping** — a stable `attribute_code` derived from a slug of the WC attribute name
-   (e.g. `wc_attr_color`), so "Color" is created once and reused across products/runs.
-2. **Attribute option mapping** — options (e.g. "Red") are looked up by
-   `(attribute_id, option_text)` before insert, to avoid duplicates on re-import.
-3. **Attribute group reuse** — one `attribute_group` per *unique set* of variation attribute codes
-   (e.g. `{color,size}`), tracked in a new map table, so two unrelated products that both use
-   Color+Size share one group instead of minting a new one each time.
-4. **Variant group** — one `variant_group` per WC *parent* product (its family of variations),
-   created once and reused on re-import via the new variation map table.
+## Phase 2 — `is_virtual` flag
 
-## Files to add
+- **Schema** (`Version-1.0.10.js`): `product.is_virtual boolean NOT NULL DEFAULT FALSE`.
+- **Checkout**: `Cart.ts` now selects `product.is_virtual` alongside `product.type` and exposes it
+  as `isVirtual` on the cart item (field resolver in `cartItem/product.ts`, not `camps.ts` — general
+  product concern, not camp-specific). `ShipmentStep.jsx`'s skip-shipping check (renamed from
+  `allRegistrations` to `skipShipping` for clarity) now fires when every item is either a
+  registration *or* virtual.
+- **GraphQL/Admin**: `isVirtual` added to `Product.graphql` and `Cart.graphql`; a "Shipping" toggle
+  added to `Status.jsx` (Requires shipping / Virtual).
 
-- `content/plugins/woocommerce-import/src/lib/woocommerceClient.ts` — add
-  `fetchProductVariations(client, productId, perPage = 50)`, an async generator identical in shape
-  to `fetchAllProducts`/`fetchAllOrders` (L24-64 today), hitting `/products/<productId>/variations`.
-- `content/plugins/woocommerce-import/src/lib/importAttributes.ts` (new) —
-  `resolveVariationAttributeContext(wcProduct)`:
-  - Filters `wcProduct.attributes` to `variation === true`.
-  - For each, find-or-create an `attribute` row: `select().from('attribute').where('attribute_code','=',code)`,
-    else call `createProductAttribute` (`core/modules/catalog/services/attribute/createProductAttribute.ts:158`,
-    re-exported through `core.ts`) with
-    `{attribute_code, attribute_name: name, type: 'select', is_required: false, display_on_frontend: true, groups: [], options: options.map(o => ({option_text: o}))}`.
-  - For an attribute that already exists, find any option texts on this product not yet present
-    (`select().from('attribute_option').where('attribute_id','=',id)`) and `insert()` the missing
-    ones directly via `@evershop/postgres-query-builder` — no service exists for "add an option to
-    an existing attribute" (confirmed: `insertAttributeOptions` in `createProductAttribute.ts:72-99`
-    only runs at attribute-creation time and blindly inserts, so it can't be reused for
-    incremental option discovery without a pre-check).
-  - Resolves/creates the shared `attribute_group` for the sorted code set via a new
-    `woocommerce_attribute_group_map` table (`attribute_set_key` UNIQUE → `attribute_group_id`); on
-    a miss, `insert('attribute_group').given({group_name})`, then link each attribute via
-    `insertOnUpdate('attribute_group_link', ['attribute_id','group_id'])` (mirrors
-    `createProductAttribute.ts:53-70`).
-  - Returns `{ attributeGroupId, attributeIds: number[] (max 5, stable order), codeByWcAttributeId, optionIdByWcAttributeIdAndValue }`.
-- `content/plugins/woocommerce-import/src/lib/mapVariation.ts` (new) —
-  `mapVariation(parentProduct, wcVariation, attributeContext) → ProductImportData`, mirroring
-  `mapProduct.ts`'s SKU/price/qty/stock/status/weight logic, but:
-  - `sku`: the variation's own SKU, else `wc_variation_<id>`.
-  - `price`: the variation's `regular_price`/`price`, falling back to the parent's price if blank.
-  - `name`: `` `${parentProduct.name} - ${optionValues.join(', ')}` ``.
-  - `url_key`: `` `${parentSlug}-${wcVariation.id}` `` — guarantees uniqueness without depending on
-    a variation slug, which WooCommerce doesn't provide.
-  - `group_id`: `attributeContext.attributeGroupId`, not the default group.
-  - `attributes`: `[{attribute_code, value: String(optionId)}]`, built from `wcVariation.attributes`
-    via the `attributeContext` maps — this is what makes `createProduct`/`updateProduct` populate
-    `product_attribute_value_index` automatically (`createProduct.ts:58-160`, `updateProduct.ts:175`);
-    no manual index writes are needed.
-- `content/plugins/woocommerce-import/src/lib/runVariationImport.ts` (new) —
-  `importVariationsForProduct(client, wcProduct, attributeContext, batchId)`:
-  - Fetches all variation pages via `fetchProductVariations`.
-  - Resolves/creates this parent's `variant_group_id`: looks up any existing
-    `woocommerce_variation_map` row for `external_parent_product_id`; else
-    `insert('variant_group').given({attribute_group_id, attribute_one: ids[0] ?? null, ...})`
-    (shape mirrors `createVariantGroup/[bodyParser]saveGroup.js:99`).
-  - For each variation: `mapVariation`, resolve its image via the existing
-    `resolveProductImages(wcVariation.id, wcVariation.image ? [wcVariation.image] : [])` (falling
-    back to the parent's already-resolved images if the variation has none), then create-or-update
-    exactly like `runImport.ts`'s per-product block — additionally setting
-    `product.variant_group_id` after create
-    (`update('product').given({variant_group_id}).where('product_id','=',...)`, mirroring
-    `addVariantItem/[bodyParser]addItem.js:57-62`), and re-asserting it after update for
-    idempotency. Each variation is wrapped in its own try/catch so one bad variation can't fail its
-    siblings or the parent product loop.
-  - Uses the new tracking functions in `services/importBatch.ts` (below) so re-imports are
-    idempotent and per-variation failures are recorded individually.
-- `content/plugins/woocommerce-import/src/migration/Version-1.0.3.ts` (new) — adds:
-  - `woocommerce_variation_map` (mirrors `woocommerce_product_map` in `Version-1.0.0.ts:24-38`):
-    `woocommerce_variation_map_id`, `uuid`, `external_parent_product_id`,
-    `external_variation_id` (UNIQUE), `product_id` (FK `product`, `ON DELETE CASCADE`),
-    `variant_group_id` (FK `variant_group`), `created_in_batch_id` / `last_batch_id` (FK
-    `woocommerce_import_batch`), `status`, `error_message`, `external_updated_at`, timestamps.
-  - `woocommerce_attribute_group_map`: `woocommerce_attribute_group_map_id`, `attribute_set_key`
-    (UNIQUE text — sorted, comma-joined attribute codes), `attribute_group_id` (FK
-    `attribute_group`).
+## Phase 3 — `product.type = 'camp'`
 
-## Files to change
+Repurposed the previously-dead `product.type` column (see the Appendix for how that dormancy was
+discovered) instead of leaving `manage_registrations` in place.
 
-- `content/plugins/woocommerce-import/src/types.ts` — extend `WooCommerceProduct` with
-  `type: string` and `attributes: WooCommerceProductAttribute[]`; add
-  `WooCommerceProductAttribute { id, name, variation: boolean, options: string[] }`,
-  `WooCommerceVariationAttribute { id, name, option }`,
-  `WooCommerceProductVariation { id, sku, regular_price, price, stock_quantity, manage_stock, stock_status, weight, date_modified, image?: WooCommerceProductImage, attributes: WooCommerceVariationAttribute[] }`.
-- `content/plugins/woocommerce-import/src/lib/runImport.ts` — inside the per-product loop
-  (currently L35-85): if `wcProduct.type === 'variable'`, fetch variations first; if any exist,
-  resolve the attribute context and call `importVariationsForProduct(...)` **instead of** the
-  existing `createProduct`/`updateProduct` call for the parent, then continue to the next product.
-  A variable product with zero variations falls through to today's simple-product path unchanged.
-  Variation create/update/failure counts fold into the existing `totalCreated`/`totalUpdated`/
-  `totalFailed` counters — no `woocommerce_import_batch` schema change needed.
-- `content/plugins/woocommerce-import/src/services/importBatch.ts` — add
-  `findVariationMapByExternalId`, `findVariantGroupIdForParent(externalParentProductId)`,
-  `recordVariationCreated`, `recordVariationUpdated`, `recordVariationFailed`, mirroring the
-  existing product-map functions (currently L42-123) exactly. Extend `rollbackProductBatch`
-  (currently L175-199) to also delete variation products/map rows created in the batch — leave
-  shared `attribute`/`attribute_group`/`variant_group` rows in place, since they may be reused by
-  other product families; an orphaned `variant_group` after a full rollback is harmless because
-  `product.variant_group_id` has `ON DELETE SET NULL`.
-- `content/plugins/woocommerce-import/src/core.ts` — add
-  `export { default as createProductAttribute } from '../../../../dist/modules/catalog/services/attribute/createProductAttribute.js';`.
+- **Backfill** (`Version-1.0.11.js`): `UPDATE product SET type = CASE WHEN manage_registrations
+  THEN 'camp' ELSE 'simple' END` — read per-row rather than trusting `type`'s own default, since
+  `manage_registrations` itself defaults `TRUE`.
+- **Single choke point**: `Cart.ts` now selects `product.type` and computes
+  `manageRegistrations: product?.type === 'camp' ? 1 : 0` — every other cart/checkout consumer
+  (`camps.ts`, `ShipmentStep.jsx`, `orderValidator.ts`, `orderCreator.ts`) needed **no changes**,
+  confirmed by reading each one directly.
+- **GraphQL**: `Product.resolvers.js` and `Registration.resolvers.ts` (+ `getRegistrationsBaseQuery.ts`,
+  which now also selects `product.type`) compute `manageRegistrations` from `type` instead of
+  passing the raw column through, so both stay correct once the column stops being written.
+- **Admin**: `Status.jsx`'s "Manage Registrations" radio replaced with a "Product Type" select
+  (`simple` / `camp`, `name="type"`).
+- **Filters**: `registerDefaultProductCollectionFilters.js`'s `manage_registrations` filter now
+  queries `product.type = 'camp'` — the filter **key** name was kept unchanged since
+  `RegistrationSkuSelector.jsx` sends it literally and needed no changes.
+- **Bug found and fixed along the way**: `addMineCartItem/[detectCurrentCart]addItemToCart.js` read
+  `product.manageRegistrations` off a raw, non-camelCased query-builder row — always `undefined`,
+  so the "first/last name required for registrations" check there had never actually fired. Fixed
+  to read `product.type === 'camp'` (the raw column name, matching the raw row).
+- **Left in place**: the `manage_registrations` column itself — dormant, not written after
+  `Status.jsx`'s change, dropped in a later migration only once a deploy cycle confirms nothing
+  else reads it directly.
 
-## Known limitations (documented, not solved in v1)
+## Phase 4 — WooCommerce variations import
 
-- If a WooCommerce attribute set changes between import runs (e.g. a "Material" attribute is added
-  later), the existing `variant_group`'s fixed `attribute_one..five` won't pick it up — re-importing
-  won't retrofit it. Flagged as a follow-up, not solved here.
-- If a product was previously imported as simple and later becomes variable in WooCommerce, the
-  old simple product row is left orphaned rather than auto-migrated; rollback + reimport is the
-  escape hatch.
+Built directly against the Phase 1 family model — the original design's "skip the parent, copy its
+content onto every variation" workaround was never implemented, since Phase 1 made it unnecessary.
 
-## Non-goals for v1 (explicitly deferred)
+- **`woocommerceClient.ts`**: added `fetchProductVariations(client, productId, perPage)`, a
+  paginated async generator matching `fetchAllProducts`/`fetchAllOrders`'s shape, hitting
+  `/products/<id>/variations`.
+- **`importAttributes.ts`** (new): `resolveVariationAttributeContext(wcProduct)` — finds or creates
+  an evercamps `attribute` (type `select`) per WooCommerce variation-defining attribute (stable
+  code via `wc_attr_<slug>`, reused across products/runs), inserts any newly-seen option texts onto
+  an already-existing attribute, and resolves/creates a shared `attribute_group` per unique sorted
+  set of attribute codes via a new `woocommerce_attribute_group_map` table.
+- **`mapVariation.ts`** (new): maps a single WooCommerce variation to `ProductImportData` — own
+  SKU/price (falling back to the parent's)/stock/weight, `group_id` set to the resolved attribute
+  group, and an `attributes` array built from the variation's selected option values (this is what
+  makes `createProduct`/`updateProduct` populate `product_attribute_value_index` automatically). No
+  longer duplicates the parent's name/description/images — those live on the family record instead.
+  A blank WooCommerce attribute value ("Any <attribute>") is skipped rather than treated as an
+  error.
+- **`runVariationImport.ts`** (new): `importVariationsForProduct(client, wcProduct, batchId)` —
+  resolves or creates the family via `createProductFamily` (name/url_key/description straight from
+  the WC parent), then per variation: maps it, creates or updates the product, and links it into
+  the family via `addProductToFamily` (re-asserted on every update for idempotency). Returns `null`
+  — signaling the caller to fall back to plain simple-product import — when the product has no
+  variation-defining attributes, or when WooCommerce reports it as `variable` but actually returns
+  zero variations, so nothing is silently dropped.
+- **`runImport.ts`**: branches on `wcProduct.type === 'variable'` before the existing simple-product
+  path; variation create/update/failure counts fold into the batch's existing totals.
+- **`services/importBatch.ts`**: added `findVariationMapByExternalId`, `findVariantGroupIdForParent`,
+  `recordVariationCreated`/`Updated`/`Failed`, and extended `rollbackProductBatch` to also delete
+  variation products created by a rolled-back batch (the family/`variant_group` row itself is left
+  in place, since it may be reused by a later import run).
+- **`migration/Version-1.0.3.ts`** (new): `woocommerce_variation_map` (mirrors
+  `woocommerce_product_map`, plus `external_parent_product_id` and `variant_group_id`) and
+  `woocommerce_attribute_group_map` (`attribute_set_key` UNIQUE → `attribute_group_id`).
+- **`types.ts`**: `WooCommerceProduct` gained `type`, `virtual`, `description`, `attributes`;
+  new `WooCommerceProductAttribute`, `WooCommerceVariationAttribute`, `WooCommerceProductVariation`
+  types; `ProductImportData` swapped `manage_registrations` for `type: 'simple'` and added
+  `is_virtual`, matching Phase 2/3's schema changes.
+- **`mapProduct.ts`**: now sets `type: 'simple'` and `is_virtual: wcProduct.virtual ? 1 : 0` on the
+  simple-product path too (WooCommerce's native `virtual` field, which can also vary per variation).
+- **`core.ts`**: re-exports `createProductAttribute`, `createProductFamily`, `addProductToFamily`.
 
-- Retrofitting variant_group attribute sets after creation (see limitations above).
-- Splitting variation counts out of the batch summary's existing created/updated/failed totals
-  into their own columns — v1 folds them together.
-- A settings toggle to disable variation import — v1 always imports variations for variable
-  products that have any.
+**Known limitations, unchanged from the original design:** a WooCommerce attribute set that changes
+between import runs won't retrofit an existing `variant_group`'s fixed attribute slots; a product
+previously imported as simple that later becomes variable in WooCommerce leaves its old simple row
+orphaned rather than auto-migrating it (rollback + reimport is the escape hatch).
 
 ## Verification
 
-- Unit tests: `content/plugins/woocommerce-import/tests/unit/mapVariation.test.ts` and
-  `importAttributes.test.ts`, following the plain `describe/it` convention used at
-  `core/modules/checkout/tests/unit/lineTotal.test.js`.
-- Manual, against a WooCommerce store with at least one variable product:
-  1. Run the existing `POST /wc-import/products` route.
-  2. In evercamps admin, confirm: variation products exist with correct SKU/price/stock, the
-     parent variable product's own row was **not** created, and the product edit page's variant
-     group UI shows the swatches with the correct options selected.
-  3. Re-run the import and confirm no duplicate attributes, options, attribute groups, or variant
-     groups are created (idempotency).
+- Run the plugin/module migrations, then `SELECT type, count(*) FROM product GROUP BY type` to spot
+  check the `manage_registrations` → `type` backfill.
+- Exercise `createProductFamily`/`addProductToFamily` (directly or via `createVariantGroup`/
+  `addVariantItem`) and confirm the `updateProduct` group_id guard rejects a change on a linked
+  product.
+- Cart with a virtual product and a physical one together: Shipment step still shows. Cart with
+  only virtual/registration items: Shipment step is skipped.
+- Toggle "Product Type" in the admin product form; confirm checkout behavior and
+  `RegistrationSkuSelector` still work unchanged.
+- Run the WooCommerce import against a store with a variable product: one family record is created
+  from the parent's name/description/images, each variation is a lightweight linked product with
+  its own SKU/price/stock, a virtual variation imports with `is_virtual = 1`, and re-running the
+  import doesn't duplicate attributes/options/groups/families.
 
 ## Critical files
 
-- `content/plugins/woocommerce-import/src/lib/runImport.ts` — where the variable-product branch
-  is added
-- `content/plugins/woocommerce-import/src/lib/runVariationImport.ts` — new, the variation import
-  loop
-- `content/plugins/woocommerce-import/src/lib/importAttributes.ts` — new, WC attribute → evercamps
-  attribute/attribute_group mapping
-- `content/plugins/woocommerce-import/src/lib/mapVariation.ts` — new, field mapping for a single
-  variation
-- `content/plugins/woocommerce-import/src/migration/Version-1.0.3.ts` — new tables
-- `content/plugins/woocommerce-import/src/services/importBatch.ts` — new tracking functions +
-  rollback extension
-- `core/modules/catalog/services/attribute/createProductAttribute.ts` — reused as-is, not modified
-- `core/modules/catalog/services/product/{createProduct,updateProduct}.ts` — reused as-is (their
-  existing `attributes` payload support is what populates `product_attribute_value_index`)
+- `core/modules/catalog/migration/Version-1.0.9.js` / `.10.js` / `.11.js`
+- `core/modules/catalog/services/family/createProductFamily.ts` / `addProductToFamily.ts` / `updateProductFamily.ts`
+- `core/modules/catalog/services/product/updateProduct.ts` — drift guard
+- `core/modules/checkout/services/cart/Cart.ts` — Phase 2 + 3 single choke-point read site
+- `core/modules/catalog/pages/admin/productEdit+productNew/Status.jsx` — Phase 2 + 3 admin write path
+- `content/plugins/woocommerce-import/src/lib/runVariationImport.ts` / `mapVariation.ts` / `importAttributes.ts`
+
+---
+
+# Appendix: exploratory analysis behind this decision
+
+The sections below are the research and reasoning that led to the plan implemented above — kept
+for context on *why*, not as an outstanding to-do list. Where they describe something as a
+recommendation or a future step, check the phases above first; most of it has since landed.
 
 ## Analysis: evercamps' flat variant model vs. a parent-product model
 
@@ -276,7 +262,8 @@ variant switcher need to change.
    search results pick a deterministic tile instead of today's `DISTINCT ON (COALESCE(..., random()))`
    (`ProductCollection.js:99-113`). Simple (non-variant) products stay exempt — a product with
    `variant_group_id IS NULL` continues to mean "not part of a family," same as today, so this
-   doesn't require touching every existing product row, only variant families.
+   doesn't require touching every existing product row, only variant families. **[Implemented —
+   see Phase 1 above.]**
 
 2. **Data backfill.** Today, family-level content (name/description/images) only exists duplicated
    — and possibly diverged — across each family's N variant rows, since there's no single source of
@@ -286,7 +273,8 @@ variant switcher need to change.
    accordingly (admin-overridable after). Net effect for *future* imports like the one in this
    document: the WooCommerce parent product's own name/description/images become the source of
    truth for these new columns directly, instead of `mapVariation.ts` needing to duplicate them onto
-   every variation.
+   every variation. **[Not done — no existing `variant_group` rows had content to backfill from at
+   the time Phase 1 shipped; new families get real content from creation onward via Phase 4.]**
 
 3. **Service layer.** Variant group creation today is only an HTTP route handler
    (`createVariantGroup/[bodyParser]saveGroup.js`, `addVariantItem/[bodyParser]addItem.js`) with no
@@ -296,11 +284,13 @@ variant switcher need to change.
    existing routes call into them instead of writing SQL inline. This also gives future importers
    (this plugin included) an in-process function to call, rather than having to reimplement
    `variant_group` bookkeeping by hand as this plan's `runVariationImport.ts` currently does.
+   **[Implemented — see Phase 1 above.]**
 
 4. **Storefront listing (`ProductCollection.js`).** Replace the current representative-row pick
    (`ProductCollection.js:99-113`) with one driven by `default_variant_id` — deterministic, and
    admin-curatable instead of arbitrary. This is also the natural place to add a family price rollup
    ("from $X") to the grid tile, which the flat model has no query-free way to produce today.
+   **[Not implemented — deliberately deferred, see Phase 1's "Deferred" note above.]**
 
 5. **Storefront product page — smaller than it looks.** Much of the variant-switching UX already
    exists and doesn't need to be rebuilt: `Variants.jsx` and the `variantGroup { variantAttributes,
@@ -311,7 +301,7 @@ variant switcher need to change.
    (`GeneralInfo.jsx`, `Description.jsx`, `Images.jsx`) from the new family columns instead of from
    whichever variant happened to be loaded. Decide whether sibling variant URLs keep resolving
    (with `rel=canonical` pointing at the family URL, preserving today's deep-linkability) or 301
-   redirect to it outright.
+   redirect to it outright. **[Not implemented — deliberately deferred.]**
 
 6. **Sitemap / search index.** No sitemap generator or dedicated search-index subsystem exists in
    this codebase today (confirmed — no matches for either anywhere in `core/`) — product discovery
@@ -329,7 +319,8 @@ variant switcher need to change.
    CRUD screens backed by the new service layer (step 3): a family is its own editable row
    (name/description/SEO) with its variants nested underneath. `createVariantGroup`/
    `addVariantItem`/`unlinkVariant` can stay as the lower-level "link this product to this family"
-   primitives the new family screens call into.
+   primitives the new family screens call into. **[Not implemented — deliberately deferred; the new
+   family fields are API-only for now.]**
 
 9. **Rollout.** Ship in phases rather than one cutover, given how many subsystems touch `product`:
    first the additive schema + backfill + admin editing (no URL or query behavior changes, fully
@@ -411,10 +402,13 @@ above are worth making deliberately rather than inheriting by default:
    storefront facet filtering share one system" for free (both read `product_attribute_value_index`
    off the same global `attribute` rows); Shopify doesn't get that for free either — it solves
    storefront filtering separately, via tags/metafields, not through `ProductOption`. So this isn't
-   a strict downgrade, just a different, and arguably simpler, place to draw the line.
+   a strict downgrade, just a different, and arguably simpler, place to draw the line. **[Kept the
+   global/shared design when implementing Phase 4 — the product-scoped alternative was noted but
+   not adopted.]**
 3. **Shipping flag**: add a general boolean (e.g. `requires_shipping`) at the variant/product level,
    generalizing the existing `manage_registrations` precedent, rather than resurrecting the dormant
-   `type` column for it — consistent with the earlier conclusion.
+   `type` column for it — consistent with the earlier conclusion. **[Implemented as `is_virtual` —
+   see Phase 2 above.]**
 4. **Canonical URL**: this remains the highest-leverage, most Shopify-defining change, and the
    good news is most of the client-side plumbing (`Variants.jsx`) already exists — the work is
    concentrated in the URL/routing layer (Migration path step 5), not in rebuilding the swatch UX.
@@ -431,12 +425,13 @@ Shopify's core `Product`/`ProductVariant` model has **no `productType` value for
 - **`requiresShipping`** — the one native, first-class field for this, and it's a plain boolean on
   the *variant* (not a product-level "kind"). Setting it `false` removes the variant from shipping
   calculation and the shipping-address requirement at checkout. This is exactly the flag-based
-  design already recommended earlier in this doc for evercamps.
+  design implemented as `is_virtual` (Phase 2 above).
 - **Digital delivery (downloadable files) is not native at all.** Shopify does not ship a
   first-party "attach a file, auto-email a download link" feature in the core product model. It's
   handled entirely through apps — Shopify's own free "Digital Downloads" app, or third-party apps
   (SendOwl, FetchApp, etc.) — that attach a file to a line item and react to an order-paid webhook
-  to deliver it. Shopify deliberately kept this out of the core schema.
+  to deliver it. Shopify deliberately kept this out of the core schema. (Not implemented here
+  either — out of scope per the original request.)
 - **Gift cards are the one deliberate exception** — a genuine first-class product kind
   (`Product.isGiftCard` / a dedicated `GiftCard` system object with its own code, balance, and
   expiry). Shopify built this in natively because a gift card's behavior is *structurally*
@@ -465,7 +460,8 @@ create/update/delete on both, own admin grids/edit screens, own GraphQL types
 cards (a real object model: code + balance + expiry) than to "virtual" (a single shipping
 boolean) — so promoting it to a genuine `type` value is well justified, and virtual/digital
 should *not* follow the same path (they should stay composable flags, per the section above, and
-specifically should not be added as more `type` values alongside `camp`).
+specifically should not be added as more `type` values alongside `camp`). **[Implemented — see
+Phase 3 above.]**
 
 **One data-migration wrinkle to plan for.** `manage_registrations` was added later, via
 `core/modules/catalog/migration/Version-1.0.8.js:7` —
@@ -476,7 +472,7 @@ product in this platform today, and "simple product" is the opt-out, not the oth
 backfilling `type`: a naive `ALTER TABLE product ADD COLUMN type varchar DEFAULT 'simple'` would
 silently misclassify most of the existing catalog. The backfill has to read each row's actual
 current value: `UPDATE product SET type = CASE WHEN manage_registrations THEN 'camp' ELSE 'simple'
-END`, not rely on either column's own default.
+END`, not rely on either column's own default. **[This is exactly what `Version-1.0.11.js` does.]**
 
 **Where the boolean is read today** (everything that would need to switch to reading `type ===
 'camp'`, or to a computed field derived from it during a transition period):
@@ -489,11 +485,15 @@ when every cart item is a registration), `core/modules/checkout/services/cart/Ca
 `orderValidator.ts`/`orderCreator.ts` and `RegistrationSkuSelector.jsx` in the promotion module.
 To avoid a flag-day break across all of these, keep a `manageRegistrations` GraphQL field alive as
 a computed value (`type === 'camp' ? 1 : 0`) during the transition, migrate each consumer to read
-`type` directly at its own pace, then drop the boolean once nothing depends on it.
+`type` directly at its own pace, then drop the boolean once nothing depends on it. **[Implemented
+as described — see Phase 3's "single choke point" note above. One additional site was found during
+implementation that this list missed: `addMineCartItem/[detectCurrentCart]addItemToCart.js`, which
+turned out to have a pre-existing bug (see Phase 3).]**
 
 **A UX upside that falls out of this for free**, mirroring how Shopify treats gift cards: today,
 "this is a camp product" is a checkbox buried inside editing an already-created generic product
 (`Status.jsx`). Promoting it to `type` opens the door to a real distinct creation flow — choosing
 "Camp" vs. "Simple product" up front in `ProductNewForm.jsx`, the same way Shopify's product
 creation flow branches meaningfully once "This is a gift card" is checked — rather than a setting
-discovered after the fact.
+discovered after the fact. **[Not implemented — `Status.jsx` now writes `type` directly, but
+`ProductNewForm.jsx` doesn't yet branch its fields on it. Flagged as a fast-follow, not required.]**

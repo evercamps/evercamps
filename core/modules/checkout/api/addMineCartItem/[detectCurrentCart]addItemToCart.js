@@ -47,7 +47,7 @@ export default async (request, response, next) => {
       return;
     }
 
-    if (product.manageRegistrations === 1) {
+    if (product.type === 'camp') {
     if (!first_name || !last_name) {
       response.status(INVALID_PAYLOAD);
       response.json({

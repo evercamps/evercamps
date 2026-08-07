@@ -122,6 +122,104 @@ export async function recordFailed(
   }
 }
 
+export async function findVariationMapByExternalId(externalVariationId: number) {
+  return select()
+    .from('woocommerce_variation_map')
+    .where('external_variation_id', '=', externalVariationId)
+    .load(pool);
+}
+
+// Any variation already imported for this WC parent tells us the family's
+// variant_group_id - reused so re-running an import doesn't create a second
+// family for the same WooCommerce parent product.
+export async function findVariantGroupIdForParent(
+  externalParentProductId: number
+): Promise<number | null> {
+  const row = await select('variant_group_id')
+    .from('woocommerce_variation_map')
+    .where('external_parent_product_id', '=', externalParentProductId)
+    .and('variant_group_id', 'IS NOT', null)
+    .load(pool);
+  return row ? row.variant_group_id : null;
+}
+
+export async function recordVariationCreated(
+  batchId: number,
+  externalParentProductId: number,
+  externalVariationId: number,
+  productId: number,
+  variantGroupId: number,
+  externalUpdatedAt?: string
+): Promise<void> {
+  await insert('woocommerce_variation_map')
+    .given({
+      external_parent_product_id: externalParentProductId,
+      external_variation_id: externalVariationId,
+      product_id: productId,
+      variant_group_id: variantGroupId,
+      created_in_batch_id: batchId,
+      last_batch_id: batchId,
+      status: 'success',
+      error_message: null,
+      external_updated_at: externalUpdatedAt ?? null
+    })
+    .execute(pool);
+}
+
+export async function recordVariationUpdated(
+  mapId: number,
+  productId: number,
+  variantGroupId: number,
+  batchId: number,
+  externalUpdatedAt?: string
+): Promise<void> {
+  await update('woocommerce_variation_map')
+    .given({
+      last_batch_id: batchId,
+      status: 'success',
+      error_message: null,
+      external_updated_at: externalUpdatedAt ?? null,
+      updated_at: new Date(),
+      product_id: productId,
+      variant_group_id: variantGroupId
+    })
+    .where('woocommerce_variation_map_id', '=', mapId)
+    .execute(pool);
+}
+
+export async function recordVariationFailed(
+  batchId: number,
+  externalParentProductId: number,
+  externalVariationId: number,
+  errorMessage: string,
+  existingMapId?: number
+): Promise<void> {
+  if (existingMapId) {
+    await update('woocommerce_variation_map')
+      .given({
+        last_batch_id: batchId,
+        status: 'failed',
+        error_message: errorMessage,
+        updated_at: new Date()
+      })
+      .where('woocommerce_variation_map_id', '=', existingMapId)
+      .execute(pool);
+  } else {
+    await insert('woocommerce_variation_map')
+      .given({
+        external_parent_product_id: externalParentProductId,
+        external_variation_id: externalVariationId,
+        product_id: null,
+        variant_group_id: null,
+        created_in_batch_id: batchId,
+        last_batch_id: batchId,
+        status: 'failed',
+        error_message: errorMessage
+      })
+      .execute(pool);
+  }
+}
+
 export async function listBatches(limit = 20): Promise<ImportBatchSummary[]> {
   const query = select().from('woocommerce_import_batch');
   query.orderBy('started_at', 'DESC').limit(0, limit);
@@ -194,6 +292,30 @@ async function rollbackProductBatch(
   }
 
   await del('woocommerce_product_map')
+    .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
+    .execute(pool);
+
+  // Variation products created by this batch - the family (variant_group)
+  // row itself is left in place, since it may be reused by a future import
+  // run and attribute/attribute_group rows may be shared across families.
+  const variationRows = await select()
+    .from('woocommerce_variation_map')
+    .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
+    .execute(pool);
+
+  for (const row of variationRows) {
+    if (row.product_id) {
+      const product = await select('uuid')
+        .from('product')
+        .where('product_id', '=', row.product_id)
+        .load(pool);
+      if (product) {
+        await deleteProduct(product.uuid, context);
+      }
+    }
+  }
+
+  await del('woocommerce_variation_map')
     .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
     .execute(pool);
 }

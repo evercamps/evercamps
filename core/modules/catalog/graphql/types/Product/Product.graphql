@@ -17,6 +17,8 @@ type Product {
   variantGroupId: ID
   visibility: Int
   manageRegistrations: Int
+  type: String
+  isVirtual: Int
   groupId: ID
   url: String
 }

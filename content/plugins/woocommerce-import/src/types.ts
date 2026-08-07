@@ -10,31 +10,65 @@ export interface WooCommerceProductImage {
   src: string;
 }
 
+export interface WooCommerceProductAttribute {
+  id: number;
+  name: string;
+  variation: boolean;
+  options: string[];
+}
+
+export interface WooCommerceVariationAttribute {
+  id: number;
+  name: string;
+  option: string;
+}
+
 export interface WooCommerceProduct {
   id: number;
   name: string;
   slug: string;
   sku: string;
   status: string;
+  type: string;
   regular_price: string;
   price: string;
   stock_quantity: number | null;
   manage_stock: boolean;
   stock_status: 'instock' | 'outofstock' | 'onbackorder';
   weight: string;
+  virtual: boolean;
   date_modified: string;
+  description: string;
   images: WooCommerceProductImage[];
+  attributes: WooCommerceProductAttribute[];
+}
+
+export interface WooCommerceProductVariation {
+  id: number;
+  sku: string;
+  regular_price: string;
+  price: string;
+  stock_quantity: number | null;
+  manage_stock: boolean;
+  stock_status: 'instock' | 'outofstock' | 'onbackorder';
+  weight: string;
+  virtual: boolean;
+  date_modified: string;
+  image?: WooCommerceProductImage;
+  attributes: WooCommerceVariationAttribute[];
 }
 
 // ProductData (core's type for createProduct/updateProduct) types status,
-// manage_stock, stock_availability, visibility and manage_registrations as
-// string/boolean, but productDataSchema.json actually accepts (and mapProduct
-// produces) the 0|1 numeric form for all of them - so those fields are
-// narrowed here instead of inherited as-is.
+// manage_stock, stock_availability and visibility as string/boolean, but
+// productDataSchema.json actually accepts (and mapProduct produces) the 0|1
+// numeric form for all of them - so those fields are narrowed here instead
+// of inherited as-is. manage_registrations is dropped in favor of `type`
+// ('simple' | 'camp') - WooCommerce-imported products are always 'simple',
+// camp/registration status has no WooCommerce equivalent.
 export interface ProductImportData
   extends Omit<
     ProductData,
-    'status' | 'manage_stock' | 'stock_availability' | 'visibility' | 'manage_registrations'
+    'status' | 'manage_stock' | 'stock_availability' | 'visibility' | 'manage_registrations' | 'type'
   > {
   url_key: string;
   status: 0 | 1;
@@ -42,7 +76,8 @@ export interface ProductImportData
   stock_availability: 0 | 1;
   weight?: number;
   visibility: 0 | 1;
-  manage_registrations: 0 | 1;
+  type: 'simple';
+  is_virtual: 0 | 1;
   images: string[];
 }
 

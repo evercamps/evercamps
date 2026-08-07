@@ -20,6 +20,8 @@ export type ProductData = ProductInventoryData & {
   group_id: number,
   visibility?: string,
   manage_registrations: string,
+  type?: 'simple' | 'camp',
+  is_virtual?: string,
   attributes?: ProductAttributeData[],
   images?: string[],
   [key: string]: any

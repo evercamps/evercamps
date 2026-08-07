@@ -290,6 +290,16 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
     throw new Error('Requested product not found');
   }
 
+  if (
+    data.group_id !== undefined &&
+    Number(data.group_id) !== product.group_id &&
+    product.variant_group_id
+  ) {
+    throw new Error(
+      'Cannot change attribute group while linked to a variant family; unlink first'
+    );
+  }
+
   let newProduct: Record<string, any> = {};
   try {
     newProduct = await update('product')

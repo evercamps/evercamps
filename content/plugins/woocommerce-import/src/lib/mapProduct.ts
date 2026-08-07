@@ -39,6 +39,7 @@ export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
     images: [],
     group_id: DEFAULT_ATTRIBUTE_GROUP_ID,
     visibility: 1,
-    manage_registrations: 0
+    type: 'simple',
+    is_virtual: wcProduct.virtual ? 1 : 0
   };
 }

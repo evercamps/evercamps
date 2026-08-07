@@ -9,6 +9,7 @@ export const getRegistrationsBaseQuery = (): SelectQuery => {
     'registration.created_at',    
     'product.product_id',
     'product.sku',
+    'product.type',
     'product_description.name',
     'product_image.thumb_image',
     'participant.first_name',
