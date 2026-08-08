@@ -5,6 +5,7 @@ import type {
   WooCommerceProductVariation,
   WooCommerceOrder
 } from '../types.js';
+import { debug } from '../core.js';
 
 export function createWooCommerceClient(settings: WooCommerceSettings): AxiosInstance {
   if (!settings.storeUrl) {
@@ -57,6 +58,7 @@ export async function* fetchProductVariations(
       `/products/${productId}/variations`,
       { params: { page, per_page: perPage } }
     );
+    debug(JSON.stringify(data));
     if (!Array.isArray(data) || data.length === 0) {
       return;
     }

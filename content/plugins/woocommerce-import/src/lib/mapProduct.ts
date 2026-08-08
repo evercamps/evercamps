@@ -1,3 +1,4 @@
+import { debug } from '../../../../../dist/lib/log/logger.js';
 import type { ProductImportData, WooCommerceProduct } from '../types.js';
 
 // Attribute group 1 is evercamps' default/undeletable attribute group (see
@@ -18,6 +19,7 @@ export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
   }
 
   const weight = wcProduct.weight ? parseFloat(wcProduct.weight) : 0;
+  debug("into mapProduct");
 
   return {
     name: wcProduct.name,

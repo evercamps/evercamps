@@ -36,9 +36,17 @@ export async function runImport(): Promise<ImportBatchSummary> {
       for (const wcProduct of page) {
         totalFetched += 1;
 
+        // Looked up once, up front, so every failure path below (variable
+        // product, mapProduct, or the main create/update try) can pass the
+        // existing map row's id to recordFailed instead of blindly
+        // inserting - a prior failed attempt for this external_product_id
+        // already has a row, and re-inserting violates its UNIQUE constraint.
+        const existing = await findMapByExternalId(wcProduct.id);
+        debug(JSON.stringify(existing));
         if (wcProduct.type === 'variable') {
           try {
             const variationSummary = await importVariationsForProduct(client, wcProduct, batchId);
+            debug(JSON.stringify(variationSummary));
             if (variationSummary) {
               totalCreated += variationSummary.created;
               totalUpdated += variationSummary.updated;
@@ -49,21 +57,32 @@ export async function runImport(): Promise<ImportBatchSummary> {
             // through to the plain simple-product import below.
           } catch (e) {
             totalFailed += 1;
-            await recordFailed(batchId, wcProduct.id, (e as Error).message);
+            debug("record failed")
+            debug(JSON.stringify(e));
+            await recordFailed(
+              batchId,
+              wcProduct.id,
+              (e as Error).message,
+              existing ? existing.woocommerce_product_map_id : undefined
+            );
             continue;
           }
         }
-
+        debug("begore data");
         let data;
         try {
           data = mapProduct(wcProduct);
+          debug("mapproduct succeeded");
         } catch (e) {
           totalFailed += 1;
-          await recordFailed(batchId, wcProduct.id, (e as Error).message);
+          await recordFailed(
+            batchId,
+            wcProduct.id,
+            (e as Error).message,
+            existing ? existing.woocommerce_product_map_id : undefined
+          );
           continue;
         }
-
-        const existing = await findMapByExternalId(wcProduct.id);
 
         try {
           data.images = await resolveProductImages(wcProduct.id, wcProduct.images || []);
@@ -91,7 +110,7 @@ export async function runImport(): Promise<ImportBatchSummary> {
             totalUpdated += 1;
           }
         } catch (e) {
-          
+
           debug('failed updating record ' + (e as Error).message + ' ' +JSON.stringify(wcProduct));
           totalFailed += 1;
           await recordFailed(

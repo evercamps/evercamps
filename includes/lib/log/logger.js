@@ -1,3 +1,4 @@
+import path from 'path';
 import winston from 'winston';
 import { getEnv } from '../util/getEnv.js';
 import isDevelopmentMode from '../util/isDevelopmentMode.js';
@@ -10,10 +11,26 @@ function createLogger() {
   });
 }
 
+// Returns "file.js:line" for whoever called debug() - two frames up the
+// stack from here (frame 0 is this function, frame 1 is debug() itself).
+// Note: no sourceMaps in .swcrc, so this points at the compiled dist/ file,
+// not the original TypeScript/JSX source.
+function getCallSite() {
+  const { stack } = new Error();
+  const callerLine = stack?.split('\n')[3] || '';
+  const match = callerLine.match(/([^/\\()\s]+:\d+):\d+\)?$/);
+  if (!match) {
+    return '';
+  }
+  const [filePath, line] = match[1].split(':');
+  return `${path.basename(filePath)}:${line}`;
+}
+
 // Define logger function
 export function debug(message) {
   const logger = createLogger();
-  logger.debug(message);
+  const site = getCallSite();
+  logger.debug(site ? `[${site}] ${message}` : message);
 }
 
 export function error(e) {

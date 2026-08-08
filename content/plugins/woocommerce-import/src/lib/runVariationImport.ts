@@ -14,6 +14,7 @@ import { resolveProductImages } from './importImages.js';
 import { mapVariation } from './mapVariation.js';
 import { fetchProductVariations } from './woocommerceClient.js';
 import type { AxiosInstance } from 'axios';
+import { debug, error } from '../core.js';
 
 export interface VariationImportSummary {
   created: number;
@@ -138,6 +139,7 @@ export async function importVariationsForProduct(
   wcProduct: WooCommerceProduct,
   batchId: number
 ): Promise<VariationImportSummary | null> {
+  debug("into imlport variations for product");
   const attributeContext = await resolveVariationAttributeContext(wcProduct);
   if (!attributeContext) {
     return null;
