@@ -1,4 +1,5 @@
 import { select } from '@evershop/postgres-query-builder';
+import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { translate } from '../../../../../lib/locale/translate/translate.js';
 import { get } from '../../../../../lib/util/get.js';
 
@@ -51,6 +52,12 @@ export default {
             url: '/'
           }
         ];
+        if (rewriteRule.entity_type === 'product') {
+          breadcrumbs.push({
+            title: translate('Shop'),
+            url: buildUrl('shop')
+          });
+        }
         for (let i = 0; i < paths.length; i += 1) {
           if (paths[i] === '') {
             continue;
