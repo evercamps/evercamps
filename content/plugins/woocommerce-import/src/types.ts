@@ -10,12 +10,49 @@ export interface WooCommerceProductImage {
   src: string;
 }
 
+// Attribute as it appears on the parent product: the full set of possible
+// terms, and whether this attribute is used to distinguish variations.
+export interface WooCommerceAttribute {
+  id: number;
+  name: string;
+  variation: boolean;
+  options: string[];
+}
+
+// Attribute as it appears on a variation: the single term selected for it.
+export interface WooCommerceVariationAttribute {
+  id: number;
+  name: string;
+  option: string;
+}
+
+export interface WooCommerceCategory {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface WooCommerceVariation {
+  id: number;
+  sku: string;
+  regular_price: string;
+  price: string;
+  stock_quantity: number | null;
+  // WooCommerce variations can also inherit stock management from the parent
+  // product via the literal string 'parent'.
+  manage_stock: boolean | 'parent';
+  stock_status: 'instock' | 'outofstock' | 'onbackorder';
+  attributes: WooCommerceVariationAttribute[];
+  date_modified: string;
+}
+
 export interface WooCommerceProduct {
   id: number;
   name: string;
   slug: string;
   sku: string;
   status: string;
+  type: string;
   regular_price: string;
   price: string;
   stock_quantity: number | null;
@@ -24,6 +61,8 @@ export interface WooCommerceProduct {
   weight: string;
   date_modified: string;
   images: WooCommerceProductImage[];
+  attributes: WooCommerceAttribute[];
+  categories: WooCommerceCategory[];
 }
 
 // ProductData (core's type for createProduct/updateProduct) types status,

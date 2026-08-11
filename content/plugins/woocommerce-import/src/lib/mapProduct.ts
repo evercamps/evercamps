@@ -5,7 +5,7 @@ import type { ProductImportData, WooCommerceProduct } from '../types.js';
 // special-cases attribute_group_id === 1 as non-removable) - safe to hardcode
 // as the group for every imported product since WooCommerce attributes aren't
 // mapped to evercamps' attribute system in v1.
-const DEFAULT_ATTRIBUTE_GROUP_ID = 1;
+export const DEFAULT_ATTRIBUTE_GROUP_ID = 1;
 
 export function mapProduct(wcProduct: WooCommerceProduct): ProductImportData {
   if (!wcProduct.sku) {

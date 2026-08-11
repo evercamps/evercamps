@@ -15,6 +15,7 @@ import { getProductsByCollectionBaseQuery } from './getProductsByCollectionBaseQ
 import createProduct from './product/createProduct.js';
 import deleteProduct from './product/deleteProduct.js';
 import updateProduct from './product/updateProduct.js';
+import { buildVariantOptionHash } from './variantLookup.js';
 
 export {
   createProduct,
@@ -33,5 +34,6 @@ export {
   getCollectionsBaseQuery,
   getProductsBaseQuery,
   getProductsByCategoryBaseQuery,
-  getProductsByCollectionBaseQuery
+  getProductsByCollectionBaseQuery,
+  buildVariantOptionHash
 };
