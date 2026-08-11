@@ -30,7 +30,7 @@ export default function PaginationWrapper({
 }
 
 export const layout = {
-  areaId: 'oneColumn',
+  areaId: 'rightColumn',
   sortOrder: 30
 };
 

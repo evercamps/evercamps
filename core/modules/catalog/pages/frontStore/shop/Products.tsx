@@ -47,7 +47,7 @@ export default function Products({
 }
 
 export const layout = {
-  areaId: 'oneColumn',
+  areaId: 'rightColumn',
   sortOrder: 25
 };
 

@@ -6,6 +6,6 @@ export default function SortingWrapper(): React.ReactElement {
 }
 
 export const layout = {
-  areaId: 'oneColumn',
+  areaId: 'rightColumn',
   sortOrder: 15
 };

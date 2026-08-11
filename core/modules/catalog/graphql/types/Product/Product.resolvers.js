@@ -2,6 +2,7 @@ import { select } from '@evershop/postgres-query-builder';
 import { v4 as uuidv4 } from 'uuid';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
+import { getFilterableAttributes } from '../../../../../modules/catalog/services/getFilterableAttributes.js';
 import { getProductsBaseQuery } from '../../../../../modules/catalog/services/getProductsBaseQuery.js';
 import { ProductCollection } from '../../../../../modules/catalog/services/ProductCollection.js';
 
@@ -70,6 +71,21 @@ export default {
       const root = new ProductCollection(query);
       await root.init(filters, !!user);
       return root;
+    },
+    availableAttributes: async () => {
+      const results = await getFilterableAttributes();
+      return results;
+    },
+    priceRange: async (_, __, { pool }) => {
+      const query = getProductsBaseQuery();
+      query
+        .select('MIN(product.price)', 'min')
+        .select('MAX(product.price)', 'max');
+      const result = await query.load(pool);
+      return {
+        min: result.min || 0,
+        max: result.max || 0
+      };
     }
   }
 };
