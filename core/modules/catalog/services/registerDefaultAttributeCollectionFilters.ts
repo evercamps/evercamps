@@ -1,9 +1,51 @@
 import { OPERATION_MAP } from '../../../lib/util/filterOperationMap.js';
 import { getValueSync } from '../../../lib/util/registry.js';
 
-export default async function registerDefaultAttributeCollectionFilters() {
+interface QueryBuilder {
+  andWhere(
+    column: string,
+    operation: string,
+    value: string | string[]
+  ): QueryBuilder;
+
+  innerJoin(table: string): QueryBuilder;
+
+  on(
+    leftColumn: string,
+    operator: string,
+    rightColumn: string
+  ): QueryBuilder;
+
+  orderBy(column: string): QueryBuilder;
+}
+
+interface CurrentFilter {
+  key: string;
+  operation: string;
+  value: string;
+}
+
+interface AttributeCollectionFilter {
+  key: string;
+  operation: string[];
+  callback: (
+    query: QueryBuilder,
+    operation: string,
+    value: string,
+    currentFilters: CurrentFilter[]
+  ) => void;
+}
+
+type SortFunction = (
+  query: QueryBuilder,
+  operation: string
+) => QueryBuilder;
+
+export default async function registerDefaultAttributeCollectionFilters(): Promise<
+  AttributeCollectionFilter[]
+> {
   // List of default supported filters
-  const defaultFilters = [
+  const defaultFilters: AttributeCollectionFilter[] = [
     {
       key: 'name',
       operation: ['like', 'nlike'],
@@ -13,6 +55,7 @@ export default async function registerDefaultAttributeCollectionFilters() {
           OPERATION_MAP[operation],
           `%${value}%`
         );
+
         currentFilters.push({
           key: 'name',
           operation,
@@ -43,6 +86,7 @@ export default async function registerDefaultAttributeCollectionFilters() {
             `%${value}%`
           );
         }
+
         currentFilters.push({
           key: 'code',
           operation,
@@ -61,11 +105,13 @@ export default async function registerDefaultAttributeCollectionFilters() {
             '=',
             'attribute_group_link.attribute_id'
           );
+
         query.andWhere(
           'attribute_group_link.group_id',
           OPERATION_MAP[operation],
           value
         );
+
         currentFilters.push({
           key: 'group',
           operation,
@@ -77,7 +123,12 @@ export default async function registerDefaultAttributeCollectionFilters() {
       key: 'type',
       operation: ['eq', 'neq'],
       callback: (query, operation, value, currentFilters) => {
-        query.andWhere('attribute.type', OPERATION_MAP[operation], value);
+        query.andWhere(
+          'attribute.type',
+          OPERATION_MAP[operation],
+          value
+        );
+
         currentFilters.push({
           key: 'type',
           operation,
@@ -94,6 +145,7 @@ export default async function registerDefaultAttributeCollectionFilters() {
           OPERATION_MAP[operation],
           value
         );
+
         currentFilters.push({
           key: 'is_required',
           operation,
@@ -110,6 +162,7 @@ export default async function registerDefaultAttributeCollectionFilters() {
           OPERATION_MAP[operation],
           value
         );
+
         currentFilters.push({
           key: 'is_filterable',
           operation,
@@ -121,18 +174,25 @@ export default async function registerDefaultAttributeCollectionFilters() {
       key: 'ob',
       operation: ['eq'],
       callback: (query, operation, value, currentFilters) => {
-        const attributeCollectionSortBy = getValueSync(
-          'attributeCollectionSortBy',
-          {
-            name: (query) => query.orderBy('attribute.name'),
-            type: (query) => query.orderBy('attribute.type'),
-            is_required: (query) => query.orderBy('attribute.is_required'),
-            is_filterable: (query) => query.orderBy('attribute.is_filterable')
-          }
-        );
+        const attributeCollectionSortBy = getValueSync<
+          Record<string, SortFunction>
+        >('attributeCollectionSortBy', {
+          name: (query) =>
+            query.orderBy('attribute.name'),
+
+          type: (query) =>
+            query.orderBy('attribute.type'),
+
+          is_required: (query) =>
+            query.orderBy('attribute.is_required'),
+
+          is_filterable: (query) =>
+            query.orderBy('attribute.is_filterable')
+        });
 
         if (attributeCollectionSortBy[value]) {
           attributeCollectionSortBy[value](query, operation);
+
           currentFilters.push({
             key: 'ob',
             operation,

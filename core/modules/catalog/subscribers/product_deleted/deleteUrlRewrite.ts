@@ -1,7 +1,11 @@
 import { execute } from '@evershop/postgres-query-builder';
 import { pool } from '../../../../lib/postgres/connection.js';
 
-export default async function buildUrlReWrite(data) {
+interface ProductData {
+  uuid: string;
+}
+
+export default async function buildUrlReWrite(data: ProductData) {
   const productUuid = data.uuid;
 
   // Delete the url rewrite for the product
