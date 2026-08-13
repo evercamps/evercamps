@@ -1,19 +1,7 @@
 import { select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../lib/postgres/connection.js';
+import { getProductsBaseQuery } from '../../../modules/catalog/services/getProductsBaseQuery.js';
 import { getProductsByCategoryBaseQuery } from '../../../modules/catalog/services/getProductsByCategoryBaseQuery.js';
-
-interface AttributeOption {
-  optionId: number;
-  optionText: string;
-  productCount: number;
-}
-
-interface FilterableAttribute {
-  attributeName: string;
-  attributeId: number;
-  attributeCode: string;
-  options: AttributeOption[];
-}
 
 interface AttributeData {
   attribute_name: string;
@@ -25,28 +13,37 @@ interface AttributeData {
   option_text: string;
 }
 
+interface FilterableAttributeOption {
+  optionId: number;
+  optionText: string;
+  productCount: number;
+}
+
+interface FilterableAttribute {
+  attributeName: string;
+  attributeId: number;
+  attributeCode: string;
+  options: FilterableAttributeOption[];
+}
+
 export const getFilterableAttributes = async (
-  categoryId: number
-): Promise<FilterableAttribute[]> => {
-  const productsQuery = await getProductsByCategoryBaseQuery(
-    categoryId,
-    true
-  );
+  categoryId: number | null = null
+) => {
+  const productsQuery = categoryId
+    ? await getProductsByCategoryBaseQuery(categoryId, true)
+    : getProductsBaseQuery();
 
   productsQuery.select('product.product_id');
 
   // Get the list of productIds before applying pagination, sorting...etc
   // Based on this list, we will find all attributes,
-  // category and price can be appeared in the filter table
+  // categories and prices that can appear in the filter table
   const allIds = (await productsQuery.execute(pool)).map(
-    (row: { product_id: number }) => row.product_id
+    (row) => row.product_id
   );
 
   // Filterable attributes
-  const query = select(
-    'attribute.attribute_name',
-    'attribute_name'
-  )
+  const query = select('attribute.attribute_name', 'attribute_name')
     .select('attribute.type', 'type')
     .select('attribute.is_filterable', 'is_filterable')
     .select(
@@ -86,41 +83,38 @@ export const getFilterableAttributes = async (
 
   const attributes: FilterableAttribute[] = [];
 
-  for (let i = 0; i < attributeData.length; i++) {
-    const data = attributeData[i];
-
+  for (let i = 0; i < attributeData.length; i += 1) {
     const index = attributes.findIndex(
-      (attribute) =>
-        attribute.attributeCode === data.attribute_code
+      (a) => a.attributeCode === attributeData[i].attribute_code
     );
 
     if (index === -1) {
       attributes.push({
-        attributeName: data.attribute_name,
-        attributeId: data.attribute_id,
-        attributeCode: data.attribute_code,
+        attributeName: attributeData[i].attribute_name,
+        attributeId: attributeData[i].attribute_id,
+        attributeCode: attributeData[i].attribute_code,
         options: [
           {
-            optionId: data.option_id,
-            optionText: data.option_text,
+            optionId: attributeData[i].option_id,
+            optionText: attributeData[i].option_text,
             productCount: 1
           }
         ]
       });
     } else {
-      const optionIndex = attributes[index].options.findIndex(
-        (option) =>
-          Number(option.optionId) === Number(data.option_id)
+      const idx = attributes[index].options.findIndex(
+        (o) =>
+          o.optionId === attributeData[i].option_id
       );
 
-      if (optionIndex === -1) {
+      if (idx === -1) {
         attributes[index].options.push({
-          optionId: data.option_id,
-          optionText: data.option_text,
+          optionId: attributeData[i].option_id,
+          optionText: attributeData[i].option_text,
           productCount: 1
         });
       } else {
-        attributes[index].options[optionIndex].productCount++;
+        attributes[index].options[idx].productCount += 1;
       }
     }
   }
