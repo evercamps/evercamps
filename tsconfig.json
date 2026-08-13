@@ -23,7 +23,8 @@
     "rootDirs": ["./core", "./includes"],
     "paths": {
       "@components/*": ["./core/components/*", "./includes/components/*"]
-    }
+    },
+    "types": ["cypress", "node"]
   },
   "include": ["includes", "core"]
 }
