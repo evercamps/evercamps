@@ -1,9 +1,12 @@
 import { select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../lib/postgres/connection.js';
+import { getProductsBaseQuery } from '../../../modules/catalog/services/getProductsBaseQuery.js';
 import { getProductsByCategoryBaseQuery } from '../../../modules/catalog/services/getProductsByCategoryBaseQuery.js';
 
-export const getFilterableAttributes = async (categoryId) => {
-  const productsQuery = await getProductsByCategoryBaseQuery(categoryId, true);
+export const getFilterableAttributes = async (categoryId = null) => {
+  const productsQuery = categoryId
+    ? await getProductsByCategoryBaseQuery(categoryId, true)
+    : getProductsBaseQuery();
   productsQuery.select('product.product_id');
   // Get the list of productIds before applying pagination, sorting...etc
   // Base on this list, we will find all attribute,
