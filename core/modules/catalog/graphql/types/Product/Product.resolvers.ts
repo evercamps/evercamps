@@ -105,7 +105,7 @@ export default {
       const results = await getFilterableAttributes();
       return results;
     },
-    priceRange: async (_, __, { pool }) => {
+    priceRange: async (_: unknown, __: unknown, { pool }: Context) => {
       const query = getProductsBaseQuery();
       query
         .select('MIN(product.price)', 'min')

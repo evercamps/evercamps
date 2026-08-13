@@ -19,7 +19,7 @@ interface FilterableAttributeOption {
   productCount: number;
 }
 
-interface FilterableAttribute {
+export interface FilterableAttribute {
   attributeName: string;
   attributeId: number;
   attributeCode: string;
