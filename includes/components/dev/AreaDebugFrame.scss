@@ -1,18 +1,21 @@
 .area-debug-frame {
-  position: relative;
-  outline: 1px dashed var(--area-debug-color, #ef4444);
-  outline-offset: -1px;
+  // Removes this element from the box tree so its real children stay
+  // direct flex/grid items of the true parent - the wrapper must not be
+  // able to occupy a flex/grid slot that a real child used to own.
+  display: contents;
 
-  &--empty {
-    min-height: 22px;
-    background-color: rgba(0, 0, 0, 0.03);
+  > * {
+    outline: 1px dashed var(--area-debug-color, #ef4444);
+    outline-offset: -1px;
   }
 
-  &__label {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 2147483647;
+  // Only one label per area: prepend it in front of the first real child's
+  // own content instead of absolutely positioning over it, so we never have
+  // to touch that child's `position`.
+  > *:first-child::before {
+    content: var(--area-debug-label);
+    display: inline-block;
+    margin: 0 0 2px;
     padding: 1px 4px;
     font-family: Consolas, 'Liberation Mono', Menlo, monospace;
     font-size: 10px;
@@ -21,7 +24,31 @@
     color: #fff;
     background-color: var(--area-debug-color, #ef4444);
     white-space: nowrap;
-    pointer-events: none;
-    user-select: none;
   }
+
+  &--empty {
+    display: block;
+    position: relative;
+    min-height: 22px;
+    background-color: rgba(0, 0, 0, 0.03);
+    outline: 1px dashed var(--area-debug-color, #ef4444);
+    outline-offset: -1px;
+  }
+}
+
+.area-debug-frame__label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  padding: 1px 4px;
+  font-family: Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--area-debug-color, #ef4444);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }

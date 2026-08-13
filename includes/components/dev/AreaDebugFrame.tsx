@@ -36,17 +36,37 @@ function AreaDebugFrameInner({ id, count, children }: AreaDebugFrameProps) {
 
   const isEmpty = count === 0;
   const color = DEBUG_COLORS[depth % DEBUG_COLORS.length];
+  const label = `${id} · ${isEmpty ? 'empty' : count}`;
+
+  // Areas with content render via `display: contents` so their real
+  // children stay direct flex/grid items of the true parent (e.g. a
+  // `grid-cols-3` header) — no wrapper box is inserted that could steal a
+  // grid/flex slot. Only the empty case needs a real box, since there's
+  // nothing else on the page for it to disturb.
+  if (isEmpty) {
+    return (
+      <AreaDebugDepthContext.Provider value={depth + 1}>
+        <div
+          className="area-debug-frame area-debug-frame--empty"
+          style={{ '--area-debug-color': color } as React.CSSProperties}
+        >
+          <span className="area-debug-frame__label">{label}</span>
+        </div>
+      </AreaDebugDepthContext.Provider>
+    );
+  }
 
   return (
     <AreaDebugDepthContext.Provider value={depth + 1}>
       <div
-        className={`area-debug-frame${isEmpty ? ' area-debug-frame--empty' : ''}`}
-        style={{ '--area-debug-color': color } as React.CSSProperties}
+        className="area-debug-frame"
+        style={
+          {
+            '--area-debug-color': color,
+            '--area-debug-label': `"${label}"`
+          } as React.CSSProperties
+        }
       >
-        <span className="area-debug-frame__label">
-          {id}
-          {isEmpty ? ' · empty' : ` · ${count}`}
-        </span>
         {children}
       </div>
     </AreaDebugDepthContext.Provider>
