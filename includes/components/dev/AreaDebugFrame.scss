@@ -1,0 +1,27 @@
+.area-debug-frame {
+  position: relative;
+  outline: 1px dashed var(--area-debug-color, #ef4444);
+  outline-offset: -1px;
+
+  &--empty {
+    min-height: 22px;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  &__label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2147483647;
+    padding: 1px 4px;
+    font-family: Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    font-weight: 600;
+    color: #fff;
+    background-color: var(--area-debug-color, #ef4444);
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+  }
+}

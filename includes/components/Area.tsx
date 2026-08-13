@@ -1,6 +1,7 @@
 import { useAppState } from '@components/context/app';
 import React from 'react';
 import type { ElementType } from 'react';
+import { AreaDebugFrame } from './dev/AreaDebugFrame.jsx';
 
 interface Component {
   id?: string;
@@ -102,39 +103,41 @@ function Area({
   }
 
   return (
-    <WrapperComponent {...areaWrapperProps}>
-      {areaComponents.map((w, index) => {
-        const C = w.component.default;
+    <AreaDebugFrame id={id} count={areaComponents.length}>
+      <WrapperComponent {...areaWrapperProps}>
+        {areaComponents.map((w, index) => {
+          const C = w.component.default;
 
-        const { id } = w;
-        const propsData = context.graphqlResponse;
-        const propKeys = id !== undefined ? propsMap[id] || [] : [];
+          const { id } = w;
+          const propsData = context.graphqlResponse;
+          const propKeys = id !== undefined ? propsMap[id] || [] : [];
 
-        const componentProps = propKeys.reduce(
-          (acc: Record<string, any>, map: Record<string, any>) => {
-            const { origin, alias } = map;
-            acc[origin] = propsData[alias];
-            return acc;
-          },
-          {}
-        );
-        if (w.props) {
-          Object.assign(componentProps, w.props);
-        }
-        // Check if C is a React component
-        if (React.isValidElement(C)) {
-          return <React.Fragment key={index}>{C}</React.Fragment>;
-        }
+          const componentProps = propKeys.reduce(
+            (acc: Record<string, any>, map: Record<string, any>) => {
+              const { origin, alias } = map;
+              acc[origin] = propsData[alias];
+              return acc;
+            },
+            {}
+          );
+          if (w.props) {
+            Object.assign(componentProps, w.props);
+          }
+          // Check if C is a React component
+          if (React.isValidElement(C)) {
+            return <React.Fragment key={index}>{C}</React.Fragment>;
+          }
 
-        if (typeof C === 'string') {
-          return <C key={index} {...componentProps} />;
-        }
+          if (typeof C === 'string') {
+            return <C key={index} {...componentProps} />;
+          }
 
-        return typeof C === 'function' ? (
-          <C key={index} areaProps={props} {...componentProps} />
-        ) : null;
-      })}
-    </WrapperComponent>
+          return typeof C === 'function' ? (
+            <C key={index} areaProps={props} {...componentProps} />
+          ) : null;
+        })}
+      </WrapperComponent>
+    </AreaDebugFrame>
   );
 }
 
