@@ -147,6 +147,8 @@ export interface OrderImportData {
   currency: string;
   customer_email: string | null;
   customer_full_name: string | null;
+  customer_first_name: string | null;
+  customer_last_name: string | null;
   payment_method: string | null;
   payment_method_name: string | null;
   paymentStatus: string;

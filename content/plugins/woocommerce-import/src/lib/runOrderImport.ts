@@ -9,7 +9,7 @@ import {
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
-import { debug, pool, resolveOrderStatus } from '../core.js';
+import { debug, pool, resolveOrderStatus, createCustomer} from '../core.js';
 import {
   findMapByExternalId,
   findOrderMapByExternalId,
@@ -29,6 +29,7 @@ import type {
 } from '../types.js';
 import { mapOrder } from './mapOrder.js';
 import { createWooCommerceClient, fetchAllOrders } from './woocommerceClient.js';
+import crypto from 'node:crypto';
 
 async function resolveLocalProductId(externalProductId: number): Promise<number> {
   const map = await findMapByExternalId(externalProductId);
@@ -41,15 +42,40 @@ async function resolveLocalProductId(externalProductId: number): Promise<number>
   return map.product_id;
 }
 
-async function findLocalCustomerId(email: string | null): Promise<number | null> {
+async function findOrCreateCustomer(
+  email: string | null,
+  firstName: string | null,
+  lastName: string | null
+): Promise<number | null> {
   if (!email) {
     return null;
   }
-  const customer = await select('customer_id')
+
+  const existingCustomer = await select('customer_id')
     .from('customer')
     .where('email', '=', email)
     .load(pool);
-  return customer ? customer.customer_id : null;
+
+  if (existingCustomer) {
+    return existingCustomer.customer_id;
+  }
+
+  const fullName = [firstName, lastName]
+    .filter((name) => name && name.trim())
+    .join(' ')
+    .trim();
+
+  if (!fullName) {
+    return null;
+  }
+
+  const customer = await createCustomer({
+    email,
+    password: crypto.randomUUID(),
+    full_name: fullName
+  });
+
+  return customer.customer_id;
 }
 
 async function insertAddress(
@@ -236,7 +262,8 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             resolvedItems.push({ item, productId });
           }
 
-          const customerId = await findLocalCustomerId(mapped.customer_email);
+          const customerId = await findOrCreateCustomer(mapped.customer_email, 
+            mapped.customer_first_name, mapped.customer_last_name);
 
           await startTransaction(connection);
           const created = await createOrder(mapped, resolvedItems, customerId, connection);
