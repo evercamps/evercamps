@@ -1,7 +1,14 @@
 import { useReducer } from 'react';
 import './Alert.scss';
 
-function reducer(state, action) {
+interface ModalState {
+  showing: boolean;
+  closing: boolean;
+}
+
+type ModalAction = { type: 'close' | 'closing' | 'open' };
+
+function reducer(state: ModalState, action: ModalAction): ModalState {
   switch (action.type) {
     case 'close':
       return { ...state, showing: false, closing: false };

@@ -7,9 +7,12 @@ import { NoResult } from './search/NoResult';
 import { Results } from './search/Results';
 import './SearchBox.scss';
 
-const useClickOutside = (ref, callback) => {
-  const handleClick = (e) => {
-    if (ref.current && !ref.current.contains(e.target)) {
+const useClickOutside = (
+  ref: React.RefObject<HTMLElement | null>,
+  callback: () => void
+) => {
+  const handleClick = (e: MouseEvent) => {
+    if (ref.current && !ref.current.contains(e.target as Node)) {
       callback();
     }
   };
@@ -66,13 +69,29 @@ const SearchQuery = `
   }
 `;
 
-export default function SearchBox({ resourceLinks = [] }) {
+interface ResourceLink {
+  url?: string;
+  name?: string;
+}
+
+interface SearchBoxProps {
+  resourceLinks?: ResourceLink[];
+}
+
+interface SearchResultData {
+  customers: { items: unknown[] };
+  products: { items: unknown[] };
+  orders: { items: unknown[] };
+  participants: { items: unknown[] };
+}
+
+export default function SearchBox({ resourceLinks = [] }: SearchBoxProps) {
   const [keyword, setKeyword] = React.useState('');
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
-  const InputRef = useRef();
+  const InputRef = useRef<HTMLInputElement>(null);
 
-  const clickRef = React.useRef();
+  const clickRef = React.useRef<HTMLDivElement>(null);
   const onClickOutside = () => {
     if (InputRef.current !== document.activeElement) {
       setShowResult(false);
@@ -80,7 +99,7 @@ export default function SearchBox({ resourceLinks = [] }) {
   };
   useClickOutside(clickRef, onClickOutside);
 
-  const [result, reexecuteQuery] = useQuery({
+  const [result, reexecuteQuery] = useQuery<SearchResultData>({
     query: SearchQuery,
     variables: {
       filters: keyword

@@ -1,8 +1,17 @@
 import Dot from '@components/Dot';
-import PropTypes from 'prop-types';
 import React from 'react';
 
-export function NoResult({ keyword = '', resourseLinks = [] }) {
+interface ResourceLink {
+  url?: string;
+  name?: string;
+}
+
+interface NoResultProps {
+  keyword?: string;
+  resourseLinks?: ResourceLink[];
+}
+
+export function NoResult({ keyword = '', resourseLinks = [] }: NoResultProps) {
   return (
     <div className="no-result items-center text-center">
       <h3>
@@ -27,13 +36,3 @@ export function NoResult({ keyword = '', resourseLinks = [] }) {
     </div>
   );
 }
-
-NoResult.propTypes = {
-  keyword: PropTypes.string,
-  resourseLinks: PropTypes.arrayOf(
-    PropTypes.shape({
-      url: PropTypes.string,
-      name: PropTypes.string
-    })
-  )
-};

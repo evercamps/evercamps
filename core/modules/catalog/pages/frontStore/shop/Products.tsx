@@ -40,7 +40,7 @@ export default function Products({
     <div>
       <ProductList products={items} countPerRow={4} />
       <span className="product-count italic block mt-8">
-        {_('${count} products', { count: items.length })}
+        {_('${count} products', { count: String(items.length) })}
       </span>
     </div>
   );

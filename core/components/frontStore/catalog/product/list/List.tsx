@@ -2,12 +2,44 @@ import Area from '@components/Area';
 import { Name } from '@components/frontStore/catalog/product/list/item/Name';
 import { Price } from '@components/frontStore/catalog/product/list/item/Price';
 import { Thumbnail } from '@components/frontStore/catalog/product/list/item/Thumbnail';
-import PropTypes from 'prop-types';
 import React from 'react';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import { get } from '../../../../../lib/util/get.js';
 
-export default function ProductList({ products = [], countPerRow = 3 }) {
+interface ProductPrice {
+  regular?: {
+    value?: number;
+    text?: string;
+  };
+  special?: {
+    value?: number;
+    text?: string;
+  };
+}
+
+interface ProductImage {
+  alt?: string;
+  listing?: string;
+}
+
+interface ProductItem {
+  productId?: number;
+  name?: string;
+  sku?: string;
+  url?: string;
+  price?: ProductPrice;
+  image?: ProductImage;
+}
+
+interface ProductListProps {
+  products?: ProductItem[];
+  countPerRow?: number;
+}
+
+export default function ProductList({
+  products = [],
+  countPerRow = 3
+}: ProductListProps) {
   if (products.length === 0) {
     return (
       <div className="product-list">
@@ -64,29 +96,3 @@ export default function ProductList({ products = [], countPerRow = 3 }) {
     </div>
   );
 }
-
-ProductList.propTypes = {
-  products: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      sku: PropTypes.string,
-      productId: PropTypes.number,
-      url: PropTypes.string,
-      price: PropTypes.shape({
-        regular: PropTypes.shape({
-          value: PropTypes.number,
-          text: PropTypes.string
-        }),
-        special: PropTypes.shape({
-          value: PropTypes.number,
-          text: PropTypes.string
-        })
-      }),
-      image: PropTypes.shape({
-        alt: PropTypes.string,
-        listing: PropTypes.string
-      })
-    })
-  ).isRequired,
-  countPerRow: PropTypes.number.isRequired
-};
