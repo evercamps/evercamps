@@ -15,6 +15,7 @@ interface WooCommerceSetting {
 
 interface ImportBatch {
   uuid: string;
+  type: 'products' | 'orders';
   status: string;
   totalFetched: number;
   totalCreated: number;
@@ -27,14 +28,15 @@ interface ImportBatch {
   failuresApi: string;
 }
 
-interface FailedProduct {
-  externalProductId: number;
+interface FailedRow {
+  externalId: number;
   errorMessage: string | null;
 }
 
 interface Props {
   saveSettingApi: string;
   importProductsApi: string;
+  importOrdersApi: string;
   setting: WooCommerceSetting;
   wooCommerceImportBatches: ImportBatch[];
 }
@@ -47,17 +49,25 @@ function formatDate(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
-function ImportAction({ importProductsApi }: { importProductsApi: string }) {
+function ImportAction({
+  title,
+  description,
+  buttonLabel,
+  importingLabel,
+  importApi
+}: {
+  title: string;
+  description: string;
+  buttonLabel: string;
+  importingLabel: string;
+  importApi: string;
+}) {
   const [isImporting, setIsImporting] = useState(false);
 
   const runImport = async () => {
     setIsImporting(true);
     try {
-      const response = await axios.post(
-        importProductsApi,
-        {},
-        { validateStatus: () => true }
-      );
+      const response = await axios.post(importApi, {}, { validateStatus: () => true });
       if (response.status !== 200) {
         throw new Error(response.data?.error?.message ?? 'Import failed');
       }
@@ -74,15 +84,15 @@ function ImportAction({ importProductsApi }: { importProductsApi: string }) {
   };
 
   return (
-    <Card.Session title="Import">
-      <p>Fetch every product from the configured WooCommerce store and create or update it here.</p>
+    <Card.Session title={title}>
+      <p>{description}</p>
       <button
         type="button"
         className="button primary"
         disabled={isImporting}
         onClick={() => runImport()}
       >
-        {isImporting ? 'Importing…' : 'Import products now'}
+        {isImporting ? importingLabel : buttonLabel}
       </button>
     </Card.Session>
   );
@@ -91,7 +101,7 @@ function ImportAction({ importProductsApi }: { importProductsApi: string }) {
 function FailedCount({ batch }: { batch: ImportBatch }) {
   const modal = useModal();
   const [isLoading, setIsLoading] = useState(false);
-  const [failures, setFailures] = useState<FailedProduct[] | null>(null);
+  const [failures, setFailures] = useState<FailedRow[] | null>(null);
 
   const showFailures = async () => {
     modal.openModal();
@@ -125,21 +135,21 @@ function FailedCount({ batch }: { batch: ImportBatch }) {
         {batch.totalFailed}
       </button>
       {modal.state.showing && (
-        <Modal modal={modal} title="Failed products">
+        <Modal modal={modal} title={batch.type === 'orders' ? 'Failed orders' : 'Failed products'}>
           {isLoading && <p>Loading…</p>}
           {!isLoading && failures?.length === 0 && <p>No failure details found for this batch.</p>}
           {!isLoading && failures && failures.length > 0 && (
             <table className="table table-auto w-full">
               <thead>
                 <tr>
-                  <th>WooCommerce product ID</th>
+                  <th>{batch.type === 'orders' ? 'WooCommerce order ID' : 'WooCommerce product ID'}</th>
                   <th>Error</th>
                 </tr>
               </thead>
               <tbody>
                 {failures.map((failure) => (
-                  <tr key={failure.externalProductId}>
-                    <td>{failure.externalProductId}</td>
+                  <tr key={failure.externalId}>
+                    <td>{failure.externalId}</td>
                     <td>{failure.errorMessage}</td>
                   </tr>
                 ))}
@@ -156,7 +166,8 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
   const [rollingBackUuid, setRollingBackUuid] = useState<string | null>(null);
 
   const rollback = async (batch: ImportBatch) => {
-    if (!window.confirm('Remove every product this import run created?')) {
+    const noun = batch.type === 'orders' ? 'orders' : 'products';
+    if (!window.confirm(`Remove every ${noun.slice(0, -1)} this import run created?`)) {
       return;
     }
     setRollingBackUuid(batch.uuid);
@@ -167,7 +178,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
       if (response.status !== 200) {
         throw new Error(response.data?.error?.message ?? 'Rollback failed');
       }
-      toast.success('Batch products removed.');
+      toast.success(`Batch ${noun} removed.`);
       window.location.reload();
     } catch (e) {
       toast.error((e as Error).message);
@@ -190,6 +201,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
         <thead>
           <tr>
             <th>Started</th>
+            <th>Type</th>
             <th>Status</th>
             <th>Created</th>
             <th>Updated</th>
@@ -201,6 +213,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
           {batches.map((batch) => (
             <tr key={batch.uuid}>
               <td>{formatDate(batch.startedAt)}</td>
+              <td>{batch.type === 'orders' ? 'Orders' : 'Products'}</td>
               <td>{batch.status}</td>
               <td>{batch.totalCreated}</td>
               <td>{batch.totalUpdated}</td>
@@ -215,7 +228,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
                     disabled={rollingBackUuid === batch.uuid}
                     onClick={() => rollback(batch)}
                   >
-                    Remove products from this batch
+                    Remove {batch.type === 'orders' ? 'orders' : 'products'} from this batch
                   </button>
                 )}
               </td>
@@ -230,6 +243,7 @@ function BatchHistory({ batches }: { batches: ImportBatch[] }) {
 export default function WooCommerceSettings({
   saveSettingApi,
   importProductsApi,
+  importOrdersApi,
   setting: { wooCommerceStoreUrl, wooCommerceConsumerKey },
   wooCommerceImportBatches
 }: Props) {
@@ -279,7 +293,20 @@ export default function WooCommerceSettings({
           </Form>
           <div className="mt-8">
             <Card>
-              <ImportAction importProductsApi={importProductsApi} />
+              <ImportAction
+                title="Import products"
+                description="Fetch every product from the configured WooCommerce store and create or update it here."
+                buttonLabel="Import products now"
+                importingLabel="Importing…"
+                importApi={importProductsApi}
+              />
+              <ImportAction
+                title="Import orders"
+                description="Fetch every order from the configured WooCommerce store and create or update it here. Import products first - order line items are linked to already-imported products."
+                buttonLabel="Import orders now"
+                importingLabel="Importing…"
+                importApi={importOrdersApi}
+              />
               <BatchHistory batches={wooCommerceImportBatches ?? []} />
             </Card>
           </div>
@@ -298,12 +325,14 @@ export const query = `
   query Query {
     saveSettingApi: url(routeId: "saveSetting")
     importProductsApi: url(routeId: "importProducts")
+    importOrdersApi: url(routeId: "importOrders")
     setting {
       wooCommerceStoreUrl
       wooCommerceConsumerKey
     }
     wooCommerceImportBatches {
       uuid
+      type
       status
       totalFetched
       totalCreated

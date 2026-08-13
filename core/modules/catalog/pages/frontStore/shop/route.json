@@ -1,0 +1,5 @@
+{
+  "methods": ["GET"],
+  "path": "/shop",
+  "name": "Shop page"
+}

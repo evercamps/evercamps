@@ -1,5 +1,6 @@
 type WooCommerceImportBatch {
   uuid: String
+  type: String
   status: String
   totalFetched: Int
   totalCreated: Int
