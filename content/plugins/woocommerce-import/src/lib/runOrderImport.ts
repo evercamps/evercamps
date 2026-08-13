@@ -227,21 +227,39 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
         if (existing && existing.order_id) {
           try {
             const mapped = mapOrder(wcOrder);
+
+            const customerId = await findOrCreateCustomer(
+              mapped.customer_email,
+              mapped.customer_first_name,
+              mapped.customer_last_name
+            );
+
             const status = resolveOrderStatus(mapped.paymentStatus, mapped.shipmentStatus);
+
             await update('order')
               .given({
                 status,
                 payment_status: mapped.paymentStatus,
                 shipment_status: mapped.shipmentStatus,
+                customer_id: customerId,
+                customer_email: mapped.customer_email,
+                customer_full_name: mapped.customer_full_name,
                 updated_at: new Date()
               })
               .where('order_id', '=', existing.order_id)
               .execute(pool);
-            await recordOrderUpdated(existing.woocommerce_order_map_id, batchId, wcOrder.date_modified);
+
+            await recordOrderUpdated(
+              existing.woocommerce_order_map_id,
+              batchId,
+              wcOrder.date_modified
+            );
+
             totalUpdated += 1;
           } catch (e) {
             debug('failed updating imported order ' + (e as Error).message);
             totalFailed += 1;
+
             await recordOrderFailed(
               batchId,
               wcOrder.id,
@@ -249,6 +267,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
               existing.woocommerce_order_map_id
             );
           }
+
           continue;
         }
 
