@@ -148,6 +148,10 @@ RenderEditorJS.propTypes = {
 };
 
 export default function Editor({ rows }) {
+  if (!rows) {
+    return null;
+  }
+
   return (
     <div className="editor__html">
       {rows.map((row, index) => {
@@ -189,5 +193,5 @@ Editor.propTypes = {
         })
       ).isRequired
     })
-  ).isRequired
+  )
 };
