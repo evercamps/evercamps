@@ -97,6 +97,7 @@ function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
     line_total_with_discount_incl_tax: lineTotalWithDiscount + lineTotalWithDiscountTax
   }));
   return {
+    externalLineItemId: item.id,
     externalProductId: item.product_id,
     product_sku: item.sku || `wc_product_${item.product_id}`,
     product_name: item.name,
