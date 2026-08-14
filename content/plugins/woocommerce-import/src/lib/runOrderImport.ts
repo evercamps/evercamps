@@ -9,7 +9,7 @@ import {
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
-import { debug, pool, resolveOrderStatus } from '../core.js';
+import { debug, pool, resolveOrderStatus, createCustomer} from '../core.js';
 import {
   findMapByExternalId,
   findOrderMapByExternalId,
@@ -29,6 +29,7 @@ import type {
 } from '../types.js';
 import { mapOrder } from './mapOrder.js';
 import { createWooCommerceClient, fetchAllOrders } from './woocommerceClient.js';
+import crypto from 'node:crypto';
 
 async function resolveLocalProductId(externalProductId: number): Promise<number> {
   const map = await findMapByExternalId(externalProductId);
@@ -41,15 +42,40 @@ async function resolveLocalProductId(externalProductId: number): Promise<number>
   return map.product_id;
 }
 
-async function findLocalCustomerId(email: string | null): Promise<number | null> {
+async function findOrCreateCustomer(
+  email: string | null,
+  firstName: string | null,
+  lastName: string | null
+): Promise<number | null> {
   if (!email) {
     return null;
   }
-  const customer = await select('customer_id')
+
+  const existingCustomer = await select('customer_id')
     .from('customer')
     .where('email', '=', email)
     .load(pool);
-  return customer ? customer.customer_id : null;
+
+  if (existingCustomer) {
+    return existingCustomer.customer_id;
+  }
+
+  const fullName = [firstName, lastName]
+    .filter((name) => name && name.trim())
+    .join(' ')
+    .trim();
+
+  if (!fullName) {
+    return null;
+  }
+
+  const customer = await createCustomer({
+    email,
+    password: crypto.randomUUID(),
+    full_name: fullName
+  });
+
+  return customer.customer_id;
 }
 
 async function insertAddress(
@@ -201,21 +227,39 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
         if (existing && existing.order_id) {
           try {
             const mapped = mapOrder(wcOrder);
+
+            const customerId = await findOrCreateCustomer(
+              mapped.customer_email,
+              mapped.customer_first_name,
+              mapped.customer_last_name
+            );
+
             const status = resolveOrderStatus(mapped.paymentStatus, mapped.shipmentStatus);
+
             await update('order')
               .given({
                 status,
                 payment_status: mapped.paymentStatus,
                 shipment_status: mapped.shipmentStatus,
+                customer_id: customerId,
+                customer_email: mapped.customer_email,
+                customer_full_name: mapped.customer_full_name,
                 updated_at: new Date()
               })
               .where('order_id', '=', existing.order_id)
               .execute(pool);
-            await recordOrderUpdated(existing.woocommerce_order_map_id, batchId, wcOrder.date_modified);
+
+            await recordOrderUpdated(
+              existing.woocommerce_order_map_id,
+              batchId,
+              wcOrder.date_modified
+            );
+
             totalUpdated += 1;
           } catch (e) {
             debug('failed updating imported order ' + (e as Error).message);
             totalFailed += 1;
+
             await recordOrderFailed(
               batchId,
               wcOrder.id,
@@ -223,6 +267,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
               existing.woocommerce_order_map_id
             );
           }
+
           continue;
         }
 
@@ -236,7 +281,8 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             resolvedItems.push({ item, productId });
           }
 
-          const customerId = await findLocalCustomerId(mapped.customer_email);
+          const customerId = await findOrCreateCustomer(mapped.customer_email, 
+            mapped.customer_first_name, mapped.customer_last_name);
 
           await startTransaction(connection);
           const created = await createOrder(mapped, resolvedItems, customerId, connection);
