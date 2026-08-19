@@ -19,3 +19,4 @@ export { default as createRegistration} from '../../../../dist/modules/camp/serv
 export { resolveOrderStatus } from '../../../../dist/modules/oms/services/updateOrderStatus.js';
 export { debug, error } from '../../../../dist/lib/log/logger.js';
 export { uploadFile } from '../../../../dist/modules/cms/services/uploadFile.js';
+export { getEnabledExtensions } from '../../../../dist/bin/extension/index.js';

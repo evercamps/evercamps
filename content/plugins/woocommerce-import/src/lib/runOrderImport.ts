@@ -9,7 +9,7 @@ import {
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
-import { debug, pool, resolveOrderStatus, createCustomer, createParticipant, createRegistration} from '../core.js';
+import { debug, pool, resolveOrderStatus, createCustomer, createParticipant, createRegistration, getEnabledExtensions} from '../core.js';
 import {
   findMapByExternalId,
   findOrderMapByExternalId,
@@ -239,6 +239,12 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
     );
   }
 
+  const extensions = await getEnabledExtensions();
+
+  const nationalNumberEnabled = extensions.some(
+    (extension: any) => extension.name === 'national-number-field'
+  );
+
   const client = createWooCommerceClient(settings);
   const batchId = await startBatch('orders');
 
@@ -274,7 +280,8 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             await importParticipantsForOrder(
               wcOrder,
               mapped,
-              customerId
+              customerId,
+              nationalNumberEnabled
             );
 
             const status = resolveOrderStatus(
@@ -305,7 +312,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
             totalUpdated += 1;
           } catch (e) {
-            await rollback(connection);
+            await rollback(connection); 
 
             debug(
               'failed updating imported order ' +
@@ -339,7 +346,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
           await startTransaction(connection);
 
-          await importParticipantsForOrder(wcOrder, mapped, customerId);
+          await importParticipantsForOrder(wcOrder, mapped, customerId, nationalNumberEnabled);
 
           const created = await createOrder(mapped, resolvedItems, customerId, connection);
           await commit(connection);
@@ -442,11 +449,12 @@ function extractParticipants(
 
 async function findOrCreateParticipant(
   participant: ImportedParticipant,
-  customerId: number | null
+  customerId: number | null,
+  nationalNumberEnabled: boolean
 ): Promise<number> {
   // First try to find the participant by national number.
   // The national number is the strongest identifier we have.
-  if (participant.nationalNumber) {
+  if (nationalNumberEnabled && participant.nationalNumber) {
     const existingByNationalNumber = await select('participant_id')
       .from('participant')
       .where('national_number', '=', participant.nationalNumber)
@@ -457,7 +465,7 @@ async function findOrCreateParticipant(
     }
   }
 
-  // Fall back to name + birth date.
+  // Try to find the participant by name + birth date.
   let query = select('participant_id')
     .from('participant')
     .where('first_name', '=', participant.firstName)
@@ -473,6 +481,32 @@ async function findOrCreateParticipant(
     return existingParticipant.participant_id;
   }
 
+  // If WooCommerce has a birth date but the existing participant
+  // doesn't have one yet, find the participant by name and fill it in.
+  if (participant.birthDate) {
+    const existingWithoutBirthDate = await select('participant_id')
+      .from('participant')
+      .where('first_name', '=', participant.firstName)
+      .and('last_name', '=', participant.lastName)
+      .load(pool);
+
+    if (existingWithoutBirthDate) {
+      await update('participant')
+        .given({
+          birth_date: participant.birthDate
+        })
+        .where(
+          'participant_id',
+          '=',
+          existingWithoutBirthDate.participant_id
+        )
+        .execute(pool);
+
+      return existingWithoutBirthDate.participant_id;
+    }
+  }
+
+  // Build participant data.
   const data: any = {
     first_name: participant.firstName,
     last_name: participant.lastName,
@@ -483,10 +517,13 @@ async function findOrCreateParticipant(
     data.birth_date = participant.birthDate;
   }
 
-  if (participant.nationalNumber) {
-    data.national_number = participant.nationalNumber;
-  } else {
-    data.national_number_not_applicable = true;
+  // Only add national-number fields when the extension is enabled.
+  if (nationalNumberEnabled) {
+    if (participant.nationalNumber) {
+      data.national_number = participant.nationalNumber;
+    } else {
+      data.national_number_not_applicable = true;
+    }
   }
 
   try {
@@ -496,7 +533,44 @@ async function findOrCreateParticipant(
   } catch (error) {
     const message = (error as Error).message;
 
+    // Handle a participant that was created between our lookup
+    // and the create operation.
+    if (message.includes('Participant already exists')) {
+      const existingParticipant = await query.load(pool);
+
+      if (existingParticipant) {
+        return existingParticipant.participant_id;
+      }
+
+      // It may be an existing participant without a birth date.
+      if (participant.birthDate) {
+        const existingWithoutBirthDate = await select('participant_id')
+          .from('participant')
+          .where('first_name', '=', participant.firstName)
+          .and('last_name', '=', participant.lastName)
+          .load(pool);
+
+        if (existingWithoutBirthDate) {
+          await update('participant')
+            .given({
+              birth_date: participant.birthDate
+            })
+            .where(
+              'participant_id',
+              '=',
+              existingWithoutBirthDate.participant_id
+            )
+            .execute(pool);
+
+          return existingWithoutBirthDate.participant_id;
+        }
+      }
+    }
+
+    // If the national-number extension is enabled but the imported
+    // national number is invalid, create the participant without it.
     if (
+      nationalNumberEnabled &&
       participant.nationalNumber &&
       message.includes('National number is invalid')
     ) {
@@ -546,7 +620,8 @@ async function createRegistrationIfNeeded(
 async function importParticipantsForOrder(
   wcOrder: WooCommerceOrder,
   mapped: OrderImportData,
-  customerId: number | null
+  customerId: number | null,
+  nationalNumberEnabled : boolean
 ): Promise<void> {
   for (const item of mapped.items) {
     const productId = await resolveLocalProductId(
@@ -577,7 +652,8 @@ async function importParticipantsForOrder(
     for (const participant of participants) {
       const participantId = await findOrCreateParticipant(
         participant,
-        customerId
+        customerId,
+        nationalNumberEnabled
       );
 
       await createRegistrationIfNeeded(
@@ -598,6 +674,25 @@ function normalizeBirthDate(value: string): string | null {
   }
 
   const [, day, month, year] = match;
+
+  const dayNumber = Number(day);
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+
+  const date = new Date(
+    yearNumber,
+    monthNumber - 1,
+    dayNumber
+  );
+
+  if (
+    date.getFullYear() !== yearNumber ||
+    date.getMonth() !== monthNumber - 1 ||
+    date.getDate() !== dayNumber
+  ) {
+    debug(`Invalid birth date from WooCommerce: ${value}`);
+    return null;
+  }
 
   return `${year}-${month}-${day}`;
 }
