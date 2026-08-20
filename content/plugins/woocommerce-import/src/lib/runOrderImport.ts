@@ -9,7 +9,7 @@ import {
   startTransaction,
   update
 } from '@evershop/postgres-query-builder';
-import { debug, pool, resolveOrderStatus, createCustomer} from '../core.js';
+import { debug, pool, resolveOrderStatus, createCustomer, createParticipant, createRegistration, getEnabledExtensions} from '../core.js';
 import {
   findMapByExternalId,
   findOrderMapByExternalId,
@@ -25,21 +25,51 @@ import type {
   OrderAddressImportData,
   OrderImportData,
   OrderItemImportData,
-  WooCommerceOrder
+  WooCommerceOrder,
+  WooCommerceOrderLineItem
 } from '../types.js';
 import { mapOrder } from './mapOrder.js';
 import { createWooCommerceClient, fetchAllOrders } from './woocommerceClient.js';
 import crypto from 'node:crypto';
 
-async function resolveLocalProductId(externalProductId: number): Promise<number> {
-  const map = await findMapByExternalId(externalProductId);
-  if (!map || !map.product_id) {
-    // throw new Error(
-    //   `Order references WooCommerce product ${externalProductId} that has not been imported yet.`
-    // );
-    return 0;
+interface ImportedParticipant {
+  firstName: string;
+  lastName: string;
+  birthDate: string | null;
+  nationalNumber: string | null;
+}
+
+async function resolveLocalProductId(
+  externalProductId: number,
+  productName?: string
+): Promise<number> {  
+  if (externalProductId) {
+    const map = await findMapByExternalId(externalProductId);
+
+    if (map?.product_id) {
+      return map.product_id;
+    }
   }
-  return map.product_id;
+
+  // Legacy orders: WooCommerce gives product_id = 0,
+  // so fall back to the product name.
+  if (productName) {
+    const product = await select('product_description_product_id')
+      .from('product_description')
+      .where('name', '=', productName)
+      .load(pool);
+
+    if (product) {
+      return product.product_description_product_id;
+    }
+  }
+
+  debug(
+    `Could not resolve WooCommerce product. ` +
+    `External ID: ${externalProductId}, name: ${productName}`
+  );
+
+  return 0;
 }
 
 async function findOrCreateCustomer(
@@ -209,6 +239,12 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
     );
   }
 
+  const extensions = await getEnabledExtensions();
+
+  const nationalNumberEnabled = extensions.some(
+    (extension: any) => extension.name === 'national-number-field'
+  );
+
   const client = createWooCommerceClient(settings);
   const batchId = await startBatch('orders');
 
@@ -222,9 +258,13 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
       for (const wcOrder of page as WooCommerceOrder[]) {
         totalFetched += 1;
 
+        //debug(JSON.stringify(wcOrder, null, 2));
+
         const existing = await findOrderMapByExternalId(wcOrder.id);
 
         if (existing && existing.order_id) {
+          const connection = await getConnection(pool);
+
           try {
             const mapped = mapOrder(wcOrder);
 
@@ -234,7 +274,20 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
               mapped.customer_last_name
             );
 
-            const status = resolveOrderStatus(mapped.paymentStatus, mapped.shipmentStatus);
+            await startTransaction(connection);
+
+            // Participants + registrations
+            await importParticipantsForOrder(
+              wcOrder,
+              mapped,
+              customerId,
+              nationalNumberEnabled
+            );
+
+            const status = resolveOrderStatus(
+              mapped.paymentStatus,
+              mapped.shipmentStatus
+            );
 
             await update('order')
               .given({
@@ -247,7 +300,9 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
                 updated_at: new Date()
               })
               .where('order_id', '=', existing.order_id)
-              .execute(pool);
+              .execute(connection);
+
+            await commit(connection);
 
             await recordOrderUpdated(
               existing.woocommerce_order_map_id,
@@ -257,7 +312,13 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
             totalUpdated += 1;
           } catch (e) {
-            debug('failed updating imported order ' + (e as Error).message);
+            await rollback(connection); 
+
+            debug(
+              'failed updating imported order ' +
+              (e as Error).message
+            );
+
             totalFailed += 1;
 
             await recordOrderFailed(
@@ -267,7 +328,6 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
               existing.woocommerce_order_map_id
             );
           }
-
           continue;
         }
 
@@ -277,7 +337,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
           const resolvedItems: { item: OrderItemImportData; productId: number }[] = [];
           for (const item of mapped.items) {
-            const productId = await resolveLocalProductId(item.externalProductId);
+            const productId = await resolveLocalProductId(item.externalProductId, item.product_name);
             resolvedItems.push({ item, productId });
           }
 
@@ -285,6 +345,9 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             mapped.customer_first_name, mapped.customer_last_name);
 
           await startTransaction(connection);
+
+          await importParticipantsForOrder(wcOrder, mapped, customerId, nationalNumberEnabled);
+
           const created = await createOrder(mapped, resolvedItems, customerId, connection);
           await commit(connection);
 
@@ -330,4 +393,306 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
     });
     throw e;
   }
+}
+
+function extractParticipants(
+  lineItem: WooCommerceOrderLineItem
+): ImportedParticipant[] {
+  return lineItem.meta_data
+    .filter((meta) => meta.display_key?.startsWith('Ticket #'))
+    .map((meta) => {
+      const value = meta.display_value;
+
+      const firstNameMatch = value.match(
+        /Voornaam:\s*(.*?)\s+Naam:/
+      );
+
+      const lastNameMatch = value.match(
+        /Naam:\s*(.*?)\s+Geboortedatum:/
+      );
+
+      const birthDateMatch = value.match(
+        /Geboortedatum:\s*(.*?)(?=\s+Rijksregisternummer kind)/
+      );
+
+      const nationalNumberMatch = value.match(
+        /Rijksregisternummer kind \(fiscaal attest\):\s*(.*?)(?=\s+Rijksregisternummer ouder)/
+      );
+
+      if (!firstNameMatch || !lastNameMatch) {
+        throw new Error(
+          `Could not parse participant from WooCommerce metadata: ${value}`
+        );
+      }
+
+      const rawBirthDate = birthDateMatch?.[1]?.trim();
+      const rawNationalNumber = nationalNumberMatch?.[1]?.trim();
+
+      const birthDate =
+        rawBirthDate && rawBirthDate !== '/'
+          ? normalizeBirthDate(rawBirthDate)
+          : null;
+
+      const nationalNumber =
+        rawNationalNumber && rawNationalNumber !== '/'
+          ? rawNationalNumber.replace(/\D/g, '')
+          : null;
+
+      return {
+        firstName: firstNameMatch[1].trim(),
+        lastName: lastNameMatch[1].trim(),
+        birthDate,
+        nationalNumber
+      };
+    });
+}
+
+async function findOrCreateParticipant(
+  participant: ImportedParticipant,
+  customerId: number | null,
+  nationalNumberEnabled: boolean
+): Promise<number> {
+  // First try to find the participant by national number.
+  // The national number is the strongest identifier we have.
+  if (nationalNumberEnabled && participant.nationalNumber) {
+    const existingByNationalNumber = await select('participant_id')
+      .from('participant')
+      .where('national_number', '=', participant.nationalNumber)
+      .load(pool);
+
+    if (existingByNationalNumber) {
+      return existingByNationalNumber.participant_id;
+    }
+  }
+
+  // Try to find the participant by name + birth date.
+  let query = select('participant_id')
+    .from('participant')
+    .where('first_name', '=', participant.firstName)
+    .and('last_name', '=', participant.lastName);
+
+  if (participant.birthDate) {
+    query = query.and('birth_date', '=', participant.birthDate);
+  }
+
+  const existingParticipant = await query.load(pool);
+
+  if (existingParticipant) {
+    return existingParticipant.participant_id;
+  }
+
+  // If WooCommerce has a birth date but the existing participant
+  // doesn't have one yet, find the participant by name and fill it in.
+  if (participant.birthDate) {
+    const existingWithoutBirthDate = await select('participant_id')
+      .from('participant')
+      .where('first_name', '=', participant.firstName)
+      .and('last_name', '=', participant.lastName)
+      .load(pool);
+
+    if (existingWithoutBirthDate) {
+      await update('participant')
+        .given({
+          birth_date: participant.birthDate
+        })
+        .where(
+          'participant_id',
+          '=',
+          existingWithoutBirthDate.participant_id
+        )
+        .execute(pool);
+
+      return existingWithoutBirthDate.participant_id;
+    }
+  }
+
+  // Build participant data.
+  const data: any = {
+    first_name: participant.firstName,
+    last_name: participant.lastName,
+    customer_id: customerId
+  };
+
+  if (participant.birthDate) {
+    data.birth_date = participant.birthDate;
+  }
+
+  // Only add national-number fields when the extension is enabled.
+  if (nationalNumberEnabled) {
+    if (participant.nationalNumber) {
+      data.national_number = participant.nationalNumber;
+    } else {
+      data.national_number_not_applicable = true;
+    }
+  }
+
+  try {
+    const created = await createParticipant(data);
+
+    return created.insertId;
+  } catch (error) {
+    const message = (error as Error).message;
+
+    // Handle a participant that was created between our lookup
+    // and the create operation.
+    if (message.includes('Participant already exists')) {
+      const existingParticipant = await query.load(pool);
+
+      if (existingParticipant) {
+        return existingParticipant.participant_id;
+      }
+
+      // It may be an existing participant without a birth date.
+      if (participant.birthDate) {
+        const existingWithoutBirthDate = await select('participant_id')
+          .from('participant')
+          .where('first_name', '=', participant.firstName)
+          .and('last_name', '=', participant.lastName)
+          .load(pool);
+
+        if (existingWithoutBirthDate) {
+          await update('participant')
+            .given({
+              birth_date: participant.birthDate
+            })
+            .where(
+              'participant_id',
+              '=',
+              existingWithoutBirthDate.participant_id
+            )
+            .execute(pool);
+
+          return existingWithoutBirthDate.participant_id;
+        }
+      }
+    }
+
+    // If the national-number extension is enabled but the imported
+    // national number is invalid, create the participant without it.
+    if (
+      nationalNumberEnabled &&
+      participant.nationalNumber &&
+      message.includes('National number is invalid')
+    ) {
+      debug(
+        `Invalid national number for participant ` +
+        `${participant.firstName} ${participant.lastName}: ` +
+        `${participant.nationalNumber}. Creating without national number.`
+      );
+
+      const created = await createParticipant({
+        first_name: participant.firstName,
+        last_name: participant.lastName,
+        ...(participant.birthDate
+          ? { birth_date: participant.birthDate }
+          : {}),
+        national_number_not_applicable: true,
+        customer_id: customerId
+      });
+
+      return created.insertId;
+    }
+
+    throw error;
+  }
+}
+
+async function createRegistrationIfNeeded(
+  participantId: number,
+  productId: number
+): Promise<void> {
+  const existingRegistration = await select('registration_id')
+    .from('registration')
+    .where('registration_participant_id', '=', participantId)
+    .and('registration_product_id', '=', productId)
+    .load(pool);
+
+  if (existingRegistration) {
+    return;
+  }
+
+  await createRegistration({
+    registration_participant_id: participantId,
+    registration_product_id: productId
+  });
+}
+
+async function importParticipantsForOrder(
+  wcOrder: WooCommerceOrder,
+  mapped: OrderImportData,
+  customerId: number | null,
+  nationalNumberEnabled : boolean
+): Promise<void> {
+  for (const item of mapped.items) {
+    const productId = await resolveLocalProductId(
+      item.externalProductId, item.product_name
+    );
+
+    if (!productId) {
+      debug(
+        `Skipping participants for line item ${item.externalLineItemId}: ` +
+        `no local product found for WooCommerce product ${item.externalProductId}`
+      );
+
+      continue;
+    }
+
+    const wcLineItem = wcOrder.line_items.find(
+      (lineItem) => lineItem.id === item.externalLineItemId
+    );
+
+    if (!wcLineItem) {
+      throw new Error(
+        `WooCommerce line item ${item.externalLineItemId} could not be found.`
+      );
+    }
+
+    const participants = extractParticipants(wcLineItem);
+
+    for (const participant of participants) {
+      const participantId = await findOrCreateParticipant(
+        participant,
+        customerId,
+        nationalNumberEnabled
+      );
+
+      await createRegistrationIfNeeded(
+        participantId,
+        productId
+      );
+    }
+  }
+}
+
+function normalizeBirthDate(value: string): string | null {
+  const match = value.match(
+    /^(\d{2})[\/\-\s](\d{2})[\/\-\s](\d{4})$/
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const [, day, month, year] = match;
+
+  const dayNumber = Number(day);
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+
+  const date = new Date(
+    yearNumber,
+    monthNumber - 1,
+    dayNumber
+  );
+
+  if (
+    date.getFullYear() !== yearNumber ||
+    date.getMonth() !== monthNumber - 1 ||
+    date.getDate() !== dayNumber
+  ) {
+    debug(`Invalid birth date from WooCommerce: ${value}`);
+    return null;
+  }
+
+  return `${year}-${month}-${day}`;
 }

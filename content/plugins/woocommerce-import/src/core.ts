@@ -14,6 +14,9 @@ export { default as createProduct } from '../../../../dist/modules/catalog/servi
 export { default as updateProduct } from '../../../../dist/modules/catalog/services/product/updateProduct.js';
 export { default as deleteProduct } from '../../../../dist/modules/catalog/services/product/deleteProduct.js';
 export { default as createCustomer} from '../../../../dist/modules/customer/services/customer/createCustomer.js';
+export { default as createParticipant} from '../../../../dist/modules/camp/services/participant/createParticipant.js';
+export { default as createRegistration} from '../../../../dist/modules/camp/services/registration/createRegistration.js';
 export { resolveOrderStatus } from '../../../../dist/modules/oms/services/updateOrderStatus.js';
 export { debug, error } from '../../../../dist/lib/log/logger.js';
 export { uploadFile } from '../../../../dist/modules/cms/services/uploadFile.js';
+export { getEnabledExtensions } from '../../../../dist/bin/extension/index.js';
