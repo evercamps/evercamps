@@ -19,11 +19,11 @@ export default async (connection) => {
         {
           id: 'hanhk3km0m8nt2b',
 
-          url: 'javascript:void(0)',
+          url: '/shop',
           name: 'Shop ❤️',
           type: 'custom',
 
-          uuid: 'javascript:void(0)',
+          uuid: '/shop',
           children: [
             {
               id: 'hanhk3km0m8nt2c',

@@ -20,10 +20,12 @@ export default function ParticipantNewForm({ action }: Props) {
       onSuccess={(response: any) => {
         if (response.error) {
           toast.error(
-            get(
-              response,
-              'error.message',
-              'Something wrong. Please reload the page!'
+            String(
+              get(
+                response,
+                'error.message',
+                'Something wrong. Please reload the page!'
+              )
             )
           );
         } else {
