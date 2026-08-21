@@ -174,6 +174,7 @@ export interface OrderAddressImportData {
 export interface OrderItemImportData {
   externalLineItemId: number;
   externalProductId: number;
+  externalVariationId: number | null;
   product_sku: string;
   product_name: string;
   qty: number;

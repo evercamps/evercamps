@@ -80,6 +80,7 @@ function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
   const productPriceInclTax = productPrice + lineTotalTax / qty;
   debug(JSON.stringify({
     externalProductId: item.product_id,
+    externalVariationId: item.variation_id || null,
     product_sku: item.sku || `wc_product_${item.product_id}`,
     product_name: item.name,
     qty,
@@ -99,6 +100,7 @@ function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
   return {
     externalLineItemId: item.id,
     externalProductId: item.product_id,
+    externalVariationId: item.variation_id || null,
     product_sku: item.sku || `wc_product_${item.product_id}`,
     product_name: item.name,
     qty,

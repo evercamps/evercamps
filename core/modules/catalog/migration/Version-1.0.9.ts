@@ -1,6 +1,6 @@
 import { execute } from '@evershop/postgres-query-builder';
 
-export default async (connection) => {
+export default async (connection : any) => {
   // PRODUCT_VARIANT: a real variant row, distinct from a product row
   await execute(
     connection,
