@@ -121,12 +121,21 @@ export interface WooCommerceOrderLineItem {
   product_id: number;
   variation_id: number;
   name: string;
-  sku: string;
+  sku: string | null;
   quantity: number;
   subtotal: string;
   subtotal_tax: string;
   total: string;
   total_tax: string;
+  meta_data: WooCommerceOrderLineItemMeta[];
+}
+
+export interface WooCommerceOrderLineItemMeta {
+  id: number;
+  key: string;
+  value: string;
+  display_key: string;
+  display_value: string;
 }
 
 export interface WooCommerceOrder {
@@ -163,6 +172,7 @@ export interface OrderAddressImportData {
 }
 
 export interface OrderItemImportData {
+  externalLineItemId: number;
   externalProductId: number;
   product_sku: string;
   product_name: string;
@@ -186,6 +196,8 @@ export interface OrderImportData {
   currency: string;
   customer_email: string | null;
   customer_full_name: string | null;
+  customer_first_name: string | null;
+  customer_last_name: string | null;
   payment_method: string | null;
   payment_method_name: string | null;
   paymentStatus: string;

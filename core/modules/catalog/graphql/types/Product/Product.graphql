@@ -34,4 +34,6 @@ type ProductCollection {
 extend type Query {
   product(id: ID): Product
   products(filters: [FilterInput]): ProductCollection
+  availableAttributes: [FilterAttribute]
+  priceRange: PriceRange
 }

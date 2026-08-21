@@ -97,6 +97,7 @@ function mapLineItem(item: WooCommerceOrderLineItem): OrderItemImportData {
     line_total_with_discount_incl_tax: lineTotalWithDiscount + lineTotalWithDiscountTax
   }));
   return {
+    externalLineItemId: item.id,
     externalProductId: item.product_id,
     product_sku: item.sku || `wc_product_${item.product_id}`,
     product_name: item.name,
@@ -148,6 +149,8 @@ export function mapOrder(wcOrder: WooCommerceOrder): OrderImportData {
     order_number: `WC-${wcOrder.number || wcOrder.id}`,
     currency: wcOrder.currency,
     customer_email: wcOrder.billing?.email || null,
+    customer_first_name: wcOrder.billing.first_name || null,
+    customer_last_name: wcOrder.billing.last_name || null,
     customer_full_name: billingName || null,
     payment_method: wcOrder.payment_method || null,
     payment_method_name: wcOrder.payment_method_title || null,
