@@ -72,6 +72,30 @@ async function resolveLocalProductId(
   return 0;
 }
 
+async function resolveLocalVariantId(
+  externalVariationId: number | null
+): Promise<number | null> {
+  if (!externalVariationId) {
+    return null;
+  }
+
+  const variationMap = await select('product_variant_id')
+    .from('woocommerce_variation_map')
+    .where('external_variation_id', '=', externalVariationId)
+    .load(pool);
+
+  if (!variationMap?.product_variant_id) {
+    debug(
+      `Could not resolve WooCommerce variation. ` +
+      `External variation ID: ${externalVariationId}`
+    );
+
+    return null;
+  }
+
+  return variationMap.product_variant_id;
+}
+
 async function findOrCreateCustomer(
   email: string | null,
   firstName: string | null,
@@ -148,7 +172,7 @@ const PLACEHOLDER_CART_ID = 0;
 
 async function createOrder(
   mapped: OrderImportData,
-  resolvedItems: { item: OrderItemImportData; productId: number | null }[],
+  resolvedItems: { item: OrderItemImportData; productId: number | null; productVariantId: number | null; }[],
   customerId: number | null,
   connection: PoolClient
 ): Promise<{ orderId: number; billingAddressId: number | null; shippingAddressId: number | null }> {
@@ -190,11 +214,12 @@ async function createOrder(
     })
     .execute(connection);
 
-  for (const { item, productId } of resolvedItems) {
+  for (const { item, productId, productVariantId } of resolvedItems) {
     await insert('order_item')
       .given({
         order_item_order_id: order.insertId,
         product_id: productId,
+        product_variant_id: productVariantId,
         product_sku: item.product_sku,
         product_name: item.product_name,
         product_price: item.product_price,
@@ -281,7 +306,8 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
               wcOrder,
               mapped,
               customerId,
-              nationalNumberEnabled
+              nationalNumberEnabled,
+              connection
             );
 
             const status = resolveOrderStatus(
@@ -335,10 +361,11 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
         try {
           const mapped = mapOrder(wcOrder);
 
-          const resolvedItems: { item: OrderItemImportData; productId: number }[] = [];
+          const resolvedItems: { item: OrderItemImportData; productId: number; productVariantId: number | null; }[] = [];
           for (const item of mapped.items) {
             const productId = await resolveLocalProductId(item.externalProductId, item.product_name);
-            resolvedItems.push({ item, productId });
+            const productVariantId = await resolveLocalVariantId(item.externalVariationId);
+            resolvedItems.push({ item, productId, productVariantId });
           }
 
           const customerId = await findOrCreateCustomer(mapped.customer_email, 
@@ -346,7 +373,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
           await startTransaction(connection);
 
-          await importParticipantsForOrder(wcOrder, mapped, customerId, nationalNumberEnabled);
+          await importParticipantsForOrder(wcOrder, mapped, customerId, nationalNumberEnabled, connection);
 
           const created = await createOrder(mapped, resolvedItems, customerId, connection);
           await commit(connection);
@@ -597,23 +624,72 @@ async function findOrCreateParticipant(
   }
 }
 
-async function createRegistrationIfNeeded(
+async function createOrUpdateRegistration(
   participantId: number,
-  productId: number
+  productId: number,
+  productVariantId: number | null,
+  connection: PoolClient
 ): Promise<void> {
-  const existingRegistration = await select('registration_id')
+  const registrations = await select('*')
     .from('registration')
-    .where('registration_participant_id', '=', participantId)
-    .and('registration_product_id', '=', productId)
-    .load(pool);
+    .where(
+      'registration_participant_id',
+      '=',
+      participantId
+    )
+    .and(
+      'registration_product_id',
+      '=',
+      productId
+    )
+    .execute(connection);
 
-  if (existingRegistration) {
+  // The exact participant/product/variant registration already exists.
+  const exactRegistration = registrations.find(
+    (registration: any) =>
+      (registration.product_variant_id ?? null) === productVariantId
+  );
+
+  if (exactRegistration) {
     return;
+  }
+
+  // A WooCommerce variant exists, but the old registration does not have
+  // its local variant assigned yet.
+  if (productVariantId !== null) {
+    const registrationsWithoutVariant = registrations.filter(
+      (registration: any) =>
+        registration.product_variant_id == null
+    );
+
+    if (registrationsWithoutVariant.length === 1) {
+      await update('registration')
+        .given({
+          product_variant_id: productVariantId
+        })
+        .where(
+          'registration_id',
+          '=',
+          registrationsWithoutVariant[0].registration_id
+        )
+        .execute(connection);
+
+      return;
+    }
+
+    if (registrationsWithoutVariant.length > 1) {
+      throw new Error(
+        `Cannot safely assign variant ${productVariantId} to participant ` +
+        `${participantId} and product ${productId}: multiple registrations ` +
+        `without a variant were found.`
+      );
+    }
   }
 
   await createRegistration({
     registration_participant_id: participantId,
-    registration_product_id: productId
+    registration_product_id: productId,
+    product_variant_id: productVariantId
   });
 }
 
@@ -621,11 +697,15 @@ async function importParticipantsForOrder(
   wcOrder: WooCommerceOrder,
   mapped: OrderImportData,
   customerId: number | null,
-  nationalNumberEnabled : boolean
+  nationalNumberEnabled : boolean,
+  connection: PoolClient
 ): Promise<void> {
   for (const item of mapped.items) {
     const productId = await resolveLocalProductId(
       item.externalProductId, item.product_name
+    );
+    const productVariantId = await resolveLocalVariantId(
+      item.externalVariationId
     );
 
     if (!productId) {
@@ -635,6 +715,13 @@ async function importParticipantsForOrder(
       );
 
       continue;
+    }
+
+    if (item.externalVariationId && !productVariantId) {
+      throw new Error(
+        `No local variant mapping found for WooCommerce variation ` +
+        `${item.externalVariationId}.`
+      );
     }
 
     const wcLineItem = wcOrder.line_items.find(
@@ -656,9 +743,11 @@ async function importParticipantsForOrder(
         nationalNumberEnabled
       );
 
-      await createRegistrationIfNeeded(
+      await createOrUpdateRegistration(
         participantId,
-        productId
+        productId,
+        productVariantId,
+        connection
       );
     }
   }

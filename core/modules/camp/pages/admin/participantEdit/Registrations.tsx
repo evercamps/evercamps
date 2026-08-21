@@ -19,6 +19,7 @@ const RegistrationsQuery = `
         name
         sku
         registrationId
+        variantTitle
         editUrl
         image
         deleteApi
@@ -227,7 +228,12 @@ export default function Registrations({ participant, addRegistrationUrl }: Props
                           <a href={p?.editUrl || ''} className="font-semibold hover:underline">
                             {p?.name}
                           </a>
-                          <div>{p?.sku}</div>
+                          <div>
+                            {p?.sku}
+                            {p?.variantTitle && (
+                              <span> — {p.variantTitle}</span>
+                            )}
+                          </div>
                           <div>{p?.price?.regular?.text}</div>
                         </div>
                         <div className="col-span-2 text-right">

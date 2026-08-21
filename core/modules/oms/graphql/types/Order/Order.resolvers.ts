@@ -23,6 +23,7 @@ interface Order {
 interface OrderItem {
   orderItemId: number;
   productId: number;
+  productVariantId?: number | null;
   lineTotalInclTax: number;
   lineTotal: number;
 }
@@ -223,6 +224,27 @@ export default {
       return product
         ? buildUrl('productEdit', { id: product.uuid })
         : null;
+    },
+    
+    variantTitle: async (
+      { productVariantId }: OrderItem,
+      _: unknown,
+      { pool }: Context
+    ) => {
+      if (!productVariantId) {
+        return null;
+      }
+
+      const variant = await select('title')
+        .from('product_variant')
+        .where(
+          'product_variant_id',
+          '=',
+          productVariantId
+        )
+        .load(pool);
+
+      return variant?.title ?? null;
     },
 
     total: ({ lineTotalInclTax }: OrderItem) => lineTotalInclTax,
