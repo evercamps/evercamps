@@ -46,6 +46,81 @@ export async function findMapByExternalId(externalId: number) {
     .load(pool);
 }
 
+export async function findVariationMapByExternalId(externalId: number) {
+  return select()
+    .from('woocommerce_variation_map')
+    .where('external_variation_id', '=', externalId)
+    .load(pool);
+}
+
+export async function recordVariantCreated(
+  batchId: number,
+  externalId: number,
+  variantId: number,
+  externalUpdatedAt?: string
+): Promise<void> {
+  await insert('woocommerce_variation_map')
+    .given({
+      external_variation_id: externalId,
+      product_variant_id: variantId,
+      created_in_batch_id: batchId,
+      last_batch_id: batchId,
+      status: 'success',
+      error_message: null,
+      external_updated_at: externalUpdatedAt ?? null
+    })
+    .execute(pool);
+}
+
+export async function recordVariantUpdated(
+  mapId: number,
+  variantId: number,
+  batchId: number,
+  externalUpdatedAt?: string
+): Promise<void> {
+  await update('woocommerce_variation_map')
+    .given({
+      last_batch_id: batchId,
+      status: 'success',
+      error_message: null,
+      external_updated_at: externalUpdatedAt ?? null,
+      updated_at: new Date(),
+      product_variant_id: variantId
+    })
+    .where('woocommerce_variation_map_id', '=', mapId)
+    .execute(pool);
+}
+
+export async function recordVariantFailed(
+  batchId: number,
+  externalId: number,
+  errorMessage: string,
+  existingMapId?: number
+): Promise<void> {
+  if (existingMapId) {
+    await update('woocommerce_variation_map')
+      .given({
+        last_batch_id: batchId,
+        status: 'failed',
+        error_message: errorMessage,
+        updated_at: new Date()
+      })
+      .where('woocommerce_variation_map_id', '=', existingMapId)
+      .execute(pool);
+  } else {
+    await insert('woocommerce_variation_map')
+      .given({
+        external_variation_id: externalId,
+        product_variant_id: null,
+        created_in_batch_id: batchId,
+        last_batch_id: batchId,
+        status: 'failed',
+        error_message: errorMessage
+      })
+      .execute(pool);
+  }
+}
+
 export async function getProductUuid(productId: number): Promise<string | null> {
   const product = await select('uuid')
     .from('product')
@@ -194,6 +269,14 @@ async function rollbackProductBatch(
   }
 
   await del('woocommerce_product_map')
+    .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
+    .execute(pool);
+
+  // product_variant rows created in this batch already cascaded away with
+  // their parent product above; this also covers variation-map rows whose
+  // variant creation failed and never got a product_variant_id to cascade
+  // from.
+  await del('woocommerce_variation_map')
     .where('created_in_batch_id', '=', batch.woocommerce_import_batch_id)
     .execute(pool);
 }

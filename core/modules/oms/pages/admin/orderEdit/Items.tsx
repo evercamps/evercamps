@@ -33,6 +33,7 @@ interface OrderItem {
   finalPrice?: PriceValue;
   total?: PriceValue;
   lineTotal: PriceValue;
+  variantTitle?: string | null;
 }
 
 interface ShipmentStatus {
@@ -100,6 +101,7 @@ export default function Items({
                         name: i.productName,
                         productSku: i.productSku,
                         productUrl: i.productUrl,
+                        variantTitle: i.variantTitle,
                         variantOptions: JSON.parse(
                           i.variantOptions || '[]'
                         ),
@@ -178,6 +180,7 @@ export const query = `
         productSku
         productUrl
         thumbnail
+        variantTitle
         variantOptions
         productPrice {
           value

@@ -20,6 +20,7 @@ export const query = `
       uuid
       name
       registrationId
+      variantTitle
       participant {
         firstName
         lastName
@@ -52,6 +53,7 @@ interface Registration {
   uuid: string;
   name: string;
   registrationId: number;
+  variantTitle: string | null;
   participant: {
     firstName: string;
     lastName: string;
@@ -274,6 +276,11 @@ export default function RegistrationGrid({
               name="product"
               currentFilters={currentFilters}
             />
+            <SortableHeader
+              title="Variant"
+              name="variantTitle"
+              currentFilters={currentFilters}
+            />
           </tr>
         </thead>
         <tbody>
@@ -285,7 +292,7 @@ export default function RegistrationGrid({
             <tr key={r.uuid}>
               <td style={{ width: '2rem' }}>
                 <Checkbox
-                  isChecked={selectedRows.includes(r.registrationId.toString())}
+                  isChecked={selectedRows.includes(r.uuid)}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     if (e.target.checked)
                       setSelectedRows(selectedRows.concat([r.uuid]));
@@ -297,6 +304,7 @@ export default function RegistrationGrid({
               <td>{r.participant.firstName}</td>
               <td>{r.participant.lastName}</td>
               <td>{r.name}</td>
+              <td>{r.variantTitle || '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -323,6 +331,7 @@ function exportToExcel(registrations: Registration[]) {
       "First Name": r.participant.firstName,
       "Last Name": r.participant.lastName,
       "Product": r.name,
+      Variant: r.variantTitle || ''
     }))
   );
 

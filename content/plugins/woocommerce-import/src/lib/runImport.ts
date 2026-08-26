@@ -9,10 +9,12 @@ import {
   startBatch
 } from '../services/importBatch.js';
 import { getWooCommerceSettings } from '../services/settings.js';
-import type { ImportBatchSummary } from '../types.js';
+import type { ImportBatchSummary, WooCommerceVariation } from '../types.js';
+import { syncProductCategories } from './importCategories.js';
 import { resolveProductImages } from './importImages.js';
+import { syncProductVariants } from './importVariants.js';
 import { mapProduct } from './mapProduct.js';
-import { createWooCommerceClient, fetchAllProducts } from './woocommerceClient.js';
+import { createWooCommerceClient, fetchAllProducts, fetchAllVariations } from './woocommerceClient.js';
 
 export async function runImport(): Promise<ImportBatchSummary> {
   const settings = await getWooCommerceSettings();
@@ -49,9 +51,11 @@ export async function runImport(): Promise<ImportBatchSummary> {
         try {
           data.images = await resolveProductImages(wcProduct.id, wcProduct.images || []);
 
+          let productId: number;
           if (!existing || !existing.product_id) {
             debug('creating product');
             const product = await createProduct(data, { routeId: 'importProducts' });
+            productId = product.product_id;
             if(existing && !existing.product_id) {
               debug('udpating record');
               await recordUpdated(existing.woocommerce_product_map_id, product.product_id, batchId, wcProduct.date_modified);
@@ -68,9 +72,20 @@ export async function runImport(): Promise<ImportBatchSummary> {
             }
             debug('updating product');
             await updateProduct(uuid, data, { routeId: 'importProducts' });
+            productId = existing.product_id;
             await recordUpdated(existing.woocommerce_product_map_id, existing.product_id, batchId, wcProduct.date_modified);
             totalUpdated += 1;
           }
+
+          await syncProductCategories({ product_id: productId }, wcProduct);
+
+          const variations: WooCommerceVariation[] = [];
+          if (wcProduct.type === 'variable') {
+            for await (const page of fetchAllVariations(client, wcProduct.id)) {
+              variations.push(...page);
+            }
+          }
+          await syncProductVariants({ product_id: productId }, wcProduct, variations, batchId);
         } catch (e) {
           
           debug('failed updating record ' + (e as Error).message + ' ' +JSON.stringify(wcProduct));

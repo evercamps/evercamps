@@ -62,29 +62,7 @@ Please refer to our [Contribution Guidelines](./CONTRIBUTING.md) and [Code of Co
 
 ## Roadmap
 
-1. **Open Source it** (September 2025)
-
-   * Code of conduct
-   * Licensing
-   * Issue templates
-   * Basic Extention: Participant, Registration Entities
-
-2. **Beta Version** (November 2025)
-
-   * Test with first user
-   * Basic registration form setup
-   * Payment gateway integration
-   * Reporting & analytics
-   * Multi-language support
-
-3. **1.0 Release** (januari 2026)
-
-   * Fully tested and first life release
-   
-4. **2.x Releases** (june 2026)
-   * Extended management of registrations and participants
-   * Extended communication possibilities
-   * Report to external contributors (umbrella organisations)
+TBA
 
 ## Project Structure
 
