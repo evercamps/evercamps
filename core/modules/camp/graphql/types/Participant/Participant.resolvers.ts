@@ -4,6 +4,7 @@ import { getParticipantsBaseQuery } from '../../../services/getParticipantsBaseQ
 import { getRegistrationsByParticipantBaseQuery } from '../../../services/getRegistrationsByParticipantBaseQuery.js';
 import { ParticipantCollection } from '../../../services/ParticipantCollection.js';
 import { RegistrationCollection } from '../../../services/RegistrationCollection.js';
+import findDuplicateParticipants from '../../../services/participant/findDuplicateParticipants.js';
 import { select } from '@evershop/postgres-query-builder';
 
 export default {
@@ -19,6 +20,9 @@ export default {
       const root = new ParticipantCollection(query);
       await root.init(filters);
       return root;
+    },
+    participantDuplicateGroups: async (_root: unknown, { threshold }: { threshold?: number | null }) => {
+      return findDuplicateParticipants(threshold ?? undefined);
     }
   },
   Participant: {

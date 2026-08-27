@@ -27,30 +27,28 @@ management. No frontstore changes.
 
 ## Phase 1 — Duplicate detection
 
-**Candidate generation stays in SQL**, not loaded wholesale into Node:
+No new DB extension or migration — `pg_trgm`-backed index-assisted matching was the original idea
+(SQL-side, avoids loading the table into Node) but it adds a real dependency (some managed
+Postgres hosts restrict `CREATE EXTENSION`) for a problem that's small at this tool's scale (an
+admin-triggered, on-demand scan over what's realistically a few thousand participants). Simpler
+wins here.
 
-- `CREATE EXTENSION IF NOT EXISTS pg_trgm;` + a functional trigram index in the same migration:
-  ```sql
-  CREATE INDEX participant_name_trgm_idx ON participant
-    USING GIN ((first_name || ' ' || last_name) gin_trgm_ops);
-  ```
-  ⚠️ Confirm the hosting Postgres allows `CREATE EXTENSION` before committing to this (some managed
-  providers restrict it, though `pg_trgm` is on the standard allow-list for RDS/Cloud SQL/etc.). If
-  it turns out to be blocked, fall back to the normalized-exact baseline below only, and revisit
-  fuzzy scoring later — don't block the rest of the tool on it.
-- New `services/participant/findDuplicateParticipants.ts`:
-  - Baseline (always runs, no extension needed): group by
-    `lower(trim(regexp_replace(first_name, '\s+', ' ', 'g')))` +
-    `lower(trim(regexp_replace(last_name, '\s+', ' ', 'g')))`, `HAVING count(*) > 1`. Catches
-    casing/whitespace variants and true exact repeats from pre-uniqueness-check data.
-  - Fuzzy layer (when `pg_trgm` is available): self-join
-    `participant a, participant b WHERE a.participant_id < b.participant_id AND
-    similarity(a.first_name || ' ' || a.last_name, b.first_name || ' ' || b.last_name) > :threshold`
-    (default threshold ~0.45, exposed as a query param so the admin UI can loosen/tighten it).
-  - Union-find the pairwise matches in application code into clusters (a participant can be close
-    to more than one other), since a merge group can have >2 members.
-  - Return `{ key: string, score: number, participants: Participant[] }[]`, each cluster carrying
-    its registrations count and customer list so the grid doesn't need per-row follow-up queries.
+`services/participant/findDuplicateParticipants.ts`:
+- Baseline (SQL): group by
+  `lower(trim(regexp_replace(first_name, '\s+', ' ', 'g')))` +
+  `lower(trim(regexp_replace(last_name, '\s+', ' ', 'g')))`, `HAVING count(*) > 1`. Catches
+  casing/whitespace variants and true exact repeats from pre-uniqueness-check data. Every pair
+  from this baseline is maximally confident (score 1).
+- Fuzzy layer (in-memory): fetch every participant's `(id, first_name, last_name)` once, normalize
+  each to `"first last"`, and compare all pairs with a small self-contained Levenshtein distance
+  (`1 - distance / max(lengthA, lengthB)` as the similarity score) — no new dependency. Default
+  threshold ~0.45, exposed as a query param so the admin UI can loosen/tighten it. If the
+  participant table ever grows into the tens of thousands and this gets slow, that's the point to
+  revisit (e.g. bucket by first letter before comparing) — not a reason to reach for pg_trgm now.
+- Union-find the pairwise matches (baseline + fuzzy) into clusters, since a participant can be
+  close to more than one other and a merge group can have >2 members.
+- Return `{ key: string, score: number, participants: Participant[] }[]`, each cluster carrying
+  its registrations count and customer info so the grid doesn't need per-row follow-up queries.
 
 ## Phase 2 — GraphQL: expose duplicate groups
 
@@ -152,8 +150,7 @@ duplicate-group count from `participantDuplicateGroups`.
 
 ## Rollout order
 
-1. Phase 1 detection service (+ `pg_trgm` migration, with the exact-match baseline as a safe
-   fallback if the extension can't be enabled).
+1. Phase 1 detection service.
 2. Phase 2 GraphQL query.
 3. Phase 3 merge service + REST endpoint — the only step that deletes data; test rollback paths
    (mid-transaction failure) explicitly.

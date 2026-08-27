@@ -21,7 +21,14 @@ type ParticipantCollection {
   currentFilters: [Filter]
 }
 
+type ParticipantDuplicateGroup {
+  key: String!
+  score: Float!
+  participants: [Participant!]!
+}
+
 extend type Query {
   participants(filters: [FilterInput]): ParticipantCollection
   participant(id: String): Participant
+  participantDuplicateGroups(threshold: Float): [ParticipantDuplicateGroup!]!
 }
