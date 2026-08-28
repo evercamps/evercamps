@@ -41,7 +41,7 @@ interface Product {
 }
 
 interface AttributesProps {
-  product?: Product;
+  product?: Product | null;
   groups: AttributeGroups;
 }
 
@@ -54,11 +54,13 @@ const getGroup = (
   ) || groups[0];
 
 export default function Attributes({
-  product = {},
+  product,
   groups: { items = [] }
 }: AttributesProps) {
-  const attributeIndex = product.attributeIndex || [];
-  const groupId = product.groupId;
+  const currentProduct = product ?? {};
+
+  const attributeIndex = currentProduct.attributeIndex || [];
+  const groupId = currentProduct.groupId;
 
   const [currentGroup, setCurrentGroup] = React.useState<
     AttributeGroup | undefined
@@ -76,7 +78,7 @@ export default function Attributes({
     <Card>
       <Card.Session title="Attribute group">
         <div>
-          {product.variantGroupId && (
+          {currentProduct.variantGroupId && (
             <div>
               <input
                 type="hidden"
@@ -93,7 +95,7 @@ export default function Attributes({
             </div>
           )}
 
-          {!product.variantGroupId && (
+          {!currentProduct.variantGroupId && (
             <Field
               name="group_id"
               value={currentGroup.groupId}

@@ -9,23 +9,23 @@ interface Product {
 }
 
 interface StatusProps {
-  product?: Product;
+  product?: Product | null;
 }
 
-export default function Status({
-  product = {
+export default function Status({ product }: StatusProps) {
+  const currentProduct = product ?? {
     status: 1,
     visibility: 1,
     manageRegistrations: 1
-  }
-}: StatusProps) {
+  };
+
   return (
     <Card title="Product status">
       <Card.Session>
         <Field
           id="status"
           name="status"
-          value={product.status ?? 1}
+          value={currentProduct.status ?? 1}
           label="Status"
           options={[
             { value: 0, text: 'Disabled' },
@@ -39,7 +39,7 @@ export default function Status({
         <Field
           id="visibility"
           name="visibility"
-          value={product.visibility ?? 1}
+          value={currentProduct.visibility ?? 1}
           label="Visibility"
           options={[
             { value: 0, text: 'Not visible' },
@@ -53,7 +53,7 @@ export default function Status({
         <Field
           id="manageRegistrations"
           name="manage_registrations"
-          value={product.manageRegistrations ?? 1}
+          value={currentProduct.manageRegistrations ?? 1}
           label="Manage Registrations"
           options={[
             { value: 0, text: 'Disabled' },

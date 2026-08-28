@@ -1,0 +1,16 @@
+"""
+Represents a concrete variant of a product.
+"""
+type ProductVariant {
+  productVariantId: ID!
+  uuid: String!
+  sku: String!
+  price: Price!
+  title: String
+  isDefault: Boolean!
+  totalSeats: Int
+}
+
+extend type Product {
+  variants: [ProductVariant!]!
+}

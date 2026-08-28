@@ -338,6 +338,65 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
   return product;
 }
 
+async function syncDefaultVariant(
+  productData: ProductData,
+  productId: number,
+  connection: PoolClient
+) {
+  const variants = await select(
+    'product_variant_id',
+    'is_default'
+  )
+    .from('product_variant')
+    .where('product_id', '=', productId)
+    .execute(connection);
+
+  // Only sync while this product has exactly one variant
+  // and that variant is the generated default variant.
+  if (
+    variants.length !== 1 ||
+    variants[0].is_default !== true
+  ) {
+    return;
+  }
+
+  const defaultVariant = variants[0];
+
+  const variantData: Record<string, unknown> = {};
+
+  if (productData.sku !== undefined) {
+    variantData.sku = productData.sku;
+  }
+
+  if (productData.price !== undefined) {
+    variantData.price = productData.price;
+  }
+
+  if (Object.keys(variantData).length > 0) {
+    await update('product_variant')
+      .given(variantData)
+      .where(
+        'product_variant_id',
+        '=',
+        defaultVariant.product_variant_id
+      )
+      .execute(connection);
+  }
+
+  if (productData.qty !== undefined) {
+    await update('inventory_item')
+      .given({
+        total_seats: productData.qty
+      })
+      .where(
+        'variant_id',
+        '=',
+        defaultVariant.product_variant_id
+      )
+      .execute(connection);
+  }
+}
+
 /**
  * Update product service. This service will update a product with all related data
  * @param {String} uuid
@@ -370,6 +429,12 @@ async function updateProduct(uuid: string, data: ProductData, context: Record<st
 
     // Update product inventory
     await hookable(updateProductInventory, { ...context, connection, product })(
+      productData,
+      product.product_id,
+      connection
+    );
+
+    await syncDefaultVariant(
       productData,
       product.product_id,
       connection
