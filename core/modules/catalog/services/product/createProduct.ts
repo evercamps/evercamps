@@ -55,6 +55,29 @@ async function insertProductInventory(inventoryData: ProductInventoryData, produ
     .execute(connection);
 }
 
+async function ensureDefaultVariant(
+    productData: ProductData,
+    productId: number,
+    connection: PoolClient
+  ) {
+    const variant = await insert('product_variant')
+      .given({
+        product_id: productId,
+        sku: productData.sku,
+        price: productData.price,
+        title: null,
+        is_default: true
+      })
+      .execute(connection);
+
+    await insert('inventory_item')
+      .given({
+        variant_id: variant.insertId,
+        total_seats: productData.qty ?? 0
+      })
+      .execute(connection);
+  }
+
 async function insertProductAttributes(attributes: ProductAttributeData[], productId: number, connection: PoolClient) {
   // Looping attributes array
   for (let i = 0; i < attributes.length; i += 1) {
@@ -208,6 +231,12 @@ async function createProduct(data: ProductData, context: Record<string, any>) {
 
     // Insert product inventory
     await hookable(insertProductInventory, { ...context, connection, product })(
+      productData,
+      product.insertId,
+      connection
+    );
+    // Create the default product variant
+    await ensureDefaultVariant(
       productData,
       product.insertId,
       connection
