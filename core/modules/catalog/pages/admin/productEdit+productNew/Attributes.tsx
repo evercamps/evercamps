@@ -41,7 +41,7 @@ interface Product {
 }
 
 interface AttributesProps {
-  product?: Product;
+  product?: Product | null;
   groups: AttributeGroups;
 }
 
@@ -54,9 +54,11 @@ const getGroup = (
   ) || groups[0];
 
 export default function Attributes({
-  product = {},
+  product: productProp,
   groups: { items = [] }
 }: AttributesProps) {
+  // `product` is `null` on the "New Product" page (product(id: null)).
+  const product = productProp ?? {};
   const attributeIndex = product.attributeIndex || [];
   const groupId = product.groupId;
 

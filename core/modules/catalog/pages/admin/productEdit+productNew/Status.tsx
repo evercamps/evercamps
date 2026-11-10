@@ -9,16 +9,20 @@ interface Product {
 }
 
 interface StatusProps {
-  product?: Product;
+  product?: Product | null;
 }
 
-export default function Status({
-  product = {
-    status: 1,
-    visibility: 1,
-    manageRegistrations: 1
-  }
-}: StatusProps) {
+const DEFAULT_PRODUCT: Product = {
+  status: 1,
+  visibility: 1,
+  manageRegistrations: 1
+};
+
+export default function Status({ product: productProp }: StatusProps) {
+  // `product` is `null` (not `undefined`) on the "New Product" page, because
+  // `product(id: null)` resolves to null - a destructuring default doesn't
+  // catch that.
+  const product = productProp ?? DEFAULT_PRODUCT;
   return (
     <Card title="Product status">
       <Card.Session>
