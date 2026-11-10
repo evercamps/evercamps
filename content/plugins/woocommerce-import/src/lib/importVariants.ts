@@ -1,5 +1,5 @@
 import { del, insert, insertOnUpdate, select, update } from '@evershop/postgres-query-builder';
-import { buildVariantOptionHash, pool } from '../core.js';
+import { buildVariantOptionHash, debug, pool } from '../core.js';
 import {
   findVariationMapByExternalId,
   recordVariantCreated,
@@ -75,26 +75,84 @@ export async function resolveAttributeAndOption(
   return { attribute_id: attribute.attribute_id, option_id: option.attribute_option_id };
 }
 
+// The product's default variant (created by core createProduct /
+// ensureDefaultVariant) that isn't linked to a WooCommerce id yet - a simple
+// product adopts it instead of inserting a second variant (which would also
+// clash on the unique product_variant.sku).
+async function findAdoptableDefaultVariant(productId: number): Promise<number | null> {
+  const query = select('product_variant.product_variant_id').from('product_variant');
+  query
+    .leftJoin('woocommerce_variation_map')
+    .on('woocommerce_variation_map.product_variant_id', '=', 'product_variant.product_variant_id');
+  query
+    .where('product_variant.product_id', '=', productId)
+    .and('product_variant.is_default', '=', true)
+    .and('woocommerce_variation_map.woocommerce_variation_map_id', 'IS', null);
+  const row = await query.load(pool);
+  return row ? row.product_variant_id : null;
+}
+
+async function hasOtherDefaultVariant(productId: number, variantId?: number): Promise<boolean> {
+  const query = select('product_variant_id')
+    .from('product_variant')
+    .where('product_id', '=', productId)
+    .and('is_default', '=', true);
+  if (variantId) {
+    query.and('product_variant_id', '!=', variantId);
+  }
+  return !!(await query.load(pool));
+}
+
+// `isSimpleProduct`: the variant is the synthetic one built from a WC simple
+// product. That one is (or becomes) the product's default variant; real WC
+// variations never are.
 async function syncSingleVariant(
   productId: number,
   input: VariantImportInput,
   parent: WooCommerceProduct,
-  batchId: number
+  batchId: number,
+  isSimpleProduct: boolean
 ): Promise<void> {
   const data = mapVariant(input, parent);
   const existingMap = await findVariationMapByExternalId(input.external_variation_id);
 
   let variantId: number;
-  if (existingMap && existingMap.product_variant_id) {
-    variantId = existingMap.product_variant_id;
+  const adoptableId =
+    existingMap && existingMap.product_variant_id
+      ? null
+      : isSimpleProduct
+        ? await findAdoptableDefaultVariant(productId)
+        : null;
+
+  if ((existingMap && existingMap.product_variant_id) || adoptableId) {
+    variantId = existingMap?.product_variant_id || (adoptableId as number);
+    const given: Record<string, any> = {
+      sku: data.sku,
+      price: data.price,
+      title: data.title,
+      updated_at: new Date()
+    };
+    if (isSimpleProduct && !(await hasOtherDefaultVariant(productId, variantId))) {
+      given.is_default = true;
+    }
     await update('product_variant')
-      .given({ sku: data.sku, price: data.price, title: data.title, updated_at: new Date() })
+      .given(given)
       .where('product_variant_id', '=', variantId)
       .execute(pool);
-    await recordVariantUpdated(existingMap.woocommerce_variation_map_id, variantId, batchId, input.date_modified);
+    if (existingMap) {
+      await recordVariantUpdated(existingMap.woocommerce_variation_map_id, variantId, batchId, input.date_modified);
+    } else {
+      await recordVariantCreated(batchId, input.external_variation_id, variantId, input.date_modified);
+    }
   } else {
     const created = await insert('product_variant')
-      .given({ product_id: productId, sku: data.sku, price: data.price, title: data.title })
+      .given({
+        product_id: productId,
+        sku: data.sku,
+        price: data.price,
+        title: data.title,
+        is_default: isSimpleProduct && !(await hasOtherDefaultVariant(productId))
+      })
       .execute(pool);
     variantId = created.insertId;
     if (existingMap) {
@@ -148,11 +206,41 @@ async function deleteStaleVariants(productId: number, processedExternalIds: Set<
 
   for (const row of rows) {
     if (row.external_variation_id === null || !processedExternalIds.has(row.external_variation_id)) {
+      // A variant that registrations or order lines still point at is kept
+      // (deleting it would only NULL their product_variant_id and lose which
+      // week/variant was booked). It's un-flagged as default so it can't act
+      // as the product's default next to the real variants.
+      if (await isVariantInUse(row.product_variant_id)) {
+        debug(
+          `Keeping stale variant ${row.product_variant_id} of product ${productId}: ` +
+          'it still has registrations or order lines.'
+        );
+        await update('product_variant')
+          .given({ is_default: false, updated_at: new Date() })
+          .where('product_variant_id', '=', row.product_variant_id)
+          .execute(pool);
+        continue;
+      }
       // Cascades to inventory_item, variant_attribute_value, variant_lookup
       // and the woocommerce_variation_map row itself.
       await del('product_variant').where('product_variant_id', '=', row.product_variant_id).execute(pool);
     }
   }
+}
+
+async function isVariantInUse(variantId: number): Promise<boolean> {
+  const registration = await select('registration_id')
+    .from('registration')
+    .where('product_variant_id', '=', variantId)
+    .load(pool);
+  if (registration) {
+    return true;
+  }
+  const orderItem = await select('order_item_id')
+    .from('order_item')
+    .where('product_variant_id', '=', variantId)
+    .load(pool);
+  return !!orderItem;
 }
 
 // Syncs product_variant/inventory_item/variant_attribute_value/variant_lookup
@@ -175,7 +263,7 @@ export async function syncProductVariants(
   for (const input of inputs) {
     processedExternalIds.add(input.external_variation_id);
     try {
-      await syncSingleVariant(product.product_id, input, wcProduct, batchId);
+      await syncSingleVariant(product.product_id, input, wcProduct, batchId, variations.length === 0);
     } catch (e) {
       failures.push(`variation ${input.external_variation_id}: ${(e as Error).message}`);
       const existingMap = await findVariationMapByExternalId(input.external_variation_id);

@@ -1,0 +1,19 @@
+"""
+A sellable variant of a product (its own sku, price and seats). Every product
+has at least one; a product without real variants has a single default one.
+Not to be confused with the legacy `Variant` type (variant groups of sibling
+products).
+"""
+type ProductVariant {
+  productVariantId: Int!
+  uuid: String!
+  sku: String!
+  price: Price!
+  title: String
+  isDefault: Boolean!
+  totalSeats: Int
+}
+
+extend type Product {
+  variants: [ProductVariant!]!
+}

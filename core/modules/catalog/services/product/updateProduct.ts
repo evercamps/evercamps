@@ -20,6 +20,7 @@ import {
 import { getAjv } from '../../../base/services/getAjv.js';
 import type { ProductAttributeData, ProductData, ProductInventoryData } from '../../../../../includes/types/product.js';
 import productDataSchema from './productDataSchema.json' with { type: 'json' };
+import { syncDefaultVariant } from './defaultVariant.js';
 
 function validateProductDataBeforeUpdate(data: ProductData) {
   const ajv = getAjv();
@@ -372,6 +373,14 @@ async function updateProduct(uuid: string, data: ProductData, context: Record<st
     await hookable(updateProductInventory, { ...context, connection, product })(
       productData,
       product.product_id,
+      connection
+    );
+
+    // Keep the default variant's sku/price/seats in line with the product
+    // (only for products whose single variant is the default one).
+    await hookable(syncDefaultVariant, { ...context, connection, product })(
+      productData,
+      product,
       connection
     );
 
