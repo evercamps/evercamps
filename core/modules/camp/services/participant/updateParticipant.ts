@@ -20,7 +20,7 @@ import { ParticipantData } from './createParticipant.js';
 
 
 
-function validateParticipantDataBeforeInsert(data: ParticipantData) {
+export function validateParticipantDataBeforeInsert(data: ParticipantData) {
   const ajv = getAjv();
   participantDataSchema.required = [];
   const jsonSchema = getValueSync(

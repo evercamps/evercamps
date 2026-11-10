@@ -5,9 +5,14 @@ import React from 'react';
 interface Props {
   participantGrid: string;
   registrationGrid: string;
+  participantDuplicates: string;
 }
 
-export default function CampMenuGroup({ participantGrid, registrationGrid }: Props) {
+export default function CampMenuGroup({
+  participantGrid,
+  registrationGrid,
+  participantDuplicates
+}: Props) {
   return (
     <NavigationItemGroup
       id="campMenuGroup"
@@ -22,6 +27,11 @@ export default function CampMenuGroup({ participantGrid, registrationGrid }: Pro
           Icon: UsersIcon,
           url: registrationGrid,
           title: 'Registrations'
+        },
+        {
+          Icon: UsersIcon,
+          url: participantDuplicates,
+          title: 'Possible duplicates'
         }
       ]}
     />
@@ -37,5 +47,6 @@ export const query = `
   query Query {
     participantGrid: url(routeId:"participantGrid")
     registrationGrid: url(routeId:"registrationGrid")
+    participantDuplicates: url(routeId:"participantDuplicates")
   }
 `;
