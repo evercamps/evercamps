@@ -27,7 +27,8 @@ export default async (request, response, next) => {
     } else {
       cart = await getCartByUUID(cartId); // Cart object
     }
-    const { sku, qty, first_name, last_name } = request.body;
+    // product_variant_id is optional: without it the product's default variant is used.
+    const { sku, qty, first_name, last_name, product_variant_id } = request.body;
 
     // Load the product by sku
     const product = await select()
@@ -64,7 +65,8 @@ export default async (request, response, next) => {
     const item = await cart.addItem(product.product_id, parseInt(qty, 10), {
       request,
       first_name,
-      last_name
+      last_name,
+      product_variant_id
     });
     await saveCart(cart);
     // Set the new cart id to the context, so next middleware can use it

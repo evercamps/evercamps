@@ -80,28 +80,46 @@ Steps marked **(decision)** need an answer before you start them.
 
 ## Stage 4: Checkout & registration on variants (first behaviour change)
 
-14. [ ] Cart: optional `variantID`, a `cartItem/variant.ts` resolver (default variant when none is
-    given), and sku/name/price from the variant.
+14. [x] Cart: a new `product_variant_id` cart item field (`cartItem/variant.ts`). It uses the
+    given variant (checked against the product) or the product's default variant, loaded by
+    `cartItemVariantLoaderFunction` (checkout `bootstrap.ts`).
+    - `product_sku` and `product_price` come from the variant, so two weeks of the same camp
+      are two cart lines.
+    - `product_name` stays the product's name; the variant title is already shown separately.
+    - Both add-to-cart APIs accept an optional `product_variant_id`.
+    - A product with only real variants and none chosen has no variant and falls back to
+      product sku/price/stock, as before, until the storefront picker exists.
     → variation-plan, Phase 3
-15. [ ] Cart inventory check against `inventory_item.total_seats − reserved`.
+15. [x] Cart inventory check against `inventory_item.total_seats − reserved`
+    (`manage_stock` stays the on/off switch).
+    - **Capacity fix:** `syncDefaultVariant` now sets `total_seats` = product qty + reserved seats.
+      Product qty is what's still free (the legacy trigger lowers it), so this stops sold
+      seats being counted twice.
     → variation-plan, Phase 3
-16. [ ] `orderCreator.saveOrderItems`: write `registration.product_variant_id`, and insert an
-    `inventory_reservation` per order item (native orders only, see step 13).
+16. [x] `orderCreator`: `registration.product_variant_id` is written, and a new hookable
+    `saveInventoryReservations` step adds one `inventory_reservation` per order line with a
+    variant (native orders only, see step 13). `order_item.product_variant_id` comes from the
+    cart item's `export()`.
     → variation-plan, Phase 3
-17. [ ] `createRegistration` + `registrationDataSchema.json` accept `product_variant_id` (default
-    variant when it's missing), using the duplicate rule from step 1.
-    - **Existing bug to fix here:** the duplicate check reads `participant_id` / `product_id`
-      from the data, but every caller (admin API, importer) sends `registration_participant_id`
-      / `registration_product_id`. So the check never matches and duplicates are never caught.
-      Read the `registration_*` keys and include the variant.
+17. [x] `createRegistration` + `registrationDataSchema.json` accept `product_variant_id` (checked
+    against the product; default variant when it's missing).
+    - Duplicate rule is `(participant, product, variant)`.
+    - **Fixed:** the duplicate check now reads the `registration_*` keys. Before, it read
+      `participant_id` / `product_id`, which no caller sends, so it never matched.
     → variation-plan, Phase 4
-18. [ ] `getRegistrationsByParticipantBaseQuery` joins `product_variant`; `Registration` gets
-    `variantId`/`variantSku`/`variantPrice`.
+18. [x] `getRegistrationsByParticipantBaseQuery` already joined `product_variant` through the base
+    query. `Registration` now also has `productVariantId`, `variantSku` and `variantPrice`.
     → variation-plan, Phase 4
-19. [ ] Admin: variant picker in `AddRegistrations.tsx`.
+19. [x] Admin: `AddRegistrations.tsx` asks for the product's `variants`.
+    - One variant → registered directly. Several → a picker (title, sku, price).
+    - Products are no longer shown as "already added", since several weeks of the same camp
+      are allowed. Duplicates are rejected by the server and shown as a toast.
     → variation-plan, Phase 5
 20. [ ] Verify everything under variation-plan *Verification* (cart → order → registration →
     reservation; old orders still render).
+    - The checkout unit tests (`core/modules/checkout/tests/unit`) can't run: they import
+      `../../../lib/...` from the old `packages/evercamps/src` layout, and `jest.config.js`
+      still points at `src/` and `packages/`. Fixing the test setup is a separate task.
 
 ## Stage 5: Week dates in the catalog
 

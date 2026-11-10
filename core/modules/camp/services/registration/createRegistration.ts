@@ -64,17 +64,51 @@ async function createRegistration(data: RegistrationData, context: Record<string
     );
     // Validate participant data
     validateRegistrationDataBeforeInsert(registrationData);
-    const { participant_id , product_id } = registrationData;    
-    // Check if participant already exists
-    const existingRegistration = await select()
+    const participantId = registrationData.registration_participant_id;
+    const productId = registrationData.registration_product_id;
+
+    // Variant: the one given (must belong to the product), otherwise the
+    // product's default variant. Products with only real variants and none
+    // given get no variant (null).
+    let variantId = registrationData.product_variant_id;
+    if (variantId === undefined || variantId === null || variantId === '') {
+      const defaultVariant = await select('product_variant_id')
+        .from('product_variant')
+        .where('product_id', '=', productId)
+        .and('is_default', '=', true)
+        .load(connection, false);
+      variantId = defaultVariant ? defaultVariant.product_variant_id : null;
+    } else {
+      const variant = await select('product_variant_id')
+        .from('product_variant')
+        .where('product_variant_id', '=', variantId)
+        .and('product_id', '=', productId)
+        .load(connection, false);
+      if (!variant) {
+        throw new Error('This variant does not belong to the product');
+      }
+      variantId = variant.product_variant_id;
+    }
+    registrationData.product_variant_id = variantId;
+
+    // Duplicate rule: (participant, product, variant) - a participant can be
+    // registered for several weeks (variants) of the same camp.
+    // (Previously this read participant_id/product_id, which no caller sends,
+    // so duplicates were never caught.)
+    const duplicateQuery = select('registration_id')
       .from('registration')
-      .where('registration_participant_id', '=', participant_id)
-      .andWhere('registration_product_id', '=', product_id)
-      .load(pool);
+      .where('registration_participant_id', '=', participantId)
+      .and('registration_product_id', '=', productId);
+    if (variantId === null) {
+      duplicateQuery.and('product_variant_id', 'IS NULL', null);
+    } else {
+      duplicateQuery.and('product_variant_id', '=', variantId);
+    }
+    const existingRegistration = await duplicateQuery.load(connection, false);
 
     if (existingRegistration) {
       throw new Error('Registration already exists');
-    }    
+    }
     // Insert registration data
     const registration = await hookable(insertRegistrationData, context)(registrationData, connection); 
 

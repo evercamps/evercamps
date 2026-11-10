@@ -131,10 +131,29 @@ export async function syncDefaultVariant(
   }
 
   if (changes.qty !== undefined) {
+    // inventory_item.total_seats is the total capacity, while the product qty
+    // the admin edits is what's still free: the legacy
+    // reduce_product_stock_when_order_placed trigger lowers it on every order,
+    // and those same orders hold inventory_reservation rows. So capacity =
+    // free qty + seats already reserved, otherwise sold seats count twice.
+    const inventoryItem = await select('inventory_item_id')
+      .from('inventory_item')
+      .where('variant_id', '=', variant.product_variant_id)
+      .load(connection, false);
+    let reservedSeats = 0;
+    if (inventoryItem) {
+      const reserved = await select()
+        .from('inventory_reservation')
+        .select('COALESCE(SUM(seats_held), 0)', 'reserved')
+        .where('inventory_item_id', '=', inventoryItem.inventory_item_id)
+        .andWhere('expires_at', 'IS NULL', null)
+        .load(connection, false);
+      reservedSeats = parseInt(reserved?.reserved ?? 0, 10);
+    }
     await insertOnUpdate('inventory_item', ['variant_id'])
       .given({
         variant_id: variant.product_variant_id,
-        total_seats: toSeats(changes.qty)
+        total_seats: toSeats(changes.qty) + reservedSeats
       })
       .execute(connection, false);
   }

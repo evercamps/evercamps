@@ -11,7 +11,12 @@ async function addCartItem(
   if (typeof context !== 'object' || context === null) {
     throw new Error('Context must be an object');
   }
-  const newItem = await cart.createItem(productID, parseInt(qty as string, 10));
+  // Optional explicit variant (e.g. a week of a camp); without it the item
+  // resolves to the product's default variant.
+  const variantId = context.product_variant_id
+    ? parseInt(String(context.product_variant_id), 10)
+    : null;
+  const newItem = await cart.createItem(productID, parseInt(qty as string, 10), variantId);
   
   context.cartData = cart.export();
   context.itemData = newItem.export();

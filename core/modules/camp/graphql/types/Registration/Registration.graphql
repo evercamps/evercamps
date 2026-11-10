@@ -11,6 +11,9 @@ type Registration {
   image: String
   manageRegistrations: Int
   variantTitle: String
+  productVariantId: Int
+  variantSku: String
+  variantPrice: Price
   deleteApi: String!
 }
 

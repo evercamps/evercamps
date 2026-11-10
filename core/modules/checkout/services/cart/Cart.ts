@@ -21,6 +21,8 @@ interface CartItemRegistrationData {
 export class Item extends (DataObject as any) {
   readonly #cart: Cart;
   #product: any;
+  #variant: any;
+  #variantKey: string | undefined;
 
   constructor(cart: Cart, initialData: Record<string, any> = {}) {
     super(getValueSync('cartItemFields', [], {}), initialData);
@@ -35,6 +37,30 @@ export class Item extends (DataObject as any) {
     const product = await loaderFunction(this.getData('product_id'));
     this.#product = product;
     return product;
+  }
+
+  /**
+   * The item's product_variant (sku/price/seats), or null when the product
+   * has no default variant and none was chosen. `variantId` defaults to the
+   * item's resolved `product_variant_id`; pass it explicitly while that field
+   * is still being resolved.
+   */
+  async getVariant(variantId?: number | null): Promise<any> {
+    const id = variantId === undefined ? this.getData('product_variant_id') : variantId;
+    const key = `${this.getData('product_id')}:${id ?? 'default'}`;
+    if (this.#variantKey === key) {
+      return this.#variant;
+    }
+    const loaderFunction = getValueSync('cartItemVariantLoaderFunction', null as any, {}) as (
+      productId: number,
+      variantId: number | null | undefined
+    ) => Promise<any>;
+    // No loader registered (e.g. unit tests): no variant, product-level fallback.
+    this.#variant = loaderFunction
+      ? await loaderFunction(this.getData('product_id'), id)
+      : null;
+    this.#variantKey = key;
+    return this.#variant;
   }
 
   getId(): string {
@@ -121,11 +147,15 @@ export class Cart extends (DataObject as any) {
     throw new Error('Item not found');
   }
 
-  async createItem(productId: number, qty: number): Promise<Item> {
+  async createItem(productId: number, qty: number, variantId: number | null = null): Promise<Item> {
     if (typeof qty !== 'number' || Number.isNaN(qty) || qty <= 0) {
       throw new Error(translate('Invalid quantity'));
     }
-    const item = new Item(this, { product_id: productId, qty });
+    const item = new Item(this, {
+      product_id: productId,
+      qty,
+      product_variant_id: variantId
+    });
     await item.build();
     if (item.hasError()) {
       throw new Error(Object.values(item.getErrors())[0] as string);

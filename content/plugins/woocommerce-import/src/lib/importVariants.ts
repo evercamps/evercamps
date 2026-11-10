@@ -87,7 +87,8 @@ async function findAdoptableDefaultVariant(productId: number): Promise<number | 
   query
     .where('product_variant.product_id', '=', productId)
     .and('product_variant.is_default', '=', true)
-    .and('woocommerce_variation_map.woocommerce_variation_map_id', 'IS', null);
+    // 'IS NULL' (not 'IS', null - that renders as "IS $1", which Postgres rejects).
+    .and('woocommerce_variation_map.woocommerce_variation_map_id', 'IS NULL', null);
   const row = await query.load(pool);
   return row ? row.product_variant_id : null;
 }
