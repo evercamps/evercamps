@@ -52,11 +52,27 @@ Steps marked **(decision)** need an answer before you start them.
 
 ## Stage 3: Importer order linking
 
-11. [ ] **Importer:** `runOrderImport` writes `order_item_registration` for every imported
-    registration (new and update path).
+11. [x] **Importer:** `runOrderImport` writes `order_item_registration` for every imported
+    registration, on both the new and the update path (`linkRegistrationToOrderItem`).
+    - New orders: `order_item`s are now inserted **before** the participants, so each
+      registration can be linked to its line.
+    - Existing orders: `mapExistingOrderItems` finds the local `order_item` per WooCommerce line
+      by product + variant, and fills in a missing `order_item.product_variant_id`.
+    - `extra_data` holds `birth_date`, `national_number` and **`payer_national_number`**
+      ("Rijksregisternummer ouder", newly parsed from the ticket), for step 24/29 to promote.
+    - **Fix:** a simple product now resolves to its **default variant**. Before this, a re-import
+      after the Stage 1 backfill would have created a duplicate registration (old registration
+      = default variant, import = `null`). This also covers the duplicate-check bug noted at
+      step 17.
+    - The national-number check accepts both `national-number-field` and
+      `belgian-administration`, so step 23 doesn't break the import.
     → fiscal-attests, 2c
-12. [ ] **Importer:** a one-off backfill action `api/linkImportedRegistrations` for data that's
-    already imported. It links clear matches and reports the ambiguous ones.
+12. [ ] **Backfill = re-run the order import once.** No separate action is needed: every run
+    fetches all WooCommerce orders, and already-imported orders go through the update path,
+    which now links them. This uses the real WooCommerce line items instead of guessing by
+    customer and product. Afterwards, check:
+    `SELECT count(*) FROM registration r WHERE NOT EXISTS (SELECT 1 FROM order_item_registration o WHERE o.registration_id = r.registration_id);`
+    Lines that couldn't be matched show in the debug log ("No local order_item found …").
     → fiscal-attests, 2c
 13. [x] **Decided:** imported orders don't write `inventory_reservation`. The import has no
     future camps, so only native orders count toward capacity. Revisit if that changes.
@@ -74,6 +90,10 @@ Steps marked **(decision)** need an answer before you start them.
     → variation-plan, Phase 3
 17. [ ] `createRegistration` + `registrationDataSchema.json` accept `product_variant_id` (default
     variant when it's missing), using the duplicate rule from step 1.
+    - **Existing bug to fix here:** the duplicate check reads `participant_id` / `product_id`
+      from the data, but every caller (admin API, importer) sends `registration_participant_id`
+      / `registration_product_id`. So the check never matches and duplicates are never caught.
+      Read the `registration_*` keys and include the variant.
     → variation-plan, Phase 4
 18. [ ] `getRegistrationsByParticipantBaseQuery` joins `product_variant`; `Registration` gets
     `variantId`/`variantSku`/`variantPrice`.
@@ -96,7 +116,7 @@ Steps marked **(decision)** need an answer before you start them.
 
 23. [ ] Rename `national-number-field` → `belgian-administration`: folder, `package.json`,
     `config/default.json`, `npm install`. Clean up the old `migration` / `plugin_enabled.*`
-    rows. Add `src/core.ts`.
+    rows. Add `src/core.ts`. (The importer already accepts the new name, see step 11.)
     → fiscal-attests, *Delivery*
 24. [ ] **Plugin migration `Version-1.1.0.ts`:** `customer.national_number`,
     `order_item_registration.payer_national_number`, and the `fiscal_attest_eligible` attribute

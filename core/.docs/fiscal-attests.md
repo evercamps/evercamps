@@ -332,14 +332,12 @@ isn't linked to the order line it was paid on, and the generation query below ca
   `order_item_registration` row (`order_item_id`, `registration_id`, `first_name`, `last_name`,
   `customer_id`) if there isn't one yet. On re-import/update (the existing-order path), look up
   the `order_item` by `order_id` + `product_id` + `product_variant_id`.
-- **Backfill for data that's already imported:** a one-off admin action in `woocommerce-import`
-  (`api/linkImportedRegistrations`). For each imported order (`woocommerce_order_map`), match
-  its `order_item`s to registrations on the same product/variant whose participant belongs to
-  the order's customer.
-  - One match → link it.
-  - Several matches → split by the line's `qty`. Only link automatically when the number of
-    participants equals `qty`.
-  - Anything ambiguous is left unlinked and reported.
+- **Backfill for data that's already imported:** re-run the order import once (**done** in the
+  code; see `plan-variant-import.md`, steps 11–12). Every run fetches all WooCommerce orders,
+  and already-imported orders go through the update path, which now writes the missing links.
+  It uses the real WooCommerce line items, so no matching by customer/product is needed. The
+  import also stores the parent's national number ("Rijksregisternummer ouder") in
+  `order_item_registration.extra_data.payer_national_number`, for 1c to promote later.
 - **Product price is not used as the amount.** It's the list price, not what was paid
   (discounts, sibling prices, coupons). The imported `order_item` amount is the right one. For
   registrations that still have no order line after the backfill, the product/variant price is

@@ -3,6 +3,10 @@ import Area from '@components/Area';
 import React from 'react';
 
 export function AddressSummary({ address }) {
+  // Orders/customers without an address (e.g. imported orders) pass null.
+  if (!address) {
+    return null;
+  }
   return (
     <Area
       id="addressSummary"
@@ -39,7 +43,7 @@ export function AddressSummary({ address }) {
                 <div>{`${postcode}, ${city}`}</div>
                 <div>
                   {province && <span>{province.name}, </span>}{' '}
-                  <span>{country.name}</span>
+                  {country && <span>{country.name}</span>}
                 </div>
               </div>
             )

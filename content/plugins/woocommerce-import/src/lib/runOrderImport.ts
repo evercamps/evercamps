@@ -37,7 +37,13 @@ interface ImportedParticipant {
   lastName: string;
   birthDate: string | null;
   nationalNumber: string | null;
+  // "Rijksregisternummer ouder" from the ticket: the payer's national number,
+  // needed for the fiscal attest (core/.docs/fiscal-attests.md).
+  payerNationalNumber: string | null;
 }
+
+// Local order_item id per WooCommerce line item id of one order.
+type OrderItemIdsByLine = Map<number, number>;
 
 async function resolveLocalProductId(
   externalProductId: number,
@@ -72,11 +78,25 @@ async function resolveLocalProductId(
   return 0;
 }
 
+// A WC variation resolves through woocommerce_variation_map. A simple product
+// (no variation id) resolves to the product's default variant, the same one
+// native checkout uses. That way registrations/order lines of simple products
+// carry a variant too, and match the registrations backfilled by camp
+// migration Version-1.0.4 instead of creating duplicates on re-import.
 async function resolveLocalVariantId(
-  externalVariationId: number | null
+  externalVariationId: number | null,
+  productId: number | null
 ): Promise<number | null> {
   if (!externalVariationId) {
-    return null;
+    if (!productId) {
+      return null;
+    }
+    const defaultVariant = await select('product_variant_id')
+      .from('product_variant')
+      .where('product_id', '=', productId)
+      .and('is_default', '=', true)
+      .load(pool);
+    return defaultVariant ? defaultVariant.product_variant_id : null;
   }
 
   const variationMap = await select('product_variant_id')
@@ -175,7 +195,12 @@ async function createOrder(
   resolvedItems: { item: OrderItemImportData; productId: number | null; productVariantId: number | null; }[],
   customerId: number | null,
   connection: PoolClient
-): Promise<{ orderId: number; billingAddressId: number | null; shippingAddressId: number | null }> {
+): Promise<{
+  orderId: number;
+  billingAddressId: number | null;
+  shippingAddressId: number | null;
+  orderItemIds: OrderItemIdsByLine;
+}> {
   const billingAddressId = await insertAddress(mapped.billingAddress, connection);
   const shippingAddressId = await insertAddress(mapped.shippingAddress, connection);
 
@@ -214,8 +239,9 @@ async function createOrder(
     })
     .execute(connection);
 
+  const orderItemIds: OrderItemIdsByLine = new Map();
   for (const { item, productId, productVariantId } of resolvedItems) {
-    await insert('order_item')
+    const orderItem = await insert('order_item')
       .given({
         order_item_order_id: order.insertId,
         product_id: productId,
@@ -237,6 +263,7 @@ async function createOrder(
         line_total_with_discount_incl_tax: item.line_total_with_discount_incl_tax
       })
       .execute(connection);
+    orderItemIds.set(item.externalLineItemId, orderItem.insertId);
 
     await compensateStockTrigger(productId, item.qty, connection);
   }
@@ -252,7 +279,8 @@ async function createOrder(
   return {
     orderId: order.insertId,
     billingAddressId,
-    shippingAddressId
+    shippingAddressId,
+    orderItemIds
   };
 }
 
@@ -266,8 +294,10 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
   const extensions = await getEnabledExtensions();
 
-  const nationalNumberEnabled = extensions.some(
-    (extension: any) => extension.name === 'national-number-field'
+  // The national-number plugin is being renamed to "belgian-administration"
+  // (core/.docs/plan-variant-import.md, step 23); accept both names.
+  const nationalNumberEnabled = extensions.some((extension: any) =>
+    ['national-number-field', 'belgian-administration'].includes(extension.name)
   );
 
   const client = createWooCommerceClient(settings);
@@ -301,12 +331,21 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
             await startTransaction(connection);
 
-            // Participants + registrations
+            const orderItemIds = await mapExistingOrderItems(
+              existing.order_id,
+              mapped.items,
+              connection
+            );
+
+            // Participants + registrations (+ their order_item_registration
+            // link). Re-running the import on already-imported orders is also
+            // the backfill for links that are missing.
             await importParticipantsForOrder(
               wcOrder,
               mapped,
               customerId,
               nationalNumberEnabled,
+              orderItemIds,
               connection
             );
 
@@ -364,7 +403,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
           const resolvedItems: { item: OrderItemImportData; productId: number; productVariantId: number | null; }[] = [];
           for (const item of mapped.items) {
             const productId = await resolveLocalProductId(item.externalProductId, item.product_name);
-            const productVariantId = await resolveLocalVariantId(item.externalVariationId);
+            const productVariantId = await resolveLocalVariantId(item.externalVariationId, productId);
             resolvedItems.push({ item, productId, productVariantId });
           }
 
@@ -373,9 +412,18 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
 
           await startTransaction(connection);
 
-          await importParticipantsForOrder(wcOrder, mapped, customerId, nationalNumberEnabled, connection);
-
+          // Order (and its order_items) first, so each registration can be
+          // linked to the order line it was paid on.
           const created = await createOrder(mapped, resolvedItems, customerId, connection);
+
+          await importParticipantsForOrder(
+            wcOrder,
+            mapped,
+            customerId,
+            nationalNumberEnabled,
+            created.orderItemIds,
+            connection
+          );
           await commit(connection);
 
           await recordOrderCreated(
@@ -452,8 +500,16 @@ function extractParticipants(
         );
       }
 
+      // Label may carry a suffix like "(fiscaal attest)"; take the digits,
+      // dots, dashes and slashes after the colon. "/" means not filled in.
+      const payerNationalNumberMatch = value.match(
+        /Rijksregisternummer ouder[^:]*:\s*([0-9.\-/ ]+)/
+      );
+
       const rawBirthDate = birthDateMatch?.[1]?.trim();
       const rawNationalNumber = nationalNumberMatch?.[1]?.trim();
+      const payerDigits = (payerNationalNumberMatch?.[1] ?? '').replace(/\D/g, '');
+      const payerNationalNumber = payerDigits.length > 0 ? payerDigits : null;
 
       const birthDate =
         rawBirthDate && rawBirthDate !== '/'
@@ -469,7 +525,8 @@ function extractParticipants(
         firstName: firstNameMatch[1].trim(),
         lastName: lastNameMatch[1].trim(),
         birthDate,
-        nationalNumber
+        nationalNumber,
+        payerNationalNumber
       };
     });
 }
@@ -629,7 +686,7 @@ async function createOrUpdateRegistration(
   productId: number,
   productVariantId: number | null,
   connection: PoolClient
-): Promise<void> {
+): Promise<number> {
   const registrations = await select('*')
     .from('registration')
     .where(
@@ -651,7 +708,7 @@ async function createOrUpdateRegistration(
   );
 
   if (exactRegistration) {
-    return;
+    return exactRegistration.registration_id;
   }
 
   // A WooCommerce variant exists, but the old registration does not have
@@ -674,7 +731,7 @@ async function createOrUpdateRegistration(
         )
         .execute(connection);
 
-      return;
+      return registrationsWithoutVariant[0].registration_id;
     }
 
     if (registrationsWithoutVariant.length > 1) {
@@ -686,11 +743,105 @@ async function createOrUpdateRegistration(
     }
   }
 
-  await createRegistration({
+  const created = await createRegistration({
     registration_participant_id: participantId,
     registration_product_id: productId,
     product_variant_id: productVariantId
-  });
+  }, { routeId: 'importOrders' });
+  return created.insertId;
+}
+
+// Links a registration to the order line it was paid on: the same
+// order_item_registration row native checkout writes in
+// orderCreator.saveOrderItems. Without it the registration has no amount
+// (needed for the fiscal attests). Idempotent: an already-linked registration
+// is left as it is.
+async function linkRegistrationToOrderItem(
+  orderItemId: number,
+  registrationId: number,
+  participant: ImportedParticipant,
+  customerId: number | null,
+  connection: PoolClient
+): Promise<void> {
+  const existing = await select('order_item_registration_id')
+    .from('order_item_registration')
+    .where('registration_id', '=', registrationId)
+    .load(connection, false);
+  if (existing) {
+    return;
+  }
+
+  const extraData: Record<string, string> = {};
+  if (participant.birthDate) {
+    extraData.birth_date = participant.birthDate;
+  }
+  if (participant.nationalNumber) {
+    extraData.national_number = participant.nationalNumber;
+  }
+  if (participant.payerNationalNumber) {
+    extraData.payer_national_number = participant.payerNationalNumber;
+  }
+
+  await insert('order_item_registration')
+    .given({
+      order_item_id: orderItemId,
+      registration_id: registrationId,
+      first_name: participant.firstName,
+      last_name: participant.lastName,
+      customer_id: customerId,
+      extra_data: Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null
+    })
+    .execute(connection, false);
+}
+
+// For an order imported earlier: find the local order_item of each WC line
+// item (order_item doesn't store the WC line id). Matched on product, then on
+// variant. An order_item without a variant (imported before variants were
+// wired) also matches, and gets the variant filled in. Each order_item is used
+// once, so two lines of the same product map to two order_items.
+async function mapExistingOrderItems(
+  orderId: number,
+  items: OrderItemImportData[],
+  connection: PoolClient
+): Promise<OrderItemIdsByLine> {
+  const orderItems = await select('order_item_id', 'product_id', 'product_variant_id')
+    .from('order_item')
+    .where('order_item_order_id', '=', orderId)
+    .execute(connection, false);
+
+  const used = new Set<number>();
+  const result: OrderItemIdsByLine = new Map();
+
+  for (const item of items) {
+    const productId = await resolveLocalProductId(item.externalProductId, item.product_name);
+    if (!productId) {
+      continue;
+    }
+    const variantId = await resolveLocalVariantId(item.externalVariationId, productId);
+    const candidates = orderItems.filter(
+      (row: any) => !used.has(row.order_item_id) && row.product_id === productId
+    );
+    const match =
+      candidates.find((row: any) => row.product_variant_id === variantId) ||
+      candidates.find((row: any) => row.product_variant_id == null);
+    if (!match) {
+      debug(
+        `No local order_item found for WooCommerce line item ${item.externalLineItemId} ` +
+        `of order ${orderId}; its registrations are not linked.`
+      );
+      continue;
+    }
+    used.add(match.order_item_id);
+    result.set(item.externalLineItemId, match.order_item_id);
+
+    if (match.product_variant_id == null && variantId !== null) {
+      await update('order_item')
+        .given({ product_variant_id: variantId })
+        .where('order_item_id', '=', match.order_item_id)
+        .execute(connection, false);
+    }
+  }
+  return result;
 }
 
 async function importParticipantsForOrder(
@@ -698,6 +849,7 @@ async function importParticipantsForOrder(
   mapped: OrderImportData,
   customerId: number | null,
   nationalNumberEnabled : boolean,
+  orderItemIds: OrderItemIdsByLine,
   connection: PoolClient
 ): Promise<void> {
   for (const item of mapped.items) {
@@ -705,7 +857,8 @@ async function importParticipantsForOrder(
       item.externalProductId, item.product_name
     );
     const productVariantId = await resolveLocalVariantId(
-      item.externalVariationId
+      item.externalVariationId,
+      productId
     );
 
     if (!productId) {
@@ -743,12 +896,23 @@ async function importParticipantsForOrder(
         nationalNumberEnabled
       );
 
-      await createOrUpdateRegistration(
+      const registrationId = await createOrUpdateRegistration(
         participantId,
         productId,
         productVariantId,
         connection
       );
+
+      const orderItemId = orderItemIds.get(item.externalLineItemId);
+      if (orderItemId) {
+        await linkRegistrationToOrderItem(
+          orderItemId,
+          registrationId,
+          participant,
+          customerId,
+          connection
+        );
+      }
     }
   }
 }

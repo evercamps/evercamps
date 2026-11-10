@@ -28,8 +28,8 @@ interface Order {
   customerFullName: string;
   customerEmail: string;
   customerUrl?: string;
-  shippingAddress?: Address;
-  billingAddress: Address;
+  shippingAddress?: Address | null;
+  billingAddress?: Address | null;
 }
 
 interface CustomerProps {
@@ -89,7 +89,14 @@ export default function Customer({
       </Card.Session>
 
       <Card.Session title="Billing address">
-        <AddressSummary address={billingAddress} />
+        {billingAddress ? (
+          <AddressSummary address={billingAddress} />
+        ) : (
+          // Imported (WooCommerce) orders can have no billing address.
+          <span className="italic text-textSubdued">
+            {_('No billing address provided')}
+          </span>
+        )}
       </Card.Session>
     </Card>
   );
