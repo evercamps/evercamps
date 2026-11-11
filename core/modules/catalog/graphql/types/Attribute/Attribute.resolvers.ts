@@ -1,5 +1,6 @@
 import { Pool, select } from '@evershop/postgres-query-builder';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
+import { formatOptionDate } from '../../../services/attribute/optionPeriod.js';
 
 interface Attribute {
   attributeId: number;
@@ -42,5 +43,12 @@ export default {
 
       return results.map((result) => camelCase(result));
     }
+  },
+
+  // DATE columns come back from node-postgres as Date objects (local
+  // midnight); expose them as plain YYYY-MM-DD strings.
+  AttributeOption: {
+    startDate: (option: { startDate?: unknown }) => formatOptionDate(option.startDate),
+    endDate: (option: { endDate?: unknown }) => formatOptionDate(option.endDate)
   }
 };

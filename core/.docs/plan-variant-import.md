@@ -123,8 +123,17 @@ Steps marked **(decision)** need an answer before you start them.
 
 ## Stage 5: Week dates in the catalog
 
-21. [ ] Attribute edit page: start/end/days inputs per option; the create/update attribute
+21. [x] Attribute edit page: start/end/days inputs per option; the create/update attribute
     services save them; GraphQL `AttributeOption { startDate, endDate, dayCount }`.
+    - Validation lives in `catalog/services/attribute/optionPeriod.ts`:
+      - both dates or neither, `YYYY-MM-DD`, end not before start;
+      - days is a whole number ≥ 1 that fits between the dates;
+      - empty days = weekdays between the dates.
+    - All options are checked before anything is saved.
+    - GraphQL returns the dates as `YYYY-MM-DD` strings (node-postgres gives `Date` objects).
+    - **Also fixed:** a new option's random temporary id could match an existing option of
+      *another* attribute and overwrite it. The update now only matches options of the same
+      attribute. The "New Attribute" page no longer crashes on `attribute = null`.
     → fiscal-attests, 1b
 22. [ ] Fill in the dates for all period options (*Week 1 zomer*, …), including the ones the
     importer created.

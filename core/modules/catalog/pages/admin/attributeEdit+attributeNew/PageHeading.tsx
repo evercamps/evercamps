@@ -7,18 +7,19 @@ interface Attribute {
 
 interface AttributeEditPageHeadingProps {
   backUrl: string;
-  attribute?: Attribute;
+  attribute?: Attribute | null;
 }
 
 export default function AttributeEditPageHeading({
   backUrl,
-  attribute = {}
+  attribute
 }: AttributeEditPageHeadingProps) {
+  // `attribute` is null on the "New Attribute" page (attribute(id: null)).
   return (
     <PageHeading
       backUrl={backUrl}
       heading={
-        attribute.attributeName
+        attribute?.attributeName
           ? `Editing ${attribute.attributeName}`
           : 'Create a new attribute'
       }

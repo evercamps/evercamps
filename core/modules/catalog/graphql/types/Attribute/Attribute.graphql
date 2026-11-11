@@ -5,6 +5,16 @@ type AttributeOption {
   attributeOptionId: ID!
   uuid: String!
   optionText: String!
+  """
+  Care period of the option (e.g. a camp week), YYYY-MM-DD. Null for options
+  that aren't periods.
+  """
+  startDate: String
+  endDate: String
+  """
+  Number of care days; null means "weekdays between start and end date".
+  """
+  dayCount: Int
 }
 
 """
