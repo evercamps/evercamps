@@ -16,7 +16,7 @@ import { syncProductCategories } from './importCategories.js';
 import { resolveProductImages } from './importImages.js';
 import { syncProductVariants } from './importVariants.js';
 import { mapProduct } from './mapProduct.js';
-import { campKey, parseCampProductName } from './season.js';
+import { campKey, isSeasonAttribute, parseCampProductName } from './season.js';
 import { createWooCommerceClient, fetchAllProducts, fetchAllVariations } from './woocommerceClient.js';
 
 async function updateCampProduct(
@@ -72,6 +72,14 @@ export async function runImport(): Promise<ImportBatchSummary> {
           data = mapProduct(wcProduct);
           if (year !== null) {
             data = { ...data, name: baseName, url_key: key, sku: key };
+          }
+          // Camp products (a year in the name, or a kampweek attribute) take
+          // participant registrations; other products (merchandise, ...) don't.
+          const isCampProduct =
+            year !== null ||
+            (wcProduct.attributes || []).some((attribute) => isSeasonAttribute(attribute.name));
+          if (isCampProduct) {
+            data = { ...data, manage_registrations: 1 };
           }
         } catch (e) {
           totalFailed += 1;

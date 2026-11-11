@@ -170,6 +170,21 @@ Steps marked **(decision)** need an answer before you start them.
     - Products are no longer shown as "already added", since several weeks of the same camp
       are allowed. Duplicates are rejected by the server and shown as a toast.
     → variation-plan, Phase 5
+19b. [x] Admin **Variants card** on the product edit page (`catalog/pages/admin/productEdit/Variants.tsx`).
+    - **Shows:** each variant's title/options, sku, price, seats, number of registrations +
+      order lines, and a default badge.
+    - **Manage:** add, edit (sku, title, price, seats, one option per select attribute,
+      default) and delete. Delete is only allowed when nothing uses the variant and it isn't
+      the last one.
+    - **Backend:** API `POST /api/products/:id/variants`, `PATCH|DELETE /api/productVariants/:id`
+      (service `catalog/services/product/productVariants.ts`). It checks:
+      - the sku is unique;
+      - each option belongs to its attribute;
+      - no two variants of a product have the same options (`variant_lookup`);
+      - only one variant is the default.
+    - **GraphQL (admin):** `ProductVariant { options, usageCount, updateApi, deleteApi }`,
+      `Product { createVariantApi, variantAttributes }`. `variantAttributes` lists the select
+      attributes of the product's attribute group, plus any attribute its variants already use.
 20. [ ] Verify everything under variation-plan *Verification* (cart → order → registration →
     reservation; old orders still render).
     - The checkout unit tests (`core/modules/checkout/tests/unit`) can't run: they import

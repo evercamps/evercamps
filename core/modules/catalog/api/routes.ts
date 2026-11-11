@@ -215,6 +215,39 @@ export const routes: RouteDefinition[] = [
     ],
   },
 
+  // Product variants (product_variant) - admin "Variants" card on the product edit page
+  {
+    routeId: 'createProductVariant',
+    region: 'api',
+    path: '/products/:id/variants',
+    methods: ['POST'],
+    middleware: [
+      { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'createProductVariant', after: ['escapeHtml'], before: ['apiResponse'] },
+    ],
+  },
+
+  {
+    routeId: 'updateProductVariant',
+    region: 'api',
+    path: '/productVariants/:id',
+    methods: ['PATCH'],
+    middleware: [
+      { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'updateProductVariant', after: ['escapeHtml'], before: ['apiResponse'] },
+    ],
+  },
+
+  {
+    routeId: 'deleteProductVariant',
+    region: 'api',
+    path: '/productVariants/:id',
+    methods: ['DELETE'],
+    middleware: [
+      { id: 'deleteProductVariant', after: ['escapeHtml'], before: ['apiResponse'] },
+    ],
+  },
+
   {
     routeId: 'createVariantGroup',
     region: 'api',
