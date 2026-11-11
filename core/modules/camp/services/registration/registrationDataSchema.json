@@ -1,16 +1,19 @@
 {
   "type": "object",
-  "properties": {    
-    "participant_id": {
+  "properties": {
+    "registration_participant_id": {
       "type": "integer"
     },
-    "product_id": {
+    "registration_product_id": {
       "type": "integer"
+    },
+    "product_variant_id": {
+      "type": ["integer", "null"]
     }
   },
   "required": [
-    "participant_id",
-    "product_id"
+    "registration_participant_id",
+    "registration_product_id"
   ],
   "additionalProperties": true
 }

@@ -54,6 +54,16 @@ export default {
     addNoteApi: (cart) => buildUrl('addShippingNote', { cart_id: cart.uuid })
   },
   CartItem: {
+    variantTitle: async (cartItem, _, { pool }) => {
+      if (!cartItem.productVariantId) {
+        return null;
+      }
+      const variant = await select('title')
+        .from('product_variant')
+        .where('product_variant_id', '=', cartItem.productVariantId)
+        .load(pool);
+      return variant?.title ?? null;
+    },
     registrations: async (cartItem, _, { pool }) => {
       const registrations = cartItem.registrations || [];
       const { uuid: cartUuid } = await select('uuid')

@@ -12,19 +12,21 @@ interface DescriptionRow {
 }
 
 interface DescriptionProps {
-  product: {
-    description: DescriptionRow[];
-  };
+  product?: {
+    description?: DescriptionRow[] | null;
+  } | null;
 }
 
-export default function Description({
-  product: { description }
-}: DescriptionProps) {
+export default function Description({ product }: DescriptionProps) {
+  const description = product?.description;
+  // Imported products often have no description yet.
+  if (!Array.isArray(description) || description.length === 0) {
+    return null;
+  }
   return (
     <div className="mt-8 md:mt-12">
       <div className="product-description">
         <Editor rows={description} />
-        bb
       </div>
     </div>
   );

@@ -148,6 +148,11 @@ RenderEditorJS.propTypes = {
 };
 
 export default function Editor({ rows }) {
+  // `rows` is null for content without a description (e.g. imported
+  // products, new categories/pages): render nothing instead of crashing.
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
   return (
     <div className="editor__html">
       {rows.map((row, index) => {
@@ -157,7 +162,7 @@ export default function Editor({ rows }) {
             className={`row__container mt-12 grid md:${rowClasses} grid-cols-1 gap-8`}
             key={index}
           >
-            {row.columns.map((column, index) => {
+            {(row.columns || []).map((column, index) => {
               const columnClasses = getColumnClasses(column.size);
               return (
                 <div

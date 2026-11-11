@@ -15,6 +15,7 @@ import {
 } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import attributeDataSchema from './attributeDataSchema.json' with { type: 'json' };
+import { normalizeOptionPeriod, type OptionPeriodInput } from './optionPeriod.js';
 
 export type AttributeData = {
   attribute_code: string;
@@ -73,7 +74,7 @@ async function insertAttributeOptions(
   attributeId: number,
   attributeType: string,
   attributeCode: string,
-  options: { option_text: string }[],
+  options: ({ option_text: string } & OptionPeriodInput)[],
   connection: PoolClient
 ) {
   // Ignore updating options if it is not present in the data
@@ -84,14 +85,18 @@ async function insertAttributeOptions(
     return;
   }
 
+  // Validate all periods first, so a bad date doesn't leave half the options inserted
+  const periods = options.map((option) => normalizeOptionPeriod(option, option.option_text));
+
   /* Adding new options */
   await Promise.all(
-    options.map(async (option) => {
+    options.map(async (option, index) => {
       await insert('attribute_option')
         .given({
           option_text: option.option_text,
           attribute_id: attributeId,
-          attribute_code: attributeCode
+          attribute_code: attributeCode,
+          ...periods[index]
         })
         .execute(connection);
     })

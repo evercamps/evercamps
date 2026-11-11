@@ -1,0 +1,5 @@
+{
+  "methods": ["DELETE"],
+  "path": "/productVariants/:id",
+  "access": "private"
+}

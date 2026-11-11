@@ -9,10 +9,13 @@ interface Category {
 }
 
 interface StatusProps {
-  category?: Category;
+  category?: Category | null;
 }
 
-export default function Status({ category = {} }: StatusProps) {
+export default function Status({ category: categoryProp }: StatusProps) {
+  // `category` is `null` on the "New Category" page (category(id: null)
+  // resolves to null), which a destructuring default doesn't catch.
+  const category = categoryProp ?? {};
   return (
     <Card>
       <Card.Session title="Status">

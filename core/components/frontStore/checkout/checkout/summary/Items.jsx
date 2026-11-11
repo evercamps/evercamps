@@ -57,6 +57,9 @@ function Items({ items = [], priceIncludingTax = false }) {
                   <div>
                     <span className="font-semibold">{item.productName}</span>
                   </div>
+                  {item.variantTitle && (
+                    <div className="text-textSubdued">{item.variantTitle}</div>
+                  )}
                   <ItemVariantOptions
                     options={JSON.parse(item.variantOptions || '[]')}
                   />

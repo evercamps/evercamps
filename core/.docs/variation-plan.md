@@ -29,6 +29,73 @@ least one `product_variant` (a "default variant" flagged `is_default`), so every
 consumer (cart, order, registration) can assume a variant is always resolvable — no dual-path
 fallback logic scattered through checkout/camp code.
 
+## Status (checked against the code on 2026-11-10)
+
+Legend: ✅ done · 🟡 partly / done differently · ❌ not started
+
+| Phase | Item | Status | Notes |
+|---|---|---|---|
+| 1 | `is_default` column + one-default unique index + backfill | ❌ | `catalog/migration/Version-1.1.0.ts` only drops `UNSIGNED_TOTAL_SEATS` on `inventory_item`. The migration from this plan must now be **`Version-1.1.1.ts`** or later, not `1.0.10`. |
+| 1 | `ensureDefaultVariant` in `createProduct` / `syncDefaultVariant` in `updateProduct` | ❌ | Only the WooCommerce importer creates variants today. |
+| 1 | `ProductVariant` GraphQL type + `Product.variants` | ❌ | No `catalog/graphql/types/ProductVariant`. |
+| 2 | `cart_item.product_variant_id` | ❌ | |
+| 2 | `order_item.product_variant_id` | 🟡 | Added in `checkout/migration/Version-1.0.9.ts`, but **without FK or index**. |
+| 2 | Registration variant column | 🟡 | Added as **`registration.product_variant_id`** (`camp/migration/Version-1.0.3.ts`), not `registration_variant_id`. No FK, no backfill to the default variant. The rest of this plan should use the real name `product_variant_id`. |
+| 3 | Cart `variantID`, `cartItem/variant.ts`, sku/price/inventory from variant | ❌ | No variant code in `checkout/services`. |
+| 3 | `orderCreator.saveOrderItems` writes the registration's variant | ❌ | The `insert('registration')` still only sets `registration_participant_id` + `registration_product_id`. |
+| 3 | `inventory_reservation` on order placement | ❌ | The table exists (`oms/migration/Version-1.0.5.ts`), nothing writes to it. |
+| 4 | `createRegistration` / `registrationDataSchema.json` accept a variant | ❌ | |
+| 4 | `getRegistrationsBaseQuery` joins `product_variant` | ✅ | Selects `product_variant_id` + `variant_title`. |
+| 4 | `getRegistrationsByParticipantBaseQuery` joins `product_variant` | ❌ | Covered for now by the `Registration.variantTitle` resolver's fallback lookup. |
+| 4 | `Registration.graphql` variant fields | 🟡 | Only `variantTitle` (with a field resolver). No `variantId` / `variantSku` / `variantPrice`. |
+| 5 | `OrderItem.variantTitle` (GraphQL + resolver) | ✅ | `oms/graphql/types/Order`. |
+| 5 | Show `variantTitle` in `orderEdit/Items.tsx`, `registrationGrid/Grid.tsx`, `participantEdit/Registrations.tsx` | ✅ | |
+| 5 | Variant picker in `AddRegistrations.tsx` | ❌ | Depends on Phase 1's `Product.variants`. |
+
+**Where you are:** the data side used by the **importer** (variant tables, the
+`order_item`/`registration` variant columns, and showing variant titles in the admin) is in
+place. The **native flow** (default variant on create/update, cart → order → registration →
+reservation, and the admin variant picker) hasn't started. Next up: Phase 1.
+
+### Import (`woocommerce-import`) follow-ups
+
+Checked `content/plugins/woocommerce-import/src/lib/importVariants.ts` and `runOrderImport.ts`:
+
+1. **Simple products already get a variant, but not a flagged default one.**
+   `syncProductVariants` creates one synthetic variant from a simple product
+   (`variantInputFromSimpleProduct`). Once Phase 1 lands:
+   - **Set `is_default = true`** on that synthetic variant. For variable products, set it on the
+     first variation (or none, if the plan allows "no default when there are real variants").
+   - **Watch out for a conflict with `ensureDefaultVariant`.** The importer calls `createProduct`,
+     which will then insert a default variant with no `woocommerce_variation_map` row.
+     `deleteStaleVariants` deletes every variant without a map row, so it would delete that
+     default straight away.
+   - Fix: either skip `ensureDefaultVariant` when called from the importer
+     (`context.routeId === 'importProducts'`), or let the importer adopt the default variant (map
+     the simple product's external id onto it instead of inserting a second one).
+2. **`deleteStaleVariants` can leave dangling references.** `registration.product_variant_id` and
+   `order_item.product_variant_id` have no FK, so deleting a variant that has registrations or
+   orders leaves IDs pointing at nothing. Fix both sides:
+   - add FKs `ON DELETE SET NULL` in a new checkout/camp migration (Phase 2 asked for them anyway);
+   - in the importer, don't delete a stale variant that has registrations or order lines. Log it
+     instead.
+3. **Imported orders don't write `inventory_reservation`.** Once Phase 3 counts capacity as
+   `total_seats − reserved`, imported (historic) orders hold no seats. Decide: either also write
+   reservations from `runOrderImport` (for future camps only), or accept that only native orders
+   count.
+4. **Imported orders don't write `order_item_registration`.** `importParticipantsForOrder`
+   creates the registration but never links it to its `order_item`. This also blocks the fiscal
+   attests (see `fiscal-attests.md`, Phase 2c, which has the fix plus a backfill).
+5. **Week dates aren't imported.** Imported WooCommerce attributes become select attributes
+   matched by slugified name (e.g. `periode`), with options by text. The importer only inserts
+   missing options and never updates them, so the new `attribute_option.start_date/end_date/
+   day_count` (`fiscal-attests.md`, 1b) won't be overwritten. The dates have to be filled in by
+   hand on the attribute edit page after import.
+6. **Registration variant is already set by the import** (`createOrUpdateRegistration` sets
+   `product_variant_id`, including a one-time upgrade of an old variant-less registration). Its
+   duplicate check is `(participant, product, variant)`, while the plan's Phase 4 defaults to
+   `(participant, product)`. Pick one rule and use it in both places.
+
 ## Phase 1 — Catalog: default variant becomes real
 
 **New migration `core/modules/catalog/migration/Version-1.0.10.js`** (additive — `Version-1.0.9.js`

@@ -1,0 +1,36 @@
+"""
+An attribute option chosen for a variant, e.g. kampweek = "Week 1 zomer 2027".
+"""
+type ProductVariantOption {
+  attributeId: Int!
+  attributeCode: String!
+  attributeName: String!
+  optionId: Int!
+  optionText: String!
+}
+
+"""
+A select attribute whose options a product's variants can use (attributes of
+the product's attribute group).
+"""
+type ProductVariantAttribute {
+  attributeId: Int!
+  attributeCode: String!
+  attributeName: String!
+  options: [AttributeOption!]!
+}
+
+extend type ProductVariant {
+  options: [ProductVariantOption!]!
+  """
+  Registrations + order lines on this variant; a variant in use can't be deleted.
+  """
+  usageCount: Int!
+  updateApi: String!
+  deleteApi: String!
+}
+
+extend type Product {
+  createVariantApi: String!
+  variantAttributes: [ProductVariantAttribute!]!
+}

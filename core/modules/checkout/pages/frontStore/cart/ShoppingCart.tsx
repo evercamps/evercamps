@@ -100,6 +100,7 @@ export const query = `
         productName
         productSku
         variantOptions
+        variantTitle
         productUrl
         productPrice {
           value

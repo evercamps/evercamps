@@ -20,6 +20,8 @@ export interface CartItem {
   productName: string;
   productSku: string;
   variantOptions?: string;
+  // Title of the chosen product variant (e.g. a camp week)
+  variantTitle?: string | null;
   productCustomOptions?: string;
   productUrl: string;
   productPrice: Price;

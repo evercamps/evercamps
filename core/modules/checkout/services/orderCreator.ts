@@ -176,7 +176,8 @@ async function saveOrderItems(
         const registration = await insert('registration')
           .given({
             registration_participant_id: participantId,
-            registration_product_id: item.getData('product_id')
+            registration_product_id: item.getData('product_id'),
+            product_variant_id: item.getData('product_variant_id')
           })
           .execute(connection);
 
@@ -206,6 +207,37 @@ async function saveOrderItems(
     })
   );
   return savedItems;
+}
+
+// A committed, non-expiring seat hold per order line with a variant, so the
+// cart's availability check (total_seats - reserved) accounts for this order.
+// Cart-time holds with an expiry are a later follow-up.
+async function saveInventoryReservations(
+  cart: Cart,
+  orderId: number,
+  connection: PoolClient
+) {
+  for (const item of cart.getItems()) {
+    const variantId = item.getData('product_variant_id');
+    if (!variantId) {
+      continue;
+    }
+    const inventoryItem = await select('inventory_item_id')
+      .from('inventory_item')
+      .where('variant_id', '=', variantId)
+      .load(connection, false);
+    if (!inventoryItem) {
+      continue;
+    }
+    await insert('inventory_reservation')
+      .given({
+        inventory_item_id: inventoryItem.inventory_item_id,
+        order_id: orderId,
+        seats_held: item.getData('qty'),
+        expires_at: null
+      })
+      .execute(connection, false);
+  }
 }
 
 async function saveOrderActivity(orderID: number, connection: PoolClient) {
@@ -241,6 +273,9 @@ async function createOrderFunc(cart: Cart) {
 
     // Save order items
     await hookable(saveOrderItems, { cart })(cart, order.insertId, connection);
+
+    // Reserve the seats of each variant for this order
+    await hookable(saveInventoryReservations, { cart })(cart, order.insertId, connection);
 
     // Save order activity
     await hookable(saveOrderActivity, { cart })(order.insertId, connection);

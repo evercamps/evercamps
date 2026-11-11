@@ -18,6 +18,7 @@ import {
 import { getAjv } from '../../../base/services/getAjv.js';
 import type { ProductAttributeData, ProductData, ProductInventoryData } from '../../../../../includes/types/product.js';
 import productDataSchema from './productDataSchema.json'  with { type: 'json' };
+import { ensureDefaultVariant } from './defaultVariant.js';
 
 export type { ProductAttributeData, ProductData, ProductInventoryData };
 
@@ -212,6 +213,15 @@ async function createProduct(data: ProductData, context: Record<string, any>) {
       product.insertId,
       connection
     );
+
+    // Every product gets a default variant (+ inventory_item) mirroring its
+    // sku/price/qty. Importers that add real variants adopt or replace it.
+    await hookable(ensureDefaultVariant, { ...context, connection, product })(
+      productData,
+      product.insertId,
+      connection
+    );
+
     // Insert product attributes
     await hookable(insertProductAttributes, {
       ...context,

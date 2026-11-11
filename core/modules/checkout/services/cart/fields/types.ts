@@ -3,6 +3,7 @@ export interface ItemContext {
   setError(key: string, message: string | undefined): void;
   getCart(): CartContext;
   getProduct(): Promise<Record<string, any>>;
+  getVariant(variantId?: number | null): Promise<Record<string, any> | null>;
   getTriggeredField(): string | undefined;
   getRequestedValue(): any;
   getId(): string | undefined;

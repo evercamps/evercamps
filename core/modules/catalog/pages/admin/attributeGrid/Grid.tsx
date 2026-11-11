@@ -134,18 +134,20 @@ function Actions({
 }
 
 interface AttributeGridProps {
-  attributes: AttributeResponse;
+  attributes: AttributeResponse | null;
 }
 
-export default function AttributeGrid({
-  attributes: {
-    items: attributes,
-    total,
+// Restored from the pre-TypeScript Grid.jsx (commit 62883fd^): the TS
+// conversion in #164 replaced the whole table with a literal "...", so the
+// attribute grid rendered nothing.
+export default function AttributeGrid({ attributes: attributesProp }: AttributeGridProps) {
+  const {
+    items: attributes = [],
+    total = 0,
     currentFilters = []
-  }
-}: AttributeGridProps) {
-  const pageFilter = currentFilters.find((f) => f.key === 'page');
+  } = attributesProp ?? ({} as Partial<AttributeResponse>);
 
+  const pageFilter = currentFilters.find((f) => f.key === 'page');
   const limitFilter = currentFilters.find((f) => f.key === 'limit');
 
   const page = pageFilter ? parseInt(pageFilter.value, 10) : 1;
@@ -155,7 +157,236 @@ export default function AttributeGrid({
 
   return (
     <Card>
-      ...
+      <Card.Session
+        title={
+          <Form submitBtn={false} id="attributeGridFilter">
+            <Field
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Search"
+              value={currentFilters.find((f) => f.key === 'name')?.value}
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                // If the user presses enter, submit the filter
+                if (e.key === 'Enter') {
+                  const url = new URL(document.location.href);
+                  const name = (document.getElementById('name') as HTMLInputElement | null)?.value;
+                  if (name) {
+                    url.searchParams.set('name[operation]', 'like');
+                    url.searchParams.set('name[value]', name);
+                  } else {
+                    url.searchParams.delete('name[operation]');
+                    url.searchParams.delete('name[value]');
+                  }
+                  window.location.href = url.href;
+                }
+              }}
+            />
+          </Form>
+        }
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              // Just get the url and remove all query params
+              const url = new URL(document.location.href);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
+      />
+      <table className="listing sticky">
+        <thead>
+          <tr>
+            <th className="align-bottom">
+              <Checkbox
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (e.target.checked) {
+                    setSelectedRows(attributes.map((a) => a.uuid));
+                  } else {
+                    setSelectedRows([]);
+                  }
+                }}
+              />
+            </th>
+            <Area
+              className=""
+              id="attributeGridHeader"
+              noOuter
+              coreComponents={[
+                {
+                  component: {
+                    default: () => (
+                      <SortableHeader
+                        name="name"
+                        title="Attribute Name"
+                        currentFilters={currentFilters}
+                      />
+                    )
+                  },
+                  sortOrder: 10
+                },
+                {
+                  component: {
+                    default: () => <DummyColumnHeader title="Groups" />
+                  },
+                  sortOrder: 15
+                },
+                {
+                  component: {
+                    default: () => (
+                      <SortableHeader
+                        name="type"
+                        title="Type"
+                        currentFilters={currentFilters}
+                      />
+                    )
+                  },
+                  sortOrder: 20
+                },
+                {
+                  component: {
+                    default: () => (
+                      <SortableHeader
+                        name="is_required"
+                        title="Is Required?"
+                        currentFilters={currentFilters}
+                      />
+                    )
+                  },
+                  sortOrder: 25
+                },
+                {
+                  component: {
+                    default: () => (
+                      <SortableHeader
+                        name="is_filterable"
+                        title="Is Filterable?"
+                        currentFilters={currentFilters}
+                      />
+                    )
+                  },
+                  sortOrder: 30
+                }
+              ]}
+            />
+          </tr>
+        </thead>
+        <tbody>
+          <Actions attributes={attributes} selectedIds={selectedRows} />
+          {attributes.map((a) => (
+            <tr key={a.attributeId}>
+              <td>
+                <Checkbox
+                  isChecked={selectedRows.includes(a.uuid)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    if (e.target.checked) {
+                      setSelectedRows(selectedRows.concat([a.uuid]));
+                    } else {
+                      setSelectedRows(selectedRows.filter((r) => r !== a.uuid));
+                    }
+                  }}
+                />
+              </td>
+              <Area
+                className=""
+                id="attributeGridRow"
+                row={a}
+                noOuter
+                coreComponents={[
+                  {
+                    component: {
+                      default: () => (
+                        <AttributeNameRow
+                          name={a.attributeName}
+                          url={a.editUrl}
+                        />
+                      )
+                    },
+                    sortOrder: 10
+                  },
+                  {
+                    component: {
+                      default: () => <GroupRow groups={a.groups?.items} />
+                    },
+                    sortOrder: 15
+                  },
+                  {
+                    component: {
+                      default: ({ areaProps }: { areaProps: any }) => (
+                        <BasicRow id="type" areaProps={areaProps} />
+                      )
+                    },
+                    sortOrder: 20
+                  },
+                  {
+                    component: {
+                      default: () => <YesNoRow value={a.isRequired} />
+                    },
+                    sortOrder: 25
+                  },
+                  {
+                    component: {
+                      default: () => <YesNoRow value={a.isFilterable} />
+                    },
+                    sortOrder: 30
+                  }
+                ]}
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {attributes.length === 0 && (
+        <div className="flex w-full justify-center">
+          There is no attribute to display
+        </div>
+      )}
+      <Pagination total={total} limit={limit} page={page} />
     </Card>
   );
 }
+
+export const layout = {
+  areaId: 'content',
+  sortOrder: 20
+};
+
+export const query = `
+  query Query($filters: [FilterInput]) {
+    attributes (filters: $filters) {
+      items {
+        attributeId
+        uuid
+        attributeName
+        attributeCode
+        type
+        isRequired
+        isFilterable
+        editUrl
+        updateApi
+        deleteApi
+        groups {
+          items {
+            attributeGroupId
+            groupName
+            updateApi
+          }
+        }
+      }
+      total
+      currentFilters {
+        key
+        operation
+        value
+      }
+    }
+  }
+`;
+
+export const variables = `
+{
+  filters: getContextValue('filtersFromUrl')
+}`;

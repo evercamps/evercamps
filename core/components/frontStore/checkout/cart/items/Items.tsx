@@ -113,6 +113,9 @@ export default function Items({ items, setting: { priceIncludingTax, participant
                     <a href={item.productUrl} className="name font-semibold hover:underline">
                       {item.productName}
                     </a>
+                    {item.variantTitle && (
+                      <div className="text-textSubdued">{item.variantTitle}</div>
+                    )}
                     {item.errors.map((e, i) => (
                       <div className="text-critical" key={i}>{e}</div>
                     ))}

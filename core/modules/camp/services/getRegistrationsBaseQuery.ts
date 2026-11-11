@@ -32,11 +32,13 @@ export const getRegistrationsBaseQuery = (): SelectQuery => {
       'product_variant.product_variant_id'
     );
 
-  // Alias it so camelCase() returns variantTitle.
+  // Aliased so camelCase() returns variantTitle / variantSku / variantPrice.
   query.select(
     'product_variant.title',
     'variant_title'
   );
+  query.select('product_variant.sku', 'variant_sku');
+  query.select('product_variant.price', 'variant_price');
 
   query
     .leftJoin('product_description')

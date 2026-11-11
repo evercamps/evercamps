@@ -16,6 +16,10 @@ interface AttributeOption {
   optionId?: string | number;
   uuid?: string | number;
   optionText?: string;
+  // Care period of the option, e.g. "Week 1 zomer" = 2026-07-06 .. 2026-07-10
+  startDate?: string | null;
+  endDate?: string | null;
+  dayCount?: number | null;
 }
 
 interface Attribute {
@@ -39,7 +43,7 @@ interface OptionsProps {
 }
 
 interface GeneralProps {
-  attribute?: Attribute;
+  attribute?: Attribute | null;
   createGroupApi: string;
 }
 
@@ -166,13 +170,20 @@ function Options({ originOptions = [] }: OptionsProps) {
 
   return (
     <div className="attribute-edit-options">
+      {options.length > 0 && (
+        <div className="flex mb-2 space-x-8 text-textSubdued">
+          <div className="w-1/3">Option</div>
+          <div className="w-1/5">Start date</div>
+          <div className="w-1/5">End date</div>
+          <div className="w-1/12">Days</div>
+        </div>
+      )}
       {options.map((option, index) => (
         <div key={option.uuid} className="flex mb-2 space-x-8">
-          <div>
+          <div className="w-1/3">
             <Field
               type="text"
               name={`options[${index}][option_text]`}
-              form="attribute-edit-form"
               value={option.optionText}
               validationRules={['notEmpty']}
             />
@@ -181,6 +192,34 @@ function Options({ originOptions = [] }: OptionsProps) {
               type="hidden"
               name={`options[${index}][option_id]`}
               value={option.optionId}
+            />
+          </div>
+
+          {/* Optional care period (e.g. a camp week). Used for display and
+              the fiscal attests; leave empty for options that aren't periods. */}
+          <div className="w-1/5">
+            <Field
+              type="date"
+              name={`options[${index}][start_date]`}
+              value={option.startDate ?? ''}
+              placeholder="YYYY-MM-DD"
+            />
+          </div>
+          <div className="w-1/5">
+            <Field
+              type="date"
+              name={`options[${index}][end_date]`}
+              value={option.endDate ?? ''}
+              placeholder="YYYY-MM-DD"
+            />
+          </div>
+          <div className="w-1/12">
+            <Field
+              type="text"
+              name={`options[${index}][day_count]`}
+              value={option.dayCount ?? ''}
+              validationRules={['number']}
+              placeholder="Auto"
             />
           </div>
 
@@ -210,9 +249,11 @@ function Options({ originOptions = [] }: OptionsProps) {
 }
 
 export default function General({
-  attribute = { type: 'text' },
+  attribute: attributeProp,
   createGroupApi
 }: GeneralProps) {
+  // `attribute` is null on the "New Attribute" page (attribute(id: null)).
+  const attribute: Attribute = attributeProp ?? { type: 'text' };
   const [type, setType] = React.useState(attribute.type);
 
   const fields = [
@@ -266,7 +307,16 @@ export default function General({
       },
       sortOrder: 20
     }
-  ];
+  ].map((f) => {
+    // Prefill each field from the attribute (matched on the field's id, e.g.
+    // attributeName / attributeCode / attributeId / type). This step was lost
+    // in the TS conversion (#164), leaving the edit form empty.
+    const value = get(attribute, f.props.id);
+    if (value !== undefined) {
+      (f.props as Record<string, unknown>).value = value;
+    }
+    return f;
+  });
 
   return (
     <Card title="General">
@@ -306,6 +356,9 @@ export const query = `
         optionId: attributeOptionId
         uuid
         optionText
+        startDate
+        endDate
+        dayCount
       }
       groups {
         items {

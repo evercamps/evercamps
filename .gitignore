@@ -25,7 +25,8 @@ npm-debug.log
 coverage
 cypress
 .turbo
-/config
+/config/*
+!/config/default.json
 /packages/evercamps/config
 .prettierignore
 .prettierrc

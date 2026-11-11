@@ -1,0 +1,48 @@
+"""
+A sellable variant of a product (its own sku, price and seats). Every product
+has at least one; a product without real variants has a single default one.
+Not to be confused with the legacy `Variant` type (variant groups of sibling
+products).
+"""
+type ProductVariant {
+  productVariantId: Int!
+  uuid: String!
+  sku: String!
+  price: Price!
+  title: String
+  isDefault: Boolean!
+  totalSeats: Int
+}
+
+"""
+A variant a customer can still book on the product page (e.g. a camp week).
+"""
+type BookableVariant {
+  productVariantId: Int!
+  sku: String!
+  """
+  Title, or the option texts joined ("Week 1 zomer 2027").
+  """
+  label: String!
+  price: Price!
+  isDefault: Boolean!
+  """
+  Care period of the variant's dated option (YYYY-MM-DD), when set.
+  """
+  startDate: String
+  endDate: String
+  """
+  Seats left (total - reserved); null when the product doesn't manage stock.
+  """
+  availableSeats: Int
+  soldOut: Boolean!
+}
+
+extend type Product {
+  variants: [ProductVariant!]!
+  """
+  Variants still bookable, sorted alphabetically. Leaves out variants whose
+  period has ended, and variants of an earlier year ("... 2025") without dates.
+  """
+  bookableVariants: [BookableVariant!]!
+}

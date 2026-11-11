@@ -15,7 +15,8 @@ import { EvercampsRequest } from '../../../../types/request.js';
 export default async (request: EvercampsRequest, response: Response, next: NextFunction) => {
   try {
     const cartId = request.params.cart_id;
-    const { sku, qty, first_name, last_name } = request.body;
+    // product_variant_id is optional: without it the product's default variant is used.
+    const { sku, qty, first_name, last_name, product_variant_id } = request.body;
     const cart = await getCartByUUID(cartId instanceof Array ? cartId[0] : cartId);
 
     if (!cart) {
@@ -71,7 +72,8 @@ export default async (request: EvercampsRequest, response: Response, next: NextF
     const item = await cart.addItem(product.product_id, parseInt(qty, 10), {
       first_name,
       last_name,
-      extraData
+      extraData,
+      product_variant_id
     });
     await saveCart(cart);
     setContextValue(request, 'cartId', cart.getData('uuid'));

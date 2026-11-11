@@ -14,6 +14,7 @@ import { hookable } from '../../../../lib/util/hookable.js';
 import { getValueSync, getValue } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import attributeDataSchema from './attributeDataSchema.json' with { type: 'json' };
+import { normalizeOptionPeriod, type OptionPeriodInput } from './optionPeriod.js';
 
 export type AttributeData = {
   attribute_code?: string;
@@ -44,7 +45,7 @@ async function updateAttributeOptions(
   attributeId: number,
   attributeType: string,
   attributeCode: string,
-  options: { option_text: string, option_id: string | number }[],
+  options: ({ option_text: string, option_id: string | number } & OptionPeriodInput)[],
   connection: PoolClient
 ) {
   // Ignore updating options if it is not present in the data or if the attribute type is not select or multiselect
@@ -72,13 +73,20 @@ async function updateAttributeOptions(
       }
     })
   );
+  // Validate all periods first, so a bad date doesn't leave options half-updated
+  const periods = options.map((option) => normalizeOptionPeriod(option, option.option_text));
+
   /* Adding new options */
   // Looping options array and insert/update options. Use Promise.all to make sure all options are inserted/updated
   await Promise.all(
-    options.map(async (option) => {
+    options.map(async (option, index) => {
+      // New options get a random temporary id in the admin form; only treat
+      // the id as existing when it belongs to *this* attribute, so a
+      // coincidental match never overwrites another attribute's option.
       const exists = await select()
         .from('attribute_option')
         .where('attribute_option_id', '=', option.option_id)
+        .and('attribute_id', '=', attributeId)
         .load(connection, false);
 
       if (exists) {
@@ -86,7 +94,8 @@ async function updateAttributeOptions(
           .given({
             option_text: option.option_text,
             attribute_id: attributeId,
-            attribute_code: attributeCode
+            attribute_code: attributeCode,
+            ...periods[index]
           })
           .where('attribute_option_id', '=', option.option_id)
           .execute(connection, false);
@@ -95,7 +104,8 @@ async function updateAttributeOptions(
           .given({
             option_text: option.option_text,
             attribute_id: attributeId,
-            attribute_code: attributeCode
+            attribute_code: attributeCode,
+            ...periods[index]
           })
           .execute(connection, false);
       }

@@ -54,6 +54,12 @@ interface ShoppingCartItem {
   lineTotalInclTax: Price!
   variantGroupId: Int
   variantOptions: String
+  """
+  The chosen product variant (e.g. a camp week) and its title, so two weeks of
+  the same camp can be told apart in the cart.
+  """
+  productVariantId: Int
+  variantTitle: String
   productCustomOptions: String
   productUrl: String!
 }
@@ -119,6 +125,8 @@ type CartItem implements ShoppingCartItem {
   total: Price! # Deprecated, this field is equivalent to lineTotalInclTax
   variantGroupId: Int
   variantOptions: String
+  productVariantId: Int
+  variantTitle: String
   productCustomOptions: String
   productUrl: String!
   registrations: [CartItemRegistration!]

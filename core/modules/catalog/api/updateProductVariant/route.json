@@ -1,0 +1,5 @@
+{
+  "methods": ["PATCH"],
+  "path": "/productVariants/:id",
+  "access": "private"
+}

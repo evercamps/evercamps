@@ -22,12 +22,17 @@ export const productFields: ItemField[] = [
     ]
   },
   {
+    // The variant's sku when there is one, so two weeks (variants) of the same
+    // camp are separate cart lines. product_name stays the product's name; the
+    // variant title is shown separately (OrderItem/Registration.variantTitle).
     key: 'product_sku',
     resolvers: [
       async function(this: ItemContext) {
-        return (await this.getProduct()).sku;
+        const variant = await this.getVariant();
+        return variant?.sku ?? (await this.getProduct()).sku;
       }
-    ]
+    ],
+    dependencies: ['product_id', 'product_variant_id']
   },
   {
     key: 'group_id',
