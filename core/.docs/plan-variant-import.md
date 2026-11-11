@@ -78,6 +78,61 @@ Steps marked **(decision)** need an answer before you start them.
     future camps, so only native orders count toward capacity. Revisit if that changes.
     → variation-plan, *Import follow-up 3*
 
+13b. [x] **Kampweek per season** (`woocommerce-import/src/lib/season.ts`). Decided: a variant per
+    season, cut-off **1 October**, only the `kampweek` attribute (also `pa_kampweek`).
+    - **Season of an order:** placed from 1 October → next year (2026-10-01 → 2027);
+      otherwise the same year.
+    - **Order import:** each order line is booked on the variant of the order's season,
+      e.g. kampweek option "Week 1 zomer 2027". `ensureSeasonVariant` creates it when
+      needed: same other options, sku `<sku>-2027`, same price/seats.
+    - **Product import:** the WooCommerce variation maps to the *current* season's variant.
+      - A mapped variant that still holds registrations/orders of another season is kept as
+        that season's variant: its sku becomes `<sku>-2026`, or `<sku>-old-<id>` for a variant
+        from before seasons existed.
+    - **Existing data:** registrations and order lines on a variant without a year
+      ("Week 1 zomer") are moved to the right season variant on the next order import. A
+      participant who did the same week in two years then gets two registrations; before,
+      both years collapsed into one.
+    - **Run order:** product import first, then order import. Variants from before seasons
+      that end up unused are removed by the next product import. Their year-less kampweek
+      options stay in the attribute and can be deleted by hand.
+    - Week dates (step 22) are now filled in **per season option** ("Week 1 zomer 2027").
+
+13c. [x] **One product per camp type** (`woocommerce-import`: `lib/campProducts.ts`,
+    `season.parseCampProductName`, migration `Version-1.0.4.ts`). WooCommerce has a product per
+    year. Decided:
+    - **Year location:** the year goes into the kampweek option.
+    - **Season source:** the year in the product name decides the season; the order date is
+      only a fallback.
+    - **Existing products:** already-imported per-year products are merged.
+
+    How it works:
+    - **Product import:** "Golfsurfen-watersporten-omnisport 2022" and "… 2023" both go to
+      the product "Golfsurfen-watersporten-omnisport".
+      - The camp-type product has url_key/sku = slug of the name.
+      - `woocommerce_camp_product` remembers the product per camp type and its newest year.
+      - Description, price, images and categories come from the **newest** year.
+    - **Variants:** each year's variations become variants with kampweek "Week 1 zomer 2022",
+      using the year from the name, so no order-date guessing.
+      - A *simple* year product gets one variant with kampweek option "<camp name> <year>".
+      - Year variants are never the default variant.
+    - **Merge:** an already-imported per-year product is merged on the next product import.
+      - Its variants, registrations, order lines and map rows move to the camp product, and
+        the empty year product is deleted.
+      - Its year-less variants are relabelled in place ("Week 1 zomer" → "Week 1 zomer 2022").
+        They only ever held that year.
+      - The first per-year product of a camp type is reused (renamed) as the camp product.
+    - **Order import:** a line's season = `woocommerce_product_map.external_year` (or the
+      year in the line's product name). The 1 October order-date rule only applies to
+      products without a year in their name. Legacy lines without a product id are found
+      by camp type.
+    - **Cleanup:** `deleteStaleVariants` only touches the variations of the WC product being
+      synced (`woocommerce_variation_map.external_product_id`), so one year doesn't delete
+      another year's variants.
+    - **Caveat:** rolling back a *product* batch deletes products created in that batch.
+      Since a camp product now holds several years, don't roll back a product batch after
+      later batches have merged into it.
+
 ## Stage 4: Checkout & registration on variants (first behaviour change)
 
 14. [x] Cart: a new `product_variant_id` cart item field (`cartItem/variant.ts`). It uses the

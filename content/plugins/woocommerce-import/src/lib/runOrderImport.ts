@@ -31,6 +31,9 @@ import type {
 import { mapOrder } from './mapOrder.js';
 import { createWooCommerceClient, fetchAllOrders } from './woocommerceClient.js';
 import crypto from 'node:crypto';
+import { ensureSeasonVariant, isUnseasonedTwin } from './importVariants.js';
+import { campKey, parseCampProductName, seasonForDate } from './season.js';
+import { findCampProduct } from './campProducts.js';
 
 interface ImportedParticipant {
   firstName: string;
@@ -60,6 +63,15 @@ async function resolveLocalProductId(
   // Legacy orders: WooCommerce gives product_id = 0,
   // so fall back to the product name.
   if (productName) {
+    // Camp products are merged per camp type ("X 2022" -> "X"); a variation
+    // line is named "<product> - <variation>".
+    const { baseName } = parseCampProductName(productName.split(' - ')[0]);
+    const camp = await findCampProduct(campKey(baseName));
+    if (camp) {
+      return camp.product_id;
+    }
+
+
     const product = await select('product_description_product_id')
       .from('product_description')
       .where('name', '=', productName)
@@ -85,9 +97,22 @@ async function resolveLocalProductId(
 // migration Version-1.0.4 instead of creating duplicates on re-import.
 async function resolveLocalVariantId(
   externalVariationId: number | null,
-  productId: number | null
+  productId: number | null,
+  externalProductId?: number | null
 ): Promise<number | null> {
   if (!externalVariationId) {
+    // A simple WC product's synthetic variant is mapped under the product's
+    // own id (see mapVariant.variantInputFromSimpleProduct). For a merged
+    // camp product this is that year's variant, not the default.
+    if (externalProductId) {
+      const simpleMap = await select('product_variant_id')
+        .from('woocommerce_variation_map')
+        .where('external_variation_id', '=', externalProductId)
+        .load(pool);
+      if (simpleMap?.product_variant_id) {
+        return simpleMap.product_variant_id;
+      }
+    }
     if (!productId) {
       return null;
     }
@@ -114,6 +139,39 @@ async function resolveLocalVariantId(
   }
 
   return variationMap.product_variant_id;
+}
+
+// Season of an order line: the year of its WooCommerce product ("X 2022" ->
+// 2022, stored on woocommerce_product_map.external_year by the product
+// import, or read from the line's product name), else the order date
+// (1 October rule, see season.ts).
+async function seasonForLine(item: OrderItemImportData, orderDate: string): Promise<number> {
+  if (item.externalProductId) {
+    const map = await findMapByExternalId(item.externalProductId);
+    if (map?.external_year) {
+      return map.external_year;
+    }
+  }
+  const { year } = parseCampProductName((item.product_name || '').split(' - ')[0]);
+  return year ?? seasonForDate(orderDate);
+}
+
+// The variant an order line is booked on: the WC variation's variant, for the
+// line's season (kampweek "Week 1 zomer 2022"). See season.ts.
+async function resolveOrderLineVariantId(
+  item: OrderItemImportData,
+  productId: number | null,
+  orderDate: string
+): Promise<number | null> {
+  const baseVariantId = await resolveLocalVariantId(
+    item.externalVariationId,
+    productId,
+    item.externalProductId
+  );
+  if (!baseVariantId || !productId) {
+    return baseVariantId;
+  }
+  return ensureSeasonVariant(productId, baseVariantId, await seasonForLine(item, orderDate));
 }
 
 async function findOrCreateCustomer(
@@ -334,6 +392,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             const orderItemIds = await mapExistingOrderItems(
               existing.order_id,
               mapped.items,
+              wcOrder.date_created,
               connection
             );
 
@@ -403,7 +462,11 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
           const resolvedItems: { item: OrderItemImportData; productId: number; productVariantId: number | null; }[] = [];
           for (const item of mapped.items) {
             const productId = await resolveLocalProductId(item.externalProductId, item.product_name);
-            const productVariantId = await resolveLocalVariantId(item.externalVariationId, productId);
+            const productVariantId = await resolveOrderLineVariantId(
+              item,
+              productId,
+              wcOrder.date_created
+            );
             resolvedItems.push({ item, productId, productVariantId });
           }
 
@@ -712,12 +775,19 @@ async function createOrUpdateRegistration(
   }
 
   // A WooCommerce variant exists, but the old registration does not have
-  // its local variant assigned yet.
+  // its (season) variant assigned yet: it has no variant at all, or it is on
+  // the pre-season version of the same week (imported before seasons
+  // existed). Move it to this order's season variant.
   if (productVariantId !== null) {
-    const registrationsWithoutVariant = registrations.filter(
-      (registration: any) =>
-        registration.product_variant_id == null
-    );
+    const registrationsWithoutVariant: any[] = [];
+    for (const registration of registrations) {
+      if (
+        registration.product_variant_id == null ||
+        (await isUnseasonedTwin(registration.product_variant_id, productVariantId))
+      ) {
+        registrationsWithoutVariant.push(registration);
+      }
+    }
 
     if (registrationsWithoutVariant.length === 1) {
       await update('registration')
@@ -796,12 +866,14 @@ async function linkRegistrationToOrderItem(
 
 // For an order imported earlier: find the local order_item of each WC line
 // item (order_item doesn't store the WC line id). Matched on product, then on
-// variant. An order_item without a variant (imported before variants were
-// wired) also matches, and gets the variant filled in. Each order_item is used
+// the order's season variant. An order_item without a variant (imported
+// before variants were wired) or on the pre-season version of the same week
+// also matches, and is moved to the season variant. Each order_item is used
 // once, so two lines of the same product map to two order_items.
 async function mapExistingOrderItems(
   orderId: number,
   items: OrderItemImportData[],
+  orderDate: string,
   connection: PoolClient
 ): Promise<OrderItemIdsByLine> {
   const orderItems = await select('order_item_id', 'product_id', 'product_variant_id')
@@ -817,13 +889,21 @@ async function mapExistingOrderItems(
     if (!productId) {
       continue;
     }
-    const variantId = await resolveLocalVariantId(item.externalVariationId, productId);
+    const variantId = await resolveOrderLineVariantId(item, productId, orderDate);
     const candidates = orderItems.filter(
       (row: any) => !used.has(row.order_item_id) && row.product_id === productId
     );
-    const match =
+    let match =
       candidates.find((row: any) => row.product_variant_id === variantId) ||
       candidates.find((row: any) => row.product_variant_id == null);
+    if (!match && variantId !== null) {
+      for (const row of candidates) {
+        if (await isUnseasonedTwin(row.product_variant_id, variantId)) {
+          match = row;
+          break;
+        }
+      }
+    }
     if (!match) {
       debug(
         `No local order_item found for WooCommerce line item ${item.externalLineItemId} ` +
@@ -834,7 +914,7 @@ async function mapExistingOrderItems(
     used.add(match.order_item_id);
     result.set(item.externalLineItemId, match.order_item_id);
 
-    if (match.product_variant_id == null && variantId !== null) {
+    if (variantId !== null && match.product_variant_id !== variantId) {
       await update('order_item')
         .given({ product_variant_id: variantId })
         .where('order_item_id', '=', match.order_item_id)
@@ -856,9 +936,11 @@ async function importParticipantsForOrder(
     const productId = await resolveLocalProductId(
       item.externalProductId, item.product_name
     );
-    const productVariantId = await resolveLocalVariantId(
-      item.externalVariationId,
-      productId
+    // The line's season (year of its WC product) decides the kampweek variant.
+    const productVariantId = await resolveOrderLineVariantId(
+      item,
+      productId,
+      wcOrder.date_created
     );
 
     if (!productId) {
