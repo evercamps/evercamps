@@ -185,6 +185,15 @@ Steps marked **(decision)** need an answer before you start them.
     - **GraphQL (admin):** `ProductVariant { options, usageCount, updateApi, deleteApi }`,
       `Product { createVariantApi, variantAttributes }`. `variantAttributes` lists the select
       attributes of the product's attribute group, plus any attribute its variants already use.
+19c. [x] **Storefront variant picker** (was out of scope in variation-plan; now done).
+    - **GraphQL:** `Product.bookableVariants` lists label, price, dates of the dated option,
+      seats left and sold out, sorted alphabetically. It leaves out variants whose period has
+      ended, and undated variants of an earlier year ("… 2025").
+    - **Product page** (`productView/Form.tsx`): with more than one bookable variant, a
+      "Choose a week" list. The choice is posted as `product_variant_id` to the add-to-cart
+      API. "Sold out" / "x places left" is shown when 5 or fewer are left.
+    - **Cart, checkout summary, order confirmation:** the variant title is shown under the
+      product name (`CartItem.variantTitle`), so two weeks of the same camp can be told apart.
 20. [ ] Verify everything under variation-plan *Verification* (cart → order → registration →
     reservation; old orders still render).
     - The checkout unit tests (`core/modules/checkout/tests/unit`) can't run: they import

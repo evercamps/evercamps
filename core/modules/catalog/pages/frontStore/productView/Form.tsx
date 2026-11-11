@@ -127,6 +127,16 @@ interface VariantAttribute {
   attributeCode: string;
 }
 
+interface BookableVariant {
+  productVariantId: number;
+  label: string;
+  price: { value: number; text: string };
+  startDate?: string | null;
+  endDate?: string | null;
+  availableSeats?: number | null;
+  soldOut: boolean;
+}
+
 interface Product {
   productId: number;
   sku: string;
@@ -138,6 +148,74 @@ interface Product {
   variantGroup?: {
     variantAttributes?: VariantAttribute[];
   };
+  bookableVariants?: BookableVariant[];
+}
+
+function formatDate(value: string): string {
+  const [y, m, d] = value.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// Choose a variant (e.g. a camp week) when the product has more than one
+// bookable variant. The choice is posted as product_variant_id.
+function VariantPicker({
+  variants,
+  selected,
+  onSelect
+}: {
+  variants: BookableVariant[];
+  selected: number | null;
+  onSelect: (variantId: number) => void;
+}) {
+  return (
+    <div className="product-variant-picker mt-8">
+      <div className="font-semibold mb-2">{_('Choose a week')}</div>
+      <div className="flex flex-col gap-2">
+        {variants.map((variant) => {
+          const isSelected = selected === variant.productVariantId;
+          return (
+            <label
+              key={variant.productVariantId}
+              className={`flex justify-between items-center gap-4 border rounded p-3 ${
+                variant.soldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              } ${isSelected ? 'border-interactive' : 'border-divider'}`}
+            >
+              <span className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  checked={isSelected}
+                  disabled={variant.soldOut}
+                  onChange={() => onSelect(variant.productVariantId)}
+                />
+                <span>
+                  <span className="block">{variant.label}</span>
+                  {variant.startDate && variant.endDate && (
+                    <span className="block text-sm text-textSubdued">
+                      {formatDate(variant.startDate)} – {formatDate(variant.endDate)}
+                    </span>
+                  )}
+                </span>
+              </span>
+              <span className="text-right whitespace-nowrap">
+                <span className="block">{variant.price?.text}</span>
+                {variant.soldOut ? (
+                  <span className="block text-sm text-critical">{_('Sold out')}</span>
+                ) : (
+                  variant.availableSeats !== null &&
+                  variant.availableSeats !== undefined &&
+                  variant.availableSeats <= 5 && (
+                    <span className="block text-sm text-textSubdued">
+                      {_('${count} places left', { count: String(variant.availableSeats) })}
+                    </span>
+                  )
+                )}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface CurrentCustomer {
@@ -176,6 +254,18 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
   const appContext = useAppState()!;
   const { setData } = useAppDispatch()!;
   const modal = useModal();
+
+  // Variants (e.g. camp weeks). With one bookable variant it's used directly;
+  // with several the customer chooses one.
+  const bookableVariants = product.bookableVariants ?? [];
+  const showPicker = bookableVariants.length > 1;
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
+    bookableVariants.length === 1 ? bookableVariants[0].productVariantId : null
+  );
+  const isInStock =
+    bookableVariants.length > 0
+      ? bookableVariants.some((variant) => !variant.soldOut)
+      : product.inventory.isInStock;
 
   const onSuccess = (response: any) => {
     if (!response.error) {
@@ -222,6 +312,11 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
         return;
       }
     }
+    if (showPicker && !selectedVariantId) {
+      setError(_('Please choose a week'));
+      return;
+    }
+    setError(undefined);
     if (product.manageRegistrations === 1) {
       modal.openModal();
     } else {
@@ -250,13 +345,26 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
       isJSON
     >
       <input type="hidden" name="sku" value={product.sku} />
+      {selectedVariantId && (
+        <input type="hidden" name="product_variant_id" value={selectedVariantId} />
+      )}
+      {showPicker && (
+        <VariantPicker
+          variants={bookableVariants}
+          selected={selectedVariantId}
+          onSelect={(variantId) => {
+            setSelectedVariantId(variantId);
+            setError(undefined);
+          }}
+        />
+      )}
       <Area
         id="productSinglePageForm"
         coreComponents={[
           {
             component: { default: AddToCart },
             props: {
-              stockAvailability: product.inventory.isInStock,
+              stockAvailability: isInStock,
               loading,
               error,
               onAddToCartClick: handleAddToCartClick,
@@ -321,6 +429,18 @@ export const query = `
         variantAttributes {
           attributeCode
         }
+      }
+      bookableVariants {
+        productVariantId
+        label
+        price {
+          value
+          text
+        }
+        startDate
+        endDate
+        availableSeats
+        soldOut
       }
     }
     currentCustomer {

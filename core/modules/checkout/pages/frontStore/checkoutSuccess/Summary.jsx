@@ -111,6 +111,7 @@ export const query = `
         productSku
         qty
         variantOptions
+        variantTitle
         lineTotalInclTax {
           value
           text

@@ -14,6 +14,35 @@ type ProductVariant {
   totalSeats: Int
 }
 
+"""
+A variant a customer can still book on the product page (e.g. a camp week).
+"""
+type BookableVariant {
+  productVariantId: Int!
+  sku: String!
+  """
+  Title, or the option texts joined ("Week 1 zomer 2027").
+  """
+  label: String!
+  price: Price!
+  isDefault: Boolean!
+  """
+  Care period of the variant's dated option (YYYY-MM-DD), when set.
+  """
+  startDate: String
+  endDate: String
+  """
+  Seats left (total - reserved); null when the product doesn't manage stock.
+  """
+  availableSeats: Int
+  soldOut: Boolean!
+}
+
 extend type Product {
   variants: [ProductVariant!]!
+  """
+  Variants still bookable, sorted alphabetically. Leaves out variants whose
+  period has ended, and variants of an earlier year ("... 2025") without dates.
+  """
+  bookableVariants: [BookableVariant!]!
 }
