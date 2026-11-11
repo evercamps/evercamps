@@ -1,0 +1,22 @@
+{
+  "shop": {
+    "currency": "EUR",
+    "language": "en"
+  },
+  "system": {
+    "extensions": [
+      {
+        "name": "national-number-field",
+        "resolve": "content/plugins/national-number-field",
+        "enabled": true,
+        "priority": 100
+      },
+      {
+        "name": "woocommerce-import",
+        "resolve": "content/plugins/woocommerce-import",
+        "enabled": true,
+        "priority": 100
+      }
+    ]
+  }
+}
