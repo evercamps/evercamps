@@ -239,9 +239,11 @@ CREATE TABLE IF NOT EXISTS fiscal_attest (
   total_amount NUMERIC(12,2) NOT NULL,
   total_days INT NOT NULL,
   pdf_path TEXT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (income_year, sequence_number)
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+-- A correction keeps its fiche number, so the number is unique per year among
+-- the current attests only:
+CREATE UNIQUE INDEX ON fiscal_attest (income_year, sequence_number) WHERE status = 'final';
 
 -- Manual amount for a registration, set by the admin (imported/historic data, special prices).
 -- Takes precedence over the amount derived from order_item.

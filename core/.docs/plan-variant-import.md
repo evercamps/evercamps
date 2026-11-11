@@ -220,21 +220,49 @@ Steps marked **(decision)** need an answer before you start them.
 
 ## Stage 6: Plugin `belgian-administration`
 
-23. [ ] Rename `national-number-field` → `belgian-administration`: folder, `package.json`,
-    `config/default.json`, `npm install`. Clean up the old `migration` / `plugin_enabled.*`
-    rows. Add `src/core.ts`. (The importer already accepts the new name, see step 11.)
+23. [x] Renamed `national-number-field` → `belgian-administration`.
+    - **Files:** `git mv`, `package.json` (`evercamps-belgian-administration`, 1.1.0),
+      `config/default.json`, `npm install` (workspace link), new `src/core.ts`, READMEs.
+    - **tsconfig:** now the same as woocommerce-import, plus the `@evercamps/evercamps/*`
+      paths, so `npx tsc --noEmit` passes.
+    - **Old rows:** `Version-1.1.0` removes the old `migration` row and carries over a
+      `plugin_enabled.national-number-field` override.
     → fiscal-attests, *Delivery*
-24. [ ] **Plugin migration `Version-1.1.0.ts`:** `customer.national_number`,
-    `order_item_registration.payer_national_number`, and the `fiscal_attest_eligible` attribute
-    (*Ja*/*Nee*, linked to all attribute groups).
+24. [x] **Plugin migration `Version-1.1.0.ts`:** `customer.national_number` and
+    `order_item_registration.payer_national_number`.
+    - Both are filled from `extra_data.payer_national_number` (WooCommerce import, step 11);
+      the customer gets the number from their latest registration.
+    - Adds the `fiscal_attest_eligible` attribute ("Fiscaal attest": *Ja*/*Nee*), not shown in
+      the shop and not filterable, linked to all existing attribute groups.
     → fiscal-attests, 1b-bis, 1c
-25. [ ] **Plugin migration `Version-1.2.0.ts`:** `fiscal_attest`, `fiscal_attest_batch`,
-    `fiscal_attest_amount_override`, `fiscal_attest_payer`.
+25. [x] **Plugin migration `Version-1.2.0.ts`:** `fiscal_attest`, `fiscal_attest_batch`,
+    `fiscal_attest_amount_override`, `fiscal_attest_payer`, with CHECK constraints on
+    kind/status/source.
+    - The fiche number is unique per year among **current** (`final`) attests only (partial
+      unique index), because a correction keeps the original fiche number.
     → fiscal-attests, 1d
-26. [ ] Settings page: company number, municipality as recognising body, signatory, sender
-    contact, daily ceiling per year.
+26. [x] Settings page `/admin/fiscal-attests/settings` (Settings → Fiscal attests).
+    - **Fields:** company number (KBO, mod-97 checked, stored digits-only), legal name and
+      address (default to the store settings), recognising body (default *Gemeente / stad*)
+      with name and reference, signatory, Belcotax sender contact, maximum per day per year.
+    - **Code:** settings service `services/fiscalAttest/settings.ts`; admin GraphQL
+      `fiscalAttestSettings`.
     → fiscal-attests, 1a
-27. [ ] Set `fiscal_attest_eligible` on all camps.
+27. [ ] Set `fiscal_attest_eligible` on all camps: per product in the admin (Attributes card →
+    "Fiscaal attest"), or for every product with a kampweek variant at once:
+    ```sql
+    INSERT INTO product_attribute_value_index (product_id, attribute_id, option_id, option_text)
+    SELECT DISTINCT pv.product_id, a.attribute_id, o.attribute_option_id, o.option_text
+    FROM product_variant pv
+    JOIN variant_attribute_value vav ON vav.variant_id = pv.product_variant_id
+    JOIN attribute k ON k.attribute_id = vav.attribute_id AND k.attribute_code IN ('kampweek', 'pa_kampweek')
+    JOIN attribute a ON a.attribute_code = 'fiscal_attest_eligible'
+    JOIN attribute_option o ON o.attribute_id = a.attribute_id AND o.option_text = 'Ja'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM product_attribute_value_index x
+      WHERE x.product_id = pv.product_id AND x.attribute_id = a.attribute_id
+    );
+    ```
 
 ## Stage 7: Collecting national numbers & payers
 

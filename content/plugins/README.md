@@ -8,9 +8,10 @@ webpack build all pick it up automatically.
 
 Two real plugins already live here and are worth reading alongside this doc:
 
-- **`national-number-field`** — minimal example. A single field injected into an existing
-  admin page area, a server-side validation hook, a GraphQL type extension and one migration.
-  No API routes, no new pages.
+- **`belgian-administration`** — Belgium-specific features (formerly `national-number-field`).
+  Its national-number part is the minimal example: a single field injected into an existing
+  admin page area, a server-side validation hook, a GraphQL type extension and a migration.
+  It also has its own settings page (fiscal attests) and a `src/core.ts`.
 - **`woocommerce-import`** — fuller example. API routes, its own settings page, GraphQL
   types + resolvers, services, and multiple migrations.
 
@@ -108,7 +109,7 @@ plugin can have its own `dependencies` and gets them installed by the root `npm 
 }
 ```
 
-`tsconfig.json` — copy `content/plugins/national-number-field/tsconfig.json` as a starting
+`tsconfig.json` — copy `content/plugins/belgian-administration/tsconfig.json` as a starting
 point; the important bits are `"rootDir": "./src"`, `"outDir": "./dist"`, `"jsx": "react"`.
 
 ## The bootstrap file
@@ -253,7 +254,7 @@ four-levels-up path in every file. Do the same in new plugins.
 ## Writing a new plugin — checklist
 
 1. `mkdir content/plugins/my-plugin/src` and add `package.json` + `tsconfig.json` (copy from
-   `national-number-field`, rename).
+   `belgian-administration`, rename).
 2. Add a `src/bootstrap.ts` with at least an empty default export.
 3. Register it in `config/default.json` → `system.extensions` (`enabled: true` while you
    develop it).

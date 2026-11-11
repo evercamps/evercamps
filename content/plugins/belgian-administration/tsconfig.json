@@ -1,23 +1,45 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "target": "ES2018",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "sourceMap": true,
+    "noEmit": true,
     "allowJs": true,
     "checkJs": false,
     "jsx": "react",
-    "outDir": "./dist",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "allowArbitraryExtensions": true,
     "strictNullChecks": true,
     "isolatedModules": false,
-    "rootDir": "./src"
+    "paths": {
+      "@components/*": [
+        "../../../core/components/*",
+        "../../../includes/components/*"
+      ],
+      "@includes/types": [
+        "../../../includes/types/index.ts"
+      ],
+      "@includes/types/*": [
+        "../../../includes/types/*"
+      ],
+      "@evercamps/evercamps/lib/*": [
+        "../../../includes/lib/*"
+      ],
+      "@evercamps/evercamps/components/*": [
+        "../../../includes/components/*"
+      ]
+    }
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

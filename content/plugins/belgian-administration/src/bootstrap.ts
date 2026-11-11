@@ -1,4 +1,4 @@
-import { addProcessor } from '../../../../dist/lib/util/registry.js';
+import { addProcessor } from './core.js';
 import { isValidNationalNumber, isTruthyFlag } from './lib/nationalNumber.js';
 
 interface ParticipantData {

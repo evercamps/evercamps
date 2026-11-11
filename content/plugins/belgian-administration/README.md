@@ -1,11 +1,29 @@
-# National Number Field
+# Belgian Administration
 
-Adds a validated Belgian national number field (known in Dutch as
-"rijksregisternummer", in French as "numéro de registre national" — "National
-Number" is the official English term used on Belgian eID cards) to the admin
-participant form, with a checkbox to skip it for non-Belgian participants.
+Belgium-specific administration for EverCamps (formerly the `national-number-field`
+plugin, renamed because it now holds more than the national number):
 
-## Where it shows up
+- **National number** - a validated Belgian national number field (known in Dutch as
+  "rijksregisternummer", in French as "numéro de registre national") on the admin
+  participant form, with a checkbox to skip it for non-Belgian participants. Details below.
+- **Fiscal attests (281.86) and Belcotax** - in progress, see `core/.docs/fiscal-attests.md`
+  and `core/.docs/plan-variant-import.md` (stages 6-9). Done so far:
+  - settings page `/admin/fiscal-attests/settings` (Settings > Fiscal attests): organiser
+    and company number (KBO, mod-97 checked), recognising body (municipality by default),
+    signatory, Belcotax sender contact, maximum deductible amount per day per year;
+  - migration `Version-1.1.0`: `customer.national_number`,
+    `order_item_registration.payer_national_number` (filled from the WooCommerce import's
+    `extra_data`), and the product attribute **`fiscal_attest_eligible`** ("Fiscaal attest":
+    Ja / Nee), linked to every attribute group;
+  - migration `Version-1.2.0`: tables `fiscal_attest`, `fiscal_attest_batch`,
+    `fiscal_attest_amount_override`, `fiscal_attest_payer`.
+
+> Attribute groups created *after* the 1.1.0 migration don't get `fiscal_attest_eligible`
+> automatically: add it to the group on the attribute edit page.
+
+## National number
+
+### Where it shows up
 
 There is no separate "registration" form in the data model — a `registration` row
 is just a link between a `participant` and a product/camp, with no personal-data
@@ -41,7 +59,7 @@ a single field component wired into that area covers "create registration form",
   `national_number_not_applicable` (boolean, default false) to the `participant`
   table on next boot.
 
-## Validation
+### Validation
 
 The Belgian national number is 11 digits: `YYMMDD` (birth date, `00` used when
 month/day is unknown) + a 3-digit sequence number + a 2-digit checksum. The checksum
@@ -56,15 +74,15 @@ regardless of what's currently in the text field.
 
 ## Enable the extension
 
-Already added to `config/default.json`:
+Registered in `config/default.json`:
 
 ```json
 {
   "system": {
     "extensions": [
       {
-        "name": "national-number-field",
-        "resolve": "extensions/national-number-field",
+        "name": "belgian-administration",
+        "resolve": "content/plugins/belgian-administration",
         "enabled": true,
         "priority": 100
       }
@@ -73,7 +91,12 @@ Already added to `config/default.json`:
 }
 ```
 
+Migrations are tracked per plugin name. After the rename, `Version-1.0.0` runs once
+more under `belgian-administration` (harmless: `ADD COLUMN IF NOT EXISTS`), and
+`Version-1.1.0` removes the old `national-number-field` migration row and carries over a
+`plugin_enabled.national-number-field` override from `/plugin-management`.
+
 > **Warning**
 > Enabling/disabling the extension requires running `npm run build` (or restarting
-> `npm run dev`) again, and the migration runs automatically the next time the app
-> boots.
+> `npm run dev`) again, and migrations run automatically the next time the app boots.
+> In production the plugin needs its `dist/` folder: `npm run compile` builds it.

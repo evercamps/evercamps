@@ -1,12 +1,12 @@
 {
-  "name": "evercamps-national-number-field",
-  "version": "1.0.0",
+  "name": "evercamps-belgian-administration",
+  "version": "1.1.0",
   "main": "index.js",
   "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Adds a validated Belgian national number field to the participant form, with an opt-out checkbox for non-Belgian participants.",
+  "description": "Belgium-specific administration for EverCamps: validated national numbers for participants and payers, and fiscal attests (281.86) with Belcotax export.",
   "scripts": {
     "compile": "swc src -d dist --config-file ../../../.swcrc --copy-files --strip-leading-paths",
     "typecheck": "tsc --noEmit"

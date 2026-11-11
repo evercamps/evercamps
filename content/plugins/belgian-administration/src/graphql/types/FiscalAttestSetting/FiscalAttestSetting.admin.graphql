@@ -1,0 +1,41 @@
+"""
+Maximum deductible amount per care day for one income year (indexed yearly).
+"""
+type FiscalAttestMaxDailyRate {
+  year: Int!
+  amount: Float!
+}
+
+"""
+A body that can recognise a camp for the fiscal attest (e.g. the municipality).
+"""
+type FiscalAttestAuthorityType {
+  value: String!
+  label: String!
+}
+
+"""
+Organiser / recognition / Belcotax sender settings for fiscal attests (281.86).
+Organiser fields fall back to the store settings until they're filled in.
+"""
+type FiscalAttestSettings {
+  companyNumber: String
+  legalName: String
+  address: String
+  postcode: String
+  city: String
+  authorityType: String!
+  authorityName: String
+  authorityReference: String
+  signatoryName: String
+  signatoryFunction: String
+  senderContactName: String
+  senderContactEmail: String
+  senderContactPhone: String
+  maxDailyRates: [FiscalAttestMaxDailyRate!]!
+  authorityTypes: [FiscalAttestAuthorityType!]!
+}
+
+extend type Query {
+  fiscalAttestSettings: FiscalAttestSettings!
+}
