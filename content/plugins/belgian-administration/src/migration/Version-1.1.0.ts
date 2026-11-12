@@ -3,7 +3,6 @@ import { execute } from '@evershop/postgres-query-builder';
 // belgian-administration 1.1.0 (core/.docs/fiscal-attests.md, 1b-bis + 1c):
 // - carries over state from the old plugin name "national-number-field"
 // - payer national number (customer + snapshot per registration)
-// - "fiscal_attest_eligible" product attribute (Ja / Nee)
 //
 // Migrations are tracked per plugin name, so after the rename Version-1.0.0
 // runs again under "belgian-administration"; it only uses ADD COLUMN IF NOT
@@ -66,36 +65,7 @@ export default async (connection: any) => {
        AND c.national_number IS NULL`
   );
 
-  // --- fiscal_attest_eligible attribute -------------------------------------------
-  // Set per camp by the admin: does this camp qualify for a fiscal attest?
-  // Not shown on the storefront and not filterable.
-  await execute(
-    connection,
-    `INSERT INTO "attribute" ("attribute_code", "attribute_name", "type", "is_required", "display_on_frontend", "is_filterable", "sort_order")
-     SELECT 'fiscal_attest_eligible', 'Fiscaal attest', 'select', false, false, false, 100
-     WHERE NOT EXISTS (SELECT 1 FROM "attribute" WHERE attribute_code = 'fiscal_attest_eligible')`
-  );
-  for (const optionText of ['Ja', 'Nee']) {
-    await execute(
-      connection,
-      `INSERT INTO "attribute_option" ("attribute_id", "attribute_code", "option_text")
-       SELECT a.attribute_id, a.attribute_code, '${optionText}'
-       FROM "attribute" a
-       WHERE a.attribute_code = 'fiscal_attest_eligible'
-         AND NOT EXISTS (
-           SELECT 1 FROM "attribute_option" o
-           WHERE o.attribute_id = a.attribute_id AND o.option_text = '${optionText}'
-         )`
-    );
-  }
-  // Link it to every attribute group, so it shows on every product form.
-  // Groups created later need it added by hand (see README).
-  await execute(
-    connection,
-    `INSERT INTO "attribute_group_link" ("attribute_id", "group_id")
-     SELECT a.attribute_id, g.attribute_group_id
-     FROM "attribute" a CROSS JOIN "attribute_group" g
-     WHERE a.attribute_code = 'fiscal_attest_eligible'
-     ON CONFLICT ("attribute_id", "group_id") DO NOTHING`
-  );
+  // (Fiscal attest eligibility is a column on product, added in Version-1.3.0.
+  // An earlier version of this migration created a "fiscal_attest_eligible"
+  // attribute instead; 1.3.0 converts and removes it where it exists.)
 };

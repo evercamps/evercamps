@@ -50,10 +50,14 @@ function Area({
   noOuter = false,
   wrapper = 'div',
   wrapperProps = {},
-  components = _defaultComponents
+  components = _defaultComponents,
+  ...extraProps
 }: AreaProps) {
   const context = useAppState() as any;
-  const props = { id, className, coreComponents, noOuter, wrapper, wrapperProps, components };
+  // Extra props given to an Area (e.g. <Area id="x" manageRegistrations={1} />)
+  // reach every component in it as `areaProps.<name>`, so a host component can
+  // share live state with components that plugins place in its area.
+  const props = { ...extraProps, id, className, coreComponents, noOuter, wrapper, wrapperProps, components };
 
   const areaComponents = (() => {
     const areaCoreComponents = coreComponents || [];

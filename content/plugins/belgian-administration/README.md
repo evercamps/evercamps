@@ -13,13 +13,12 @@ plugin, renamed because it now holds more than the national number):
     signatory, Belcotax sender contact, maximum deductible amount per day per year;
   - migration `Version-1.1.0`: `customer.national_number`,
     `order_item_registration.payer_national_number` (filled from the WooCommerce import's
-    `extra_data`), and the product attribute **`fiscal_attest_eligible`** ("Fiscaal attest":
-    Ja / Nee), linked to every attribute group;
+    `extra_data`);
   - migration `Version-1.2.0`: tables `fiscal_attest`, `fiscal_attest_batch`,
-    `fiscal_attest_amount_override`, `fiscal_attest_payer`.
-
-> Attribute groups created *after* the 1.1.0 migration don't get `fiscal_attest_eligible`
-> automatically: add it to the group on the attribute edit page.
+    `fiscal_attest_amount_override`, `fiscal_attest_payer`;
+  - migration `Version-1.3.0`: column **`product.fiscal_attest_eligible`**, set per camp in
+    the "Fiscal attest" card on the admin product form (and converts/removes the
+    `fiscal_attest_eligible` attribute an earlier 1.1.0 created).
 
 ## National number
 

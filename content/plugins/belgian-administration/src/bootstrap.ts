@@ -19,7 +19,21 @@ function validateNationalNumber(data: ParticipantData): ParticipantData {
   return data;
 }
 
+// A fiscal attest is only possible for products that manage registrations:
+// when a product is saved with registrations off, it's never eligible. (The
+// admin form already disables the choice; this also covers the API and the
+// importer.)
+function enforceFiscalAttestNeedsRegistrations(data: Record<string, any>): Record<string, any> {
+  const registrations = data.manage_registrations;
+  if (registrations !== undefined && !isTruthyFlag(registrations) && registrations !== 'true') {
+    return { ...data, fiscal_attest_eligible: 0 };
+  }
+  return data;
+}
+
 export default async (): Promise<void> => {
   addProcessor('participantDataBeforeCreate', validateNationalNumber, 20);
   addProcessor('participantDataBeforeUpdate', validateNationalNumber, 20);
+  addProcessor('productDataBeforeCreate', enforceFiscalAttestNeedsRegistrations, 20);
+  addProcessor('productDataBeforeUpdate', enforceFiscalAttestNeedsRegistrations, 20);
 };

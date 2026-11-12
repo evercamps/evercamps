@@ -1,4 +1,5 @@
 import { Card } from '@components/admin/cms/Card';
+import Area from '@components/Area';
 import { Field } from '@components/form/Field';
 import React from 'react';
 
@@ -23,6 +24,12 @@ export default function Status({ product: productProp }: StatusProps) {
   // `product(id: null)` resolves to null - a destructuring default doesn't
   // catch that.
   const product = productProp ?? DEFAULT_PRODUCT;
+  // Current "Manage Registrations" choice, shared with the fields plugins put
+  // in the productStatusRegistrations area (e.g. "Fiscal attest", which only
+  // applies to registration products) as areaProps.manageRegistrations.
+  const [manageRegistrations, setManageRegistrations] = React.useState<number>(
+    Number(product.manageRegistrations ?? 1)
+  );
   return (
     <Card title="Product status">
       <Card.Session>
@@ -64,6 +71,12 @@ export default function Status({ product: productProp }: StatusProps) {
             { value: 1, text: 'Enabled' }
           ]}
           type="radio"
+          onChange={(value: unknown) => setManageRegistrations(Number(value))}
+        />
+        <Area
+          id="productStatusRegistrations"
+          noOuter
+          manageRegistrations={manageRegistrations}
         />
       </Card.Session>
     </Card>

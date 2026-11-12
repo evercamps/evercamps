@@ -232,8 +232,6 @@ Steps marked **(decision)** need an answer before you start them.
     `order_item_registration.payer_national_number`.
     - Both are filled from `extra_data.payer_national_number` (WooCommerce import, step 11);
       the customer gets the number from their latest registration.
-    - Adds the `fiscal_attest_eligible` attribute ("Fiscaal attest": *Ja*/*Nee*), not shown in
-      the shop and not filterable, linked to all existing attribute groups.
     → fiscal-attests, 1b-bis, 1c
 25. [x] **Plugin migration `Version-1.2.0.ts`:** `fiscal_attest`, `fiscal_attest_batch`,
     `fiscal_attest_amount_override`, `fiscal_attest_payer`, with CHECK constraints on
@@ -248,19 +246,26 @@ Steps marked **(decision)** need an answer before you start them.
     - **Code:** settings service `services/fiscalAttest/settings.ts`; admin GraphQL
       `fiscalAttestSettings`.
     → fiscal-attests, 1a
-27. [ ] Set `fiscal_attest_eligible` on all camps: per product in the admin (Attributes card →
-    "Fiscaal attest"), or for every product with a kampweek variant at once:
+26b. [x] **Eligibility is a product column, not an attribute** (decided).
+    - Plugin migration `Version-1.3.0.ts` adds `product.fiscal_attest_eligible boolean NOT NULL
+      DEFAULT false`. It converts and removes the earlier `fiscal_attest_eligible` attribute.
+    - `Version-1.1.0` no longer creates the attribute.
+    - Only for products with **Manage Registrations**.
+      - Admin product form: "Fiscal attest (281.86)" in the Status card under Manage
+        Registrations. It's disabled, and saved as not eligible, while registrations are off.
+      - A plugin processor enforces this on create/update too.
+      - Core: `Area` forwards extra props as `areaProps`; new area `productStatusRegistrations`.
+      - GraphQL `Product.fiscalAttestEligible`.
+    → fiscal-attests, 1b-bis
+27. [ ] Mark the camps as eligible: per product in the admin ("Fiscal attest" card → Yes), or
+    for every product with a kampweek variant (and registrations) at once:
     ```sql
-    INSERT INTO product_attribute_value_index (product_id, attribute_id, option_id, option_text)
-    SELECT DISTINCT pv.product_id, a.attribute_id, o.attribute_option_id, o.option_text
-    FROM product_variant pv
-    JOIN variant_attribute_value vav ON vav.variant_id = pv.product_variant_id
-    JOIN attribute k ON k.attribute_id = vav.attribute_id AND k.attribute_code IN ('kampweek', 'pa_kampweek')
-    JOIN attribute a ON a.attribute_code = 'fiscal_attest_eligible'
-    JOIN attribute_option o ON o.attribute_id = a.attribute_id AND o.option_text = 'Ja'
-    WHERE NOT EXISTS (
-      SELECT 1 FROM product_attribute_value_index x
-      WHERE x.product_id = pv.product_id AND x.attribute_id = a.attribute_id
+    UPDATE product SET fiscal_attest_eligible = true
+    WHERE manage_registrations AND product_id IN (
+      SELECT pv.product_id FROM product_variant pv
+      JOIN variant_attribute_value vav ON vav.variant_id = pv.product_variant_id
+      JOIN attribute k ON k.attribute_id = vav.attribute_id
+      WHERE k.attribute_code IN ('kampweek', 'pa_kampweek')
     );
     ```
 

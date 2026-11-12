@@ -77,7 +77,7 @@ content/plugins/belgian-administration/
     │   └── frontStore/account/FiscalAttests.tsx     # customer download list
     └── migration/
         ├── Version-1.0.0.ts       # existing participant.national_number columns
-        ├── Version-1.1.0.ts       # payer national number + fiscal_attest_eligible attribute (care dates live in core, see 1b)
+        ├── Version-1.1.0.ts       # payer national number (care dates live in core, see 1b)
         └── Version-1.2.0.ts       # fiscal_attest, fiscal_attest_batch, amount override + payer tables
 ```
 
@@ -96,7 +96,7 @@ Framework imports (`pool`, `getSetting`, `hookable`/`hookAfter`, `select`/`inser
 | Payer: national number | — | **New**, in this plugin |
 | Care period from–to, number of days | `attribute_option.start_date/end_date/day_count` on the period option (e.g. *Week 1 zomer*) | **New core columns** (Phase 1b) |
 | Amount paid | manual override, else `order_item` + `order.payment_status` (`paid`, `partial_refunded`, `refunded`) | Exists; imported registrations need linking (Phase 2c) |
-| Eligible camp | product attribute `fiscal_attest_eligible` | **New attribute** (Phase 1b-bis) |
+| Eligible camp | column `product.fiscal_attest_eligible` | **New column** (Phase 1b-bis) |
 | Payer split between parents | `fiscal_attest_payer` (customer dashboard / admin) | **New** (Phase 2b) |
 
 How it links up: `order` → `order_item` → `order_item_registration` (`registration_id`,
@@ -181,23 +181,29 @@ Rules used by the plugin (`lib/carePeriod.ts`):
   without variants that has several weeks in a multiselect), or an option with `start_date` but
   no `end_date`.
 
-### 1b-bis. Eligibility per camp as an attribute (plugin)
+### 1b-bis. Eligibility per camp: product column (plugin)
 
 Not every camp qualifies; residential camps with overnight stays may not, for example. So
-eligibility is set per camp by the admin, as a normal product attribute. The plugin migration
-(`Version-1.1.0.ts`) creates it, guarded with `WHERE NOT EXISTS` on `attribute_code`:
+eligibility is set **per product** by the admin, as a column on `product` (decided: not a
+catalog attribute):
 
-| `attribute_code` | `attribute_name` | `type` | Options | Frontend | Filterable |
-|---|---|---|---|---|---|
-| `fiscal_attest_eligible` | Fiscaal attest | `select` | *Ja*, *Nee* | no | no |
-
-- The migration links it to every existing attribute group (`attribute_group_link`), so it shows
-  up on the product form. The README says to add it to any group created later.
+- `product.fiscal_attest_eligible boolean NOT NULL DEFAULT false`, added by the plugin migration
+  `Version-1.3.0.ts`. That migration also converts and removes the `fiscal_attest_eligible`
+  select attribute that an earlier `Version-1.1.0` created.
+- Only possible for products with **Manage Registrations** enabled.
+  - Set on the admin product form in the **Status card**, right under "Manage Registrations"
+    (plugin `pages/admin/productEdit+productNew/FiscalAttestEligible.tsx` in the core area
+    `productStatusRegistrations`). The choice is disabled, and saved as "not eligible", while
+    Manage Registrations is off.
+  - The plugin's `productDataBeforeCreate`/`Update` processors enforce the same rule
+    server-side (API, importer).
+  - Saved by core `createProduct`/`updateProduct` like any other product column.
+  - GraphQL: `Product.fiscalAttestEligible`.
+  - Core change for this: `Area` passes extra props to its components as `areaProps`, and the
+    Status card keeps the live Manage Registrations value and offers that area.
 - Product-level only. Eligibility doesn't differ between weeks of the same camp.
-- **Not set** on a product that does have a dated period = **warning** in the preview ("eligibility
-  not set"), so forgotten camps get noticed. They're left out until it's set to *Ja*.
-- Showing it on the frontend later ("Fiscaal aftrekbaar") only takes toggling
-  `display_on_frontend`.
+- A camp with a dated period that is **not** marked eligible = **warning** in the preview, so
+  forgotten camps get noticed. They're left out until marked eligible.
 
 ### 1c. Payer national number (`Version-1.1.0.ts`)
 
@@ -372,9 +378,8 @@ SELECT r.registration_id, p.*, oir.payer_national_number, oir.customer_id,
 FROM registration r
 JOIN reg_period rp                     ON rp.registration_id = r.registration_id
 JOIN participant p                     ON p.participant_id = r.registration_participant_id
-JOIN product_attribute_value_index el  ON el.product_id = r.registration_product_id
-JOIN attribute ea                      ON ea.attribute_id = el.attribute_id AND ea.attribute_code = 'fiscal_attest_eligible'
-JOIN attribute_option eo               ON eo.attribute_option_id = el.option_id AND eo.option_text = 'Ja'
+JOIN product pr                        ON pr.product_id = r.registration_product_id
+                                          AND pr.fiscal_attest_eligible AND pr.manage_registrations
 LEFT JOIN order_item_registration oir  ON oir.registration_id = r.registration_id
 LEFT JOIN order_item oi                ON oi.order_item_id = oir.order_item_id
 LEFT JOIN "order" o                    ON o.order_id = oi.order_item_order_id
@@ -398,7 +403,7 @@ WHERE (o.payment_status IN ('paid', 'partial_refunded') OR ov.registration_id IS
      unparseable; no amount, or amount ≤ 0; payer shares don't add up to 100%.
    - **Warning:** no child or payer national number (or `national_number_not_applicable`);
      `day_count` empty, so days were derived from the weekdays between start and end; a dated
-     camp whose `fiscal_attest_eligible` isn't set; the amount comes from an override.
+     camp that isn't marked `fiscal_attest_eligible`; the amount comes from an override.
 3. **Split by payer** (`fiscal_attest_payer` rows with `status = 'active'`, or 100% the order
    customer when there are none), then **group** by `(participant, payer)`, with one period line
    per camp (from, to, days, daily rate, the payer's share of the amount).
@@ -506,7 +511,7 @@ deadline. No automatic upload.
 2. **`attribute_option.value_date` / `value_int`:** left as they are; not used by this feature.
 3. **Core change for checkout:** approved. `AVAILABLE_PARTICIPANT_FIELDS` becomes extensible
    through a processor (Phase 2).
-4. **Eligible camp types:** set per camp with the `fiscal_attest_eligible` product attribute
+4. **Eligible camp types:** set per camp with the `product.fiscal_attest_eligible` column
    (Phase 1b-bis).
 5. **Payer:** the order customer by default. A split between parents can be set from the
    customer dashboard and by the admin (Phase 2b).
