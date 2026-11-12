@@ -19,6 +19,8 @@ export interface PayerShare {
   nationalNumber: string | null;
   address: Address;
   sharePercent: number;
+  // admin customer page, when the payer has a customer account (preview only)
+  editUrl?: string | null;
 }
 
 // An attribute option of the registration's variant (e.g. kampweek "Week 1
@@ -42,12 +44,15 @@ export interface CandidateRegistration {
   nationalNumberNotApplicable: boolean;
   productId: number;
   productName: string;
+  productEditUrl?: string | null;
   variantTitle: string | null;
   suggestedPrice: number | null;
   periodOptions: PeriodOption[];
   editableOptions?: EditablePeriodOption[];
   order: { orderId: number; orderNumber: string; paymentStatus: string; amount: number | null } | null;
   overrideAmount: number | null;
+  // "Don't generate a fiscal attest" for its order (or this registration)
+  excluded?: { reason: string; reasonLabel: string; note: string | null; scope: 'order' | 'registration' } | null;
   // active fiscal_attest_payer rows; empty = 100% defaultPayer
   payers: PayerShare[];
   defaultPayer: PayerShare | null;
@@ -115,6 +120,7 @@ export interface RegistrationPreview {
   participantId: number;
   participantName: string;
   productName: string;
+  productEditUrl: string | null;
   label: string;
   period: CarePeriod | null;
   editableOptions: EditablePeriodOption[];
@@ -122,6 +128,8 @@ export interface RegistrationPreview {
   amountSource: 'override' | 'order' | 'none';
   suggestedPrice: number | null;
   orderNumber: string | null;
+  orderId: number | null;
+  excluded: CandidateRegistration['excluded'];
   payers: PayerShare[];
   splitIsDefault: boolean;
   issues: Issue[];
@@ -189,6 +197,13 @@ export function buildAttests(
     const own: Issue[] = [];
     const issue = (severity: IssueSeverity, code: Issue['code'], message: string) =>
       own.push({ registrationId: c.registrationId, participantId: c.participantId, participantName: name, severity, code, message });
+
+    // Excluded by the admin (e.g. payer not Belgian, or an organisation):
+    // listed, but no checks and no attest.
+    if (c.excluded) {
+      registrations.push(preview(c, name, null, null, 'none', own));
+      continue;
+    }
 
     // Not paid (and no manual amount): not part of the attests at all.
     if (c.order && !PAID.has(String(c.order.paymentStatus)) && c.overrideAmount === null) {
@@ -352,6 +367,7 @@ function preview(
     participantId: c.participantId,
     participantName: name,
     productName: c.productName,
+    productEditUrl: c.productEditUrl ?? null,
     label: period?.label ?? c.variantTitle ?? c.productName,
     period,
     editableOptions: c.editableOptions ?? [],
@@ -359,6 +375,8 @@ function preview(
     amountSource,
     suggestedPrice: c.suggestedPrice,
     orderNumber: c.order?.orderNumber ?? null,
+    orderId: c.order?.orderId ?? null,
+    excluded: c.excluded ?? null,
     payers,
     splitIsDefault: c.payers.length === 0,
     issues

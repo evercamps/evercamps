@@ -186,6 +186,22 @@ describe('buildAttests', () => {
     assert.equal(result.attests.length, 0);
   });
 
+  it('leaves out excluded orders without checks', () => {
+    const result = buildAttests(
+      2026,
+      [
+        candidate({
+          birthDate: null,
+          excluded: { reason: 'organisation', reasonLabel: 'Organisation', note: null, scope: 'order' }
+        })
+      ],
+      { maxDailyRate: null }
+    );
+    assert.equal(result.attests.length, 0);
+    assert.equal(result.issues.length, 0);
+    assert.equal(result.registrations[0].excluded?.reason, 'organisation');
+  });
+
   it('flags a daily rate above the ceiling as information only', () => {
     const result = buildAttests(2026, [candidate()], { maxDailyRate: 16.9 });
     assert.ok(codes(result.issues).includes('above_ceiling'));

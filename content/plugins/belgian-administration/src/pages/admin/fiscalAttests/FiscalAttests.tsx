@@ -22,6 +22,8 @@ interface Payer {
   nationalNumber: string | null;
   address: Address;
   sharePercent: number;
+  // admin customer page, when the payer has a customer account
+  editUrl?: string | null;
 }
 
 interface Issue {
@@ -45,6 +47,7 @@ interface RegistrationPreview {
   registrationId: number;
   participantName: string;
   productName: string;
+  productEditUrl: string | null;
   label: string;
   period: { startDate: string; endDate: string; days: number } | null;
   editableOptions: EditableOption[];
@@ -52,6 +55,8 @@ interface RegistrationPreview {
   amountSource: 'override' | 'order' | 'none';
   suggestedPrice: number | null;
   orderNumber: string | null;
+  orderId: number | null;
+  excluded: { reason: string; reasonLabel: string; note: string | null; scope: 'order' | 'registration' } | null;
   payers: Payer[];
   splitIsDefault: boolean;
   issues: Issue[];
@@ -94,6 +99,7 @@ interface Props {
   amountApi: string;
   payersApi: string;
   payerRequestApi: string;
+  exclusionApi: string;
   settingsUrl: string;
 }
 
@@ -109,7 +115,12 @@ const FILTERS: { value: string; label: string; test: (r: RegistrationPreview) =>
     test: (r) => r.issues.some((i) => /national_number/.test(i.code))
   },
   { value: 'age', label: 'Age / birth date', test: (r) => r.issues.some((i) => /too_old|no_birth_date/.test(i.code)) },
-  { value: 'ok', label: 'Ready', test: (r) => !r.issues.some((i) => i.severity === 'blocking') && r.amount !== null }
+  {
+    value: 'ok',
+    label: 'Ready',
+    test: (r) => !r.excluded && !r.issues.some((i) => i.severity === 'blocking') && r.amount !== null
+  },
+  { value: 'excluded', label: 'Excluded', test: (r) => !!r.excluded }
 ];
 
 const euro = (value: number | null | undefined) =>
@@ -339,6 +350,114 @@ function AmountCell({
   );
 }
 
+const EXCLUSION_REASONS = [
+  { value: 'not_belgian', label: 'Not Belgian' },
+  { value: 'organisation', label: 'Organisation' },
+  { value: 'other', label: 'Other' }
+];
+
+// "Don't generate a fiscal attest" for the row's order (all its
+// registrations), or for this registration when it has no order.
+function ExclusionCell({
+  registration,
+  exclusionApi,
+  onSaved
+}: {
+  registration: RegistrationPreview;
+  exclusionApi: string;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = React.useState(false);
+  const [reason, setReason] = React.useState('not_belgian');
+  const [note, setNote] = React.useState('');
+  const target = registration.orderId
+    ? { orderId: registration.orderId }
+    : { registrationId: registration.registrationId };
+
+  const save = async (excluded: boolean) => {
+    try {
+      await post(exclusionApi, { ...target, excluded, reason, note });
+      toast.success(excluded ? 'Left out of the fiscal attests' : 'Included again');
+      setEditing(false);
+      onSaved();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  if (registration.excluded) {
+    return (
+      <div className="text-xs">
+        <div className="text-critical">
+          No fiscal attest: {registration.excluded.reasonLabel}
+          {registration.excluded.scope === 'order' && registration.orderNumber
+            ? ` (order ${registration.orderNumber})`
+            : ''}
+        </div>
+        {registration.excluded.note && <div className="text-textSubdued">{registration.excluded.note}</div>}
+        <a
+          href="#"
+          className="text-interactive hover:underline"
+          onClick={(e) => {
+            e.preventDefault();
+            save(false);
+          }}
+        >
+          Include again
+        </a>
+      </div>
+    );
+  }
+
+  if (!editing) {
+    return (
+      <a
+        href="#"
+        className="text-textSubdued text-xs hover:underline"
+        onClick={(e) => {
+          e.preventDefault();
+          setEditing(true);
+        }}
+      >
+        {registration.orderId ? "Don't generate for this order" : "Don't generate"}
+      </a>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1 mt-1" style={{ minWidth: '12rem' }}>
+      <select className="form-field" value={reason} onChange={(e) => setReason(e.target.value)}>
+        {EXCLUSION_REASONS.map((r) => (
+          <option key={r.value} value={r.value}>
+            {r.label}
+          </option>
+        ))}
+      </select>
+      <input
+        className="form-field"
+        type="text"
+        placeholder="Note (optional)"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
+      <div className="flex gap-2 items-center">
+        <button type="button" className="button primary" onClick={() => save(true)}>
+          Don&apos;t generate
+        </button>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            setEditing(false);
+          }}
+        >
+          Cancel
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function PayersCell({
   registration,
   payersApi,
@@ -366,7 +485,15 @@ function PayersCell({
     return (
       <div>
         {registration.payers.map((p, i) => (
-          <div key={i}>{payerLabel(p)}</div>
+          <div key={i}>
+            {p.editUrl ? (
+              <a className="hover:underline" href={p.editUrl} target="_blank" rel="noreferrer">
+                {payerLabel(p)}
+              </a>
+            ) : (
+              payerLabel(p)
+            )}
+          </div>
         ))}
         {registration.payers.length === 0 && <div className="text-textSubdued">–</div>}
         <a
@@ -502,6 +629,7 @@ export default function FiscalAttests({
   amountApi,
   payersApi,
   payerRequestApi,
+  exclusionApi,
   settingsUrl
 }: Props) {
   const thisYear = new Date().getFullYear();
@@ -636,12 +764,13 @@ export default function FiscalAttests({
 
       {preview && (
         <>
-          <div className="grid grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-6 gap-4 mb-6">
             {[
               ['Attests', preview.attests.length],
               ['Total amount', euro(totalAmount)],
               ['Blocking issues', preview.blockingCount],
               ['Warnings', preview.warningCount],
+              ['Excluded', preview.registrations.filter((r) => r.excluded).length],
               ['Already generated', preview.existingFinalCount]
             ].map(([label, value]) => (
               <Card key={String(label)}>
@@ -776,8 +905,30 @@ export default function FiscalAttests({
                     <tr key={r.registrationId}>
                       <td>{r.participantName}</td>
                       <td>
-                        {r.productName}
-                        <div className="text-xs text-textSubdued">{r.label}</div>
+                        {r.productEditUrl ? (
+                          <a className="hover:underline" href={r.productEditUrl} target="_blank" rel="noreferrer">
+                            {r.productName}
+                          </a>
+                        ) : (
+                          r.productName
+                        )}
+                        <div className="text-xs">
+                          {r.editableOptions.length > 0 ? (
+                            <a
+                              href="#"
+                              className="text-interactive hover:underline"
+                              title="Edit the dates of this week"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openPeriod(r);
+                              }}
+                            >
+                              {r.label}
+                            </a>
+                          ) : (
+                            <span className="text-textSubdued">{r.label}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap">
                         {r.period ? (
@@ -817,6 +968,7 @@ export default function FiscalAttests({
                             {i.message}
                           </div>
                         ))}
+                        <ExclusionCell registration={r} exclusionApi={exclusionApi} onSaved={load} />
                       </td>
                     </tr>
                   ))}
@@ -869,6 +1021,7 @@ export const query = `
     amountApi: url(routeId: "saveFiscalAttestAmount")
     payersApi: url(routeId: "saveFiscalAttestRegistrationPayers")
     payerRequestApi: url(routeId: "reviewFiscalAttestPayerRequest")
+    exclusionApi: url(routeId: "saveFiscalAttestExclusion")
     settingsUrl: url(routeId: "fiscalAttestSettings")
   }
 `;

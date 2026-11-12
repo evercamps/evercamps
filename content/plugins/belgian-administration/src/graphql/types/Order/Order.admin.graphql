@@ -1,0 +1,12 @@
+"""
+"Don't generate a fiscal attest" for an order.
+"""
+type FiscalAttestExclusion {
+  reason: String!
+  reasonLabel: String!
+  note: String
+}
+
+extend type Order {
+  fiscalAttestExclusion: FiscalAttestExclusion
+}

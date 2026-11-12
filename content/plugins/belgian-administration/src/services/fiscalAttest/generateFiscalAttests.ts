@@ -164,7 +164,8 @@ export async function generateFiscalAttests(year: number): Promise<{ created: nu
         },
         signatory: { name: settings.signatoryName, function: settings.signatoryFunction },
         child: attest.child,
-        payer: attest.payer,
+        // (editUrl is only for the admin preview; not part of the attest)
+        payer: { ...attest.payer, editUrl: undefined },
         periods: attest.periods,
         totalAmount: attest.totalAmount,
         totalDays: attest.totalDays,

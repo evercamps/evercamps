@@ -1,6 +1,7 @@
-import { pool } from '../../core.js';
+import { buildUrl, pool } from '../../core.js';
 import { fallbackYear, resolveCarePeriod, toDateString, type PeriodOption } from '../../lib/carePeriod.js';
 import type { CandidateRegistration, EditablePeriodOption, PayerShare } from './buildAttests.js';
+import { loadExclusions } from './exclusions.js';
 
 // Read-only: everything buildAttests needs for one income year
 // (core/.docs/fiscal-attests.md, Phase 3). Registrations of products that
@@ -35,7 +36,8 @@ export async function collectAttestCandidates(year: number): Promise<CollectedYe
     `SELECT r.registration_id, r.created_at, r.registration_product_id, r.product_variant_id,
             p.participant_id, p.first_name, p.last_name, p.birth_date, p.customer_id AS participant_customer_id,
             p.national_number, p.national_number_not_applicable,
-            pr.fiscal_attest_eligible, pd.name AS product_name, pv.title AS variant_title, pv.price AS variant_price
+            pr.fiscal_attest_eligible, pr.uuid AS product_uuid, pd.name AS product_name,
+            pv.title AS variant_title, pv.price AS variant_price
      FROM registration r
      JOIN participant p ON p.participant_id = r.registration_participant_id
      JOIN product pr ON pr.product_id = r.registration_product_id AND pr.manage_registrations
@@ -220,6 +222,7 @@ export async function collectAttestCandidates(year: number): Promise<CollectedYe
       nationalNumberNotApplicable: !!r.national_number_not_applicable,
       productId: r.registration_product_id,
       productName: r.product_name ?? '',
+      productEditUrl: r.product_uuid ? buildUrl('productEdit', { id: r.product_uuid }) : null,
       variantTitle: r.variant_title ?? null,
       suggestedPrice: r.variant_price === null || r.variant_price === undefined ? null : Number(r.variant_price),
       periodOptions: optionsByRegistration.get(r.registration_id) ?? [],
@@ -245,6 +248,37 @@ export async function collectAttestCandidates(year: number): Promise<CollectedYe
       defaultPayer
     };
   });
+
+  // Link payers with a customer account to their admin customer page.
+  const payerCustomerIds = [
+    ...new Set(
+      candidates
+        .flatMap((c) => [...c.payers, ...(c.defaultPayer ? [c.defaultPayer] : [])])
+        .map((p) => p.customerId)
+        .filter((id): id is number => !!id)
+    )
+  ];
+  if (payerCustomerIds.length > 0) {
+    const uuids = await query(`SELECT customer_id, uuid FROM customer WHERE customer_id = ANY($1)`, [
+      payerCustomerIds
+    ]);
+    const urlByCustomer = new Map(
+      uuids.map((u) => [u.customer_id, buildUrl('customerEdit', { id: u.uuid })])
+    );
+    for (const c of candidates) {
+      for (const payer of [...c.payers, ...(c.defaultPayer ? [c.defaultPayer] : [])]) {
+        payer.editUrl = payer.customerId ? urlByCustomer.get(payer.customerId) ?? null : null;
+      }
+    }
+  }
+
+  // Orders / registrations marked "don't generate a fiscal attest".
+  const exclusions = await loadExclusions(
+    candidates.map((c) => ({ registrationId: c.registrationId, orderId: c.order?.orderId ?? null }))
+  );
+  for (const c of candidates) {
+    c.excluded = exclusions.get(c.registrationId) ?? null;
+  }
 
   return { year, candidates, notEligible };
 }

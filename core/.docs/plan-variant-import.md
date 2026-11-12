@@ -437,3 +437,14 @@ Steps marked **(decision)** need an answer before you start them.
   - Only valid Belgian national numbers are imported. WooCommerce customers are fetched
     once per run.
 
+- [x] **"Don't generate a fiscal attest" per order** (plugin migration `Version-1.5.0`, table
+  `fiscal_attest_exclusion`).
+  - **What:** an order (all its registrations), or a registration without an order, can be
+    left out, with a reason (*Not Belgian* / *Organisation* / *Other*) and an optional note.
+  - **Where:** set it from the attests overview (per row: "Don't generate for this order" /
+    "Include again"; filter and count "Excluded"), or from the admin order page ("Fiscal
+    attest" card).
+  - **Effect:** `buildAttests` lists excluded registrations without checks and makes no
+    attest for them.
+  - **Code:** API `POST /api/fiscal-attests/exclusions`; admin GraphQL
+    `Order.fiscalAttestExclusion`.
