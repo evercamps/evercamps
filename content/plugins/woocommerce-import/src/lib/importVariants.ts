@@ -49,7 +49,9 @@ export async function resolveAttributeAndOption(
       .given({
         attribute_code: code,
         attribute_name: attributeName,
-        type: 'select',
+        // Camp weeks are periods (options with start/end dates); see core
+        // catalog migration Version-1.1.3 (type "period").
+        type: isSeasonAttribute(attributeName) ? 'period' : 'select',
         is_required: false,
         display_on_frontend: true
       })

@@ -4,6 +4,21 @@ export interface WooCommerceSettings {
   storeUrl: string;
   consumerKey: string;
   consumerSecret: string;
+  // meta key of the national-number custom field on WC customers; empty =
+  // auto-detect a key containing "rijksregister" or "national"
+  customerNationalNumberMetaKey: string;
+}
+
+export interface WooCommerceMeta {
+  id?: number;
+  key: string;
+  value: unknown;
+}
+
+export interface WooCommerceCustomer {
+  id: number;
+  email: string;
+  meta_data?: WooCommerceMeta[];
 }
 
 export interface WooCommerceProductImage {
@@ -158,6 +173,7 @@ export interface WooCommerceOrder {
   billing: WooCommerceOrderAddress;
   shipping: WooCommerceOrderAddress;
   line_items: WooCommerceOrderLineItem[];
+  meta_data?: WooCommerceMeta[];
 }
 
 export interface OrderAddressImportData {

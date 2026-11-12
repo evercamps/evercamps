@@ -404,3 +404,36 @@ Steps marked **(decision)** need an answer before you start them.
     different year, and who applies the daily-rate ceiling.
     → fiscal-attests, *Open questions*
 44. [ ] Generate, send to parents, upload to Belcotax (before 1 March).
+
+## Extra changes (after Stage 8)
+
+- [x] **Admin product page:** the old "Variant" card (legacy `variant_group`,
+  `productEdit/VariantGroup.tsx`) is removed, and so is the "Can not change the attribute
+  group… variant group" text in the Attributes card. The new Variants card shows the
+  product's **attribute group** and its variant attributes at the top (admin GraphQL
+  `Product.variantAttributeGroup`).
+  - The storefront still has the legacy variant-group picker (`productView/Variants.tsx`);
+    it renders nothing without a legacy variant group.
+- [x] **Attribute type "period"** (core catalog migration `Version-1.1.3`): a select whose
+  options are periods with start/end dates (and optional days).
+  - `select` / `multiselect` are normal choices again; the date fields only show, and are
+    only saved, for `period`.
+  - Treated like `select` everywhere else: product attribute values, variant options,
+    storefront filters.
+  - `kampweek` / `pa_kampweek` are converted to `period`; the WooCommerce import creates
+    them as `period`.
+  - New options of a period attribute require both dates. Existing options without dates
+    stay allowed, and the attests page flags them.
+- [x] **Variant on/off** (`product_variant.status`, same migration).
+  - Admin Variants card: an "Enabled" checkbox and a "disabled" badge.
+  - Disabled variants are left out of `bookableVariants` (shop picker). A cart item on a
+    disabled variant gets an error, so checkout is blocked.
+  - Registrations and attests on a disabled variant are unaffected.
+- [x] **WooCommerce customer national number.** The order import reads the custom field
+  from the order's or the WooCommerce customer's `meta_data` and fills
+  `customer.national_number` when it's still empty.
+  - The meta key is a setting ("Customer data" on the WooCommerce settings page); left
+    empty, the first key containing "rijksregister" or "national" is used.
+  - Only valid Belgian national numbers are imported. WooCommerce customers are fetched
+    once per run.
+

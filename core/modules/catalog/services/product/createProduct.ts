@@ -127,7 +127,7 @@ async function insertProductAttributes(attributes: ProductAttributeData[], produ
             })()
           )
         );
-      } else if (attr.type === 'select') {
+      } else if (attr.type === 'select' || attr.type === 'period') {
         const option = await select()
           .from('attribute_option')
           .where('attribute_option_id', '=', parseInt(attribute.value, 10))

@@ -75,7 +75,7 @@ export const getFilterableAttributes = async (
       'IN',
       allIds
     )
-    .and('type', '=', 'select')
+    .and('type', 'IN', ['select', 'period'])
     .and('is_filterable', '=', 1);
 
   const attributeData =

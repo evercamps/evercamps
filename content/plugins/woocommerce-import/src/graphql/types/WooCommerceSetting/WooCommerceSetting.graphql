@@ -1,4 +1,5 @@
 extend type Setting {
   wooCommerceStoreUrl: String
   wooCommerceConsumerKey: String
+  wooCommerceCustomerNationalNumberMetaKey: String
 }

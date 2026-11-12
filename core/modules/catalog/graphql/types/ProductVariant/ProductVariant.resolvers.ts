@@ -28,6 +28,7 @@ export default {
         'product_variant.price',
         'product_variant.title',
         'product_variant.is_default',
+        'product_variant.status',
         'inventory_item.total_seats'
       ).from('product_variant');
       query
@@ -64,7 +65,10 @@ export default {
       query
         .leftJoin('inventory_item')
         .on('inventory_item.variant_id', '=', 'product_variant.product_variant_id');
-      query.where('product_variant.product_id', '=', product.productId);
+      // Disabled variants aren't bookable.
+      query
+        .where('product_variant.product_id', '=', product.productId)
+        .and('product_variant.status', '=', true);
       const variants = await query.execute(pool);
       if (variants.length === 0) {
         return [];

@@ -30,7 +30,17 @@ extend type ProductVariant {
   deleteApi: String!
 }
 
+"""
+The product's attribute group (decides which attributes the product and its
+variants have, e.g. kampweek).
+"""
+type ProductVariantAttributeGroup {
+  groupId: Int!
+  groupName: String!
+}
+
 extend type Product {
   createVariantApi: String!
   variantAttributes: [ProductVariantAttribute!]!
+  variantAttributeGroup: ProductVariantAttributeGroup
 }

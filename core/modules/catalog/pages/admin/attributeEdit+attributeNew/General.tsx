@@ -20,6 +20,8 @@ interface AttributeOption {
   startDate?: string | null;
   endDate?: string | null;
   dayCount?: number | null;
+  // added in this form, not saved yet (dates are required for those)
+  isNew?: boolean;
 }
 
 interface Attribute {
@@ -40,6 +42,8 @@ interface GroupsProps {
 
 interface OptionsProps {
   originOptions?: AttributeOption[];
+  // "period" attribute: options have a start/end date
+  isPeriod?: boolean;
 }
 
 interface GeneralProps {
@@ -143,7 +147,7 @@ function Groups({ groups, createGroupApi }: GroupsProps) {
   );
 }
 
-function Options({ originOptions = [] }: OptionsProps) {
+function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
   const [options, setOptions] = React.useState<AttributeOption[]>(originOptions);
 
   const addOption = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -154,7 +158,8 @@ function Options({ originOptions = [] }: OptionsProps) {
       {
         optionId: Math.floor(Math.random() * (9000000 - 1000000)) + 1000000,
         uuid: Math.floor(Math.random() * (9000000 - 1000000)) + 1000000,
-        optionText: ''
+        optionText: '',
+        isNew: true
       }
     ]);
   };
@@ -170,7 +175,7 @@ function Options({ originOptions = [] }: OptionsProps) {
 
   return (
     <div className="attribute-edit-options">
-      {options.length > 0 && (
+      {options.length > 0 && isPeriod && (
         <div className="flex mb-2 space-x-8 text-textSubdued">
           <div className="w-1/3">Option</div>
           <div className="w-1/5">Start date</div>
@@ -195,33 +200,41 @@ function Options({ originOptions = [] }: OptionsProps) {
             />
           </div>
 
-          {/* Optional care period (e.g. a camp week). Used for display and
-              the fiscal attests; leave empty for options that aren't periods. */}
-          <div className="w-1/5">
-            <Field
-              type="date"
-              name={`options[${index}][start_date]`}
-              value={option.startDate ?? ''}
-              placeholder="YYYY-MM-DD"
-            />
-          </div>
-          <div className="w-1/5">
-            <Field
-              type="date"
-              name={`options[${index}][end_date]`}
-              value={option.endDate ?? ''}
-              placeholder="YYYY-MM-DD"
-            />
-          </div>
-          <div className="w-1/12">
-            <Field
-              type="text"
-              name={`options[${index}][day_count]`}
-              value={option.dayCount ?? ''}
-              validationRules={['number']}
-              placeholder="Auto"
-            />
-          </div>
+          {/* Period attributes (e.g. camp weeks): each option is a period
+              with a start and end date, used for display, the shop and the
+              fiscal attests. Required for new options; existing options
+              without dates (e.g. older imported seasons) stay allowed. */}
+          {isPeriod && (
+            <>
+              <div className="w-1/5">
+                <Field
+                  type="date"
+                  name={`options[${index}][start_date]`}
+                  value={option.startDate ?? ''}
+                  placeholder="YYYY-MM-DD"
+                  validationRules={option.isNew ? ['notEmpty'] : []}
+                />
+              </div>
+              <div className="w-1/5">
+                <Field
+                  type="date"
+                  name={`options[${index}][end_date]`}
+                  value={option.endDate ?? ''}
+                  placeholder="YYYY-MM-DD"
+                  validationRules={option.isNew ? ['notEmpty'] : []}
+                />
+              </div>
+              <div className="w-1/12">
+                <Field
+                  type="text"
+                  name={`options[${index}][day_count]`}
+                  value={option.dayCount ?? ''}
+                  validationRules={['number']}
+                  placeholder="Auto"
+                />
+              </div>
+            </>
+          )}
 
           <div className="self-center">
             <a
@@ -298,6 +311,7 @@ export default function General({
         options: [
           { value: 'text', text: 'Text' },
           { value: 'select', text: 'Select' },
+          { value: 'period', text: 'Period (options with start and end date)' },
           { value: 'multiselect', text: 'Multiselect' },
           { value: 'textarea', text: 'Textarea' }
         ],
@@ -324,9 +338,12 @@ export default function General({
         <Area id="attributeEditGeneral" coreComponents={fields} />
       </Card.Session>
 
-      {['select', 'multiselect'].includes(type ?? '') && (
-        <Card.Session title="Attribute options">
-          <Options originOptions={get(attribute, 'options', [])} />
+      {['select', 'multiselect', 'period'].includes(type ?? '') && (
+        <Card.Session title={type === 'period' ? 'Periods' : 'Attribute options'}>
+          <Options
+            originOptions={get(attribute, 'options', [])}
+            isPeriod={type === 'period'}
+          />
         </Card.Session>
       )}
 

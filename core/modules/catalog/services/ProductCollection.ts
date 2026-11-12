@@ -99,7 +99,7 @@ export class ProductCollection {
     const filterableAttributes =
       (await select()
         .from('attribute')
-        .where('type', '=', 'select')
+        .where('type', 'IN', ['select', 'period'])
         .and('is_filterable', '=', 1)
         .execute(pool)) as Attribute[];
 

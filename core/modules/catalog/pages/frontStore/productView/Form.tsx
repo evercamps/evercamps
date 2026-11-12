@@ -123,10 +123,6 @@ function AddToCart({ stockAvailability, loading = false, error, onAddToCartClick
   );
 }
 
-interface VariantAttribute {
-  attributeCode: string;
-}
-
 interface BookableVariant {
   productVariantId: number;
   label: string;
@@ -145,9 +141,6 @@ interface Product {
     isInStock: boolean;
   };
   manageRegistrations: number;
-  variantGroup?: {
-    variantAttributes?: VariantAttribute[];
-  };
   bookableVariants?: BookableVariant[];
 }
 
@@ -298,20 +291,6 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
   };
 
   const handleAddToCartClick = () => {
-    const { variantGroup } = product;
-
-    if (variantGroup && variantGroup.variantAttributes && variantGroup.variantAttributes.length > 0) {
-      const urlParams = new URLSearchParams(window.location.search);
-
-      const missingAttribute = variantGroup.variantAttributes.some(
-        (attr) => !urlParams.has(attr.attributeCode)
-      );
-
-      if (missingAttribute) {
-        setError(_('Please select variant options'));
-        return;
-      }
-    }
     if (showPicker && !selectedVariantId) {
       setError(_('Please choose a week'));
       return;
@@ -425,11 +404,6 @@ export const query = `
         isInStock
       }
       manageRegistrations
-      variantGroup {
-        variantAttributes {
-          attributeCode
-        }
-      }
       bookableVariants {
         productVariantId
         label

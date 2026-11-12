@@ -34,6 +34,7 @@ import crypto from 'node:crypto';
 import { ensureSeasonVariant, isUnseasonedTwin } from './importVariants.js';
 import { campKey, parseCampProductName, seasonForDate } from './season.js';
 import { findCampProduct } from './campProducts.js';
+import { createCustomerNationalNumberImporter, isValidNationalNumber } from './customerNationalNumber.js';
 
 interface ImportedParticipant {
   firstName: string;
@@ -359,6 +360,8 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
   );
 
   const client = createWooCommerceClient(settings);
+  // Customer national number from the WC customer's custom field (meta_data).
+  const importCustomerNationalNumber = createCustomerNationalNumberImporter(client, settings);
   const batchId = await startBatch('orders');
 
   let totalFetched = 0;
@@ -386,6 +389,7 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
               mapped.customer_first_name,
               mapped.customer_last_name
             );
+            await importCustomerNationalNumber(wcOrder, customerId);
 
             await startTransaction(connection);
 
@@ -470,8 +474,9 @@ export async function runOrderImport(): Promise<ImportBatchSummary> {
             resolvedItems.push({ item, productId, productVariantId });
           }
 
-          const customerId = await findOrCreateCustomer(mapped.customer_email, 
+          const customerId = await findOrCreateCustomer(mapped.customer_email,
             mapped.customer_first_name, mapped.customer_last_name);
+          await importCustomerNationalNumber(wcOrder, customerId);
 
           await startTransaction(connection);
 
@@ -563,16 +568,22 @@ function extractParticipants(
         );
       }
 
-      // Label may carry a suffix like "(fiscaal attest)"; take the digits,
-      // dots, dashes and slashes after the colon. "/" means not filled in.
-      const payerNationalNumberMatch = value.match(
-        /Rijksregisternummer ouder[^:]*:\s*([0-9.\-/ ]+)/
-      );
+      // The parent's (payer's) national number, ticket field
+      // "Rijksregisternummer ouder (fiscaal attest)" (hard-coded: this import
+      // is specific to this WooCommerce shop). Take the digits, dots, dashes
+      // and slashes after the colon; "/" means not filled in. Only a valid
+      // Belgian national number is kept.
+      const payerNationalNumberMatch =
+        value.match(/Rijksregisternummer ouder \(fiscaal attest\):\s*([0-9.\-/ ]+)/) ??
+        value.match(/Rijksregisternummer ouder[^:]*:\s*([0-9.\-/ ]+)/);
 
       const rawBirthDate = birthDateMatch?.[1]?.trim();
       const rawNationalNumber = nationalNumberMatch?.[1]?.trim();
       const payerDigits = (payerNationalNumberMatch?.[1] ?? '').replace(/\D/g, '');
-      const payerNationalNumber = payerDigits.length > 0 ? payerDigits : null;
+      const payerNationalNumber = isValidNationalNumber(payerDigits) ? payerDigits : null;
+      if (payerDigits && !payerNationalNumber) {
+        debug(`Ignoring invalid parent national number on a ticket: ${payerDigits}`);
+      }
 
       const birthDate =
         rawBirthDate && rawBirthDate !== '/'
@@ -833,11 +844,24 @@ async function linkRegistrationToOrderItem(
   customerId: number | null,
   connection: PoolClient
 ): Promise<void> {
+  const hasPayerColumn = await columnExists(connection, 'order_item_registration', 'payer_national_number');
   const existing = await select('order_item_registration_id')
     .from('order_item_registration')
     .where('registration_id', '=', registrationId)
     .load(connection, false);
   if (existing) {
+    // Already linked (earlier run): fill in the parent's national number when missing.
+    if (hasPayerColumn && participant.payerNationalNumber) {
+      await connection.query(
+        `UPDATE order_item_registration
+         SET payer_national_number = $1,
+             extra_data = COALESCE(extra_data::jsonb, '{}'::jsonb) || jsonb_build_object('payer_national_number', $1::text)
+         WHERE order_item_registration_id = $2
+           AND (payer_national_number IS NULL OR payer_national_number = '')`,
+        [participant.payerNationalNumber, existing.order_item_registration_id]
+      );
+    }
+    await savePayerOnCustomer(connection, customerId, participant.payerNationalNumber);
     return;
   }
 
@@ -859,9 +883,49 @@ async function linkRegistrationToOrderItem(
       first_name: participant.firstName,
       last_name: participant.lastName,
       customer_id: customerId,
-      extra_data: Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null
+      extra_data: Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null,
+      // Column from the belgian-administration plugin; ignored by the query
+      // builder when it doesn't exist.
+      ...(hasPayerColumn && participant.payerNationalNumber
+        ? { payer_national_number: participant.payerNationalNumber }
+        : {})
     })
     .execute(connection, false);
+  await savePayerOnCustomer(connection, customerId, participant.payerNationalNumber);
+}
+
+const columnCache = new Map<string, boolean>();
+async function columnExists(connection: PoolClient, table: string, column: string): Promise<boolean> {
+  const key = `${table}.${column}`;
+  if (!columnCache.has(key)) {
+    const result = await connection.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`,
+      [table, column]
+    );
+    columnCache.set(key, result.rows.length > 0);
+  }
+  return columnCache.get(key)!;
+}
+
+// The order customer is the parent who filled in the ticket: their national
+// number (customer.national_number, belgian-administration plugin) is filled
+// when still empty - a number entered in EverCamps is never overwritten.
+async function savePayerOnCustomer(
+  connection: PoolClient,
+  customerId: number | null,
+  payerNationalNumber: string | null
+): Promise<void> {
+  if (!customerId || !payerNationalNumber) {
+    return;
+  }
+  if (!(await columnExists(connection, 'customer', 'national_number'))) {
+    return;
+  }
+  await connection.query(
+    `UPDATE customer SET national_number = $1
+     WHERE customer_id = $2 AND (national_number IS NULL OR national_number = '')`,
+    [payerNationalNumber, customerId]
+  );
 }
 
 // For an order imported earlier: find the local order_item of each WC line

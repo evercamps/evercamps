@@ -12,6 +12,8 @@ const findValue = (setting: SettingRow[], name: string): string | null =>
 export default {
   Setting: {
     wooCommerceStoreUrl: (setting: SettingRow[]) => findValue(setting, 'wooCommerceStoreUrl'),
-    wooCommerceConsumerKey: (setting: SettingRow[]) => findValue(setting, 'wooCommerceConsumerKey')
+    wooCommerceConsumerKey: (setting: SettingRow[]) => findValue(setting, 'wooCommerceConsumerKey'),
+    wooCommerceCustomerNationalNumberMetaKey: (setting: SettingRow[]) =>
+      findValue(setting, 'wooCommerceCustomerNationalNumberMetaKey')
   }
 };
