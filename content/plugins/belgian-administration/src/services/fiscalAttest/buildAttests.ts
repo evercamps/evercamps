@@ -72,6 +72,7 @@ export interface Issue {
     | 'invalid_dates'
     | 'no_birth_date'
     | 'too_old'
+    | 'turns_14_during'
     | 'no_amount'
     | 'amount_not_positive'
     | 'shares_not_100'
@@ -155,7 +156,7 @@ export function cents(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function payerKey(payer: PayerShare): string {
+export function payerKey(payer: PayerShare): string {
   return payer.customerId
     ? `c${payer.customerId}`
     : `n${(payer.nationalNumber ?? '').replace(/\D/g, '') || payer.fullName.trim().toLowerCase()}`;
@@ -245,8 +246,21 @@ export function buildAttests(
       issue('blocking', 'no_birth_date', 'No date of birth');
     } else if (period) {
       const age = ageOn(c.birthDate, period.startDate);
+      const ageAtEnd = ageOn(c.birthDate, period.endDate);
       if (age !== null && age >= maxAge) {
         issue('blocking', 'too_old', `${age} years old on the first care day (must be under ${maxAge})`);
+      } else if (ageAtEnd !== null && ageAtEnd >= maxAge) {
+        // Only the days before the birthday count: blocking until the admin
+        // enters the amount for those days by hand.
+        if (c.overrideAmount === null) {
+          issue(
+            'blocking',
+            'turns_14_during',
+            `Turns ${maxAge} during the camp; only the days before the birthday count. Enter that amount by hand`
+          );
+        } else {
+          issue('warning', 'turns_14_during', `Turns ${maxAge} during the camp; manual amount used`);
+        }
       }
     }
 

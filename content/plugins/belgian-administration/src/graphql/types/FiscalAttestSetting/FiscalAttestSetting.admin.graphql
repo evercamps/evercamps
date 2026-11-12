@@ -27,6 +27,10 @@ type FiscalAttestSettings {
   authorityType: String!
   authorityName: String
   authorityReference: String
+  authorityCompanyNumber: String
+  authorityAddress: String
+  authorityPostcode: String
+  authorityCity: String
   signatoryName: String
   signatoryFunction: String
   senderContactName: String
@@ -38,4 +42,22 @@ type FiscalAttestSettings {
 
 extend type Query {
   fiscalAttestSettings: FiscalAttestSettings!
+}
+
+"""
+Admin API URLs of the fiscal attest Belcotax / PDF / corrections section.
+The batch URLs contain a placeholder uuid that the page replaces.
+"""
+type FiscalAttestBelcotaxApis {
+  overviewApi: String!
+  exportApi: String!
+  discardApi: String!
+  correctionsApi: String!
+  pdfApi: String!
+  batchXmlApi: String!
+  batchStatusApi: String!
+}
+
+extend type Query {
+  fiscalAttestBelcotaxApis: FiscalAttestBelcotaxApis!
 }

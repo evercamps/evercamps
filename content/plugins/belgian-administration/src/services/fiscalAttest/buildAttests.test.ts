@@ -148,6 +148,19 @@ describe('buildAttests', () => {
     assert.equal(tooOld.attests.length, 0);
   });
 
+  it('blocks a child turning 14 during the camp until the amount is entered by hand', () => {
+    const turns = buildAttests(2026, [candidate({ birthDate: '2012-07-08' })], { maxDailyRate: null });
+    assert.ok(codes(turns.issues).includes('turns_14_during'));
+    assert.equal(turns.issues.find((i) => i.code === 'turns_14_during')?.severity, 'blocking');
+    assert.equal(turns.attests.length, 0);
+
+    const fixed = buildAttests(2026, [candidate({ birthDate: '2012-07-08', overrideAmount: 60 })], {
+      maxDailyRate: null
+    });
+    assert.equal(fixed.issues.find((i) => i.code === 'turns_14_during')?.severity, 'warning');
+    assert.equal(fixed.attests[0].totalAmount, 60);
+  });
+
   it('leaves out unpaid orders without a manual amount', () => {
     const result = buildAttests(
       2026,

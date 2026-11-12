@@ -1,4 +1,5 @@
 import { buildUrl } from '../../../core.js';
+import { listCustomerAttests } from '../../../services/fiscalAttest/customerAttests.js';
 import { listChildYearSplits } from '../../../services/fiscalAttest/payers.js';
 
 interface CustomerRow {
@@ -26,6 +27,8 @@ export default {
       isOwnerOrAdmin(customer, context) && customer.customerId
         ? listChildYearSplits(customer.customerId)
         : [],
-    saveFiscalAttestPayersApi: () => buildUrl('saveFiscalAttestPayers')
+    saveFiscalAttestPayersApi: () => buildUrl('saveFiscalAttestPayers'),
+    fiscalAttests: (customer: CustomerRow, _: unknown, context: Context) =>
+      isOwnerOrAdmin(customer, context) && customer.customerId ? listCustomerAttests(customer.customerId) : []
   }
 };

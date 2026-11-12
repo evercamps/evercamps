@@ -3,6 +3,7 @@ import { getConnection, pool } from '../../core.js';
 import { isValidNationalNumber } from '../../lib/nationalNumber.js';
 import { buildAttests, type BuildResult, type PayerShare } from './buildAttests.js';
 import { collectAttestCandidates } from './collectAttestCandidates.js';
+import { chunkAttest, toFicheData } from './fiches.js';
 import { getFiscalAttestSettings, type FiscalAttestSettings } from './settings.js';
 
 // Preview / generate the fiscal attests of an income year, and the admin
@@ -39,6 +40,10 @@ function missingSettings(settings: FiscalAttestSettings): string[] {
   if (!settings.legalName) missing.push('legal name');
   if (!settings.address || !settings.postcode || !settings.city) missing.push('organiser address');
   if (!settings.authorityName) missing.push('recognising body');
+  if (!settings.authorityCompanyNumber) missing.push('company number of the recognising body');
+  if (!settings.authorityAddress || !settings.authorityPostcode || !settings.authorityCity) {
+    missing.push('address of the recognising body');
+  }
   if (!settings.signatoryName) missing.push('signatory');
   return missing;
 }
@@ -145,47 +150,28 @@ export async function generateFiscalAttests(year: number): Promise<{ created: nu
       [year]
     );
     let sequence = rows[0].max;
-    for (const attest of preview.attests) {
+    let created = 0;
+    // One fiche per 4 periods; each gets its own volgnummer.
+    for (const chunk of preview.attests.flatMap(chunkAttest)) {
       sequence += 1;
-      const data = {
-        incomeYear: year,
-        sequenceNumber: sequence,
-        organiser: {
-          companyNumber: settings.companyNumber,
-          legalName: settings.legalName,
-          address: settings.address,
-          postcode: settings.postcode,
-          city: settings.city
-        },
-        authority: {
-          type: settings.authorityType,
-          name: settings.authorityName,
-          reference: settings.authorityReference
-        },
-        signatory: { name: settings.signatoryName, function: settings.signatoryFunction },
-        child: attest.child,
-        // (editUrl is only for the admin preview; not part of the attest)
-        payer: { ...attest.payer, editUrl: undefined },
-        periods: attest.periods,
-        totalAmount: attest.totalAmount,
-        totalDays: attest.totalDays,
-        generatedAt: new Date().toISOString()
-      };
+      const data = toFicheData(chunk, settings, sequence, 'original');
       await insert('fiscal_attest')
         .given({
           income_year: year,
           sequence_number: sequence,
-          participant_id: attest.child.participantId,
-          customer_id: attest.payer.customerId,
+          participant_id: chunk.child.participantId,
+          customer_id: chunk.payer.customerId,
           status: 'final',
+          change_type: 'original',
           data: JSON.stringify(data),
-          total_amount: attest.totalAmount,
-          total_days: attest.totalDays
+          total_amount: data.totalAmount,
+          total_days: data.totalDays
         })
         .execute(connection, false);
+      created += 1;
     }
     await commit(connection);
-    return { created: preview.attests.length };
+    return { created };
   } catch (e) {
     await rollback(connection);
     throw e;

@@ -3,11 +3,13 @@ import { useAlertContext } from '@components/modal/Alert';
 import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { toast } from 'react-toastify';
+import { FiscalAttestBelcotax, type BelcotaxApis } from '../../../components/admin/FiscalAttestBelcotax.js';
 
 // Admin "Fiscal attests" page (core/.docs/fiscal-attests.md, Phase 7):
 // pick an income year, see what would be generated and why registrations are
 // blocked, fix amounts and payer splits inline, handle customer split
-// requests, then generate the year's attests.
+// requests, then generate the year's attests. Below: the generated fiches,
+// PDFs, Belcotax batches and corrections (FiscalAttestBelcotax).
 
 interface Address {
   street?: string;
@@ -101,6 +103,7 @@ interface Props {
   payerRequestApi: string;
   exclusionApi: string;
   settingsUrl: string;
+  belcotax: BelcotaxApis;
 }
 
 const FILTERS: { value: string; label: string; test: (r: RegistrationPreview) => boolean }[] = [
@@ -114,7 +117,7 @@ const FILTERS: { value: string; label: string; test: (r: RegistrationPreview) =>
     label: 'National number missing',
     test: (r) => r.issues.some((i) => /national_number/.test(i.code))
   },
-  { value: 'age', label: 'Age / birth date', test: (r) => r.issues.some((i) => /too_old|no_birth_date/.test(i.code)) },
+  { value: 'age', label: 'Age / birth date', test: (r) => r.issues.some((i) => /too_old|turns_14_during|no_birth_date/.test(i.code)) },
   {
     value: 'ok',
     label: 'Ready',
@@ -630,8 +633,11 @@ export default function FiscalAttests({
   payersApi,
   payerRequestApi,
   exclusionApi,
-  settingsUrl
+  settingsUrl,
+  belcotax
 }: Props) {
+  // bumped after every preview load, so the Belcotax section reloads too
+  const [version, setVersion] = React.useState(0);
   const thisYear = new Date().getFullYear();
   const [year, setYear] = React.useState<number>(() => {
     if (typeof window === 'undefined') return thisYear;
@@ -671,8 +677,15 @@ export default function FiscalAttests({
       toast.error((e as Error).message);
     } finally {
       setLoading(false);
+      setVersion((v) => v + 1);
     }
   }, [previewApi, year]);
+
+  React.useEffect(() => {
+    const reload = () => load();
+    window.addEventListener('fiscal-attests:changed', reload);
+    return () => window.removeEventListener('fiscal-attests:changed', reload);
+  }, [load]);
 
   React.useEffect(() => {
     load();
@@ -792,8 +805,8 @@ export default function FiscalAttests({
           )}
           {preview.existingFinalCount > 0 && (
             <div className="border border-divider rounded p-4 mb-6">
-              The attests for {year} were generated ({preview.existingFinalCount}). Changes from now
-              on need corrections (PDFs, Belcotax and corrections follow in the next stage).
+              The attests for {year} were generated ({preview.existingFinalCount} fiches). PDFs, the
+              Belcotax export and corrections are below.
             </div>
           )}
           {preview.maxDailyRate === null && (
@@ -986,6 +999,8 @@ export default function FiscalAttests({
         </>
       )}
 
+      <FiscalAttestBelcotax year={year} apis={belcotax} version={version} />
+
       {periodModal.state.showing && editingPeriod && (
         <div className={periodModal.className} onAnimationEnd={periodModal.onAnimationEnd}>
           <div
@@ -1023,5 +1038,14 @@ export const query = `
     payerRequestApi: url(routeId: "reviewFiscalAttestPayerRequest")
     exclusionApi: url(routeId: "saveFiscalAttestExclusion")
     settingsUrl: url(routeId: "fiscalAttestSettings")
+    belcotax: fiscalAttestBelcotaxApis {
+      overviewApi
+      exportApi
+      discardApi
+      correctionsApi
+      pdfApi
+      batchXmlApi
+      batchStatusApi
+    }
   }
 `;

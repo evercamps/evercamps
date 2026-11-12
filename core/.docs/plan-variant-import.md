@@ -391,12 +391,30 @@ Steps marked **(decision)** need an answer before you start them.
 
 ## Stage 9: Output & Belcotax
 
-38. [ ] PDF per attest (`pdfkit`); downloads in the customer account and admin; bulk email.
+38. [x] PDF per attest (`pdfkit`, `services/fiscalAttest/pdf.ts`), one A4 page per fiche.
+    - Admin: per fiche and all current fiches of a year (`GET /api/fiscal-attests/pdf`).
+    - Customer account block `pages/frontStore/account/FiscalAttests.tsx` (GraphQL
+      `Customer.fiscalAttests`, only fiches already exported to Belcotax) with an
+      ownership-checked download (`GET /api/my-fiscal-attests/:uuid/pdf`).
+    - Bulk email: **not done** (there is no mailer in the app yet).
     → fiscal-attests, Phase 4
-39. [ ] Belcotax XML per income year + XSD validation; batches + status tracking.
+39. [x] Belcotax XML (`services/fiscalAttest/belcotax/xml.ts`, unit-tested) + batches.
+    - Fiches: max 4 periods per fiche (`fiches.ts`, `chunkAttest`), each with its own
+      volgnummer; `data.key` / `change_type` (plugin migration `Version-1.6.0`).
+    - Export: test file (`BELCOTST`, changes nothing) or production (creates a
+      `fiscal_attest_batch`, links the fiches). XML download again per batch; status
+      exported/submitted/accepted/rejected + Belcotax reference. Rejected releases the fiches.
+    - "Discard" removes everything not exported yet (and restores replaced fiches).
+    - No XSD validation in the app: check the first file with the Belcotax test environment
+      (step 40). Settings got the recognising body's company number and address (fiche zones).
+    - Generation also blocks a child that turns 14 during the camp, until the amount for the
+      days before the birthday is entered by hand.
     → fiscal-attests, Phase 5
 40. [ ] Test upload in the Belcotax-on-web **test environment**.
-41. [ ] Corrections & cancellations (incl. approving customer split requests).
+41. [x] Corrections & cancellations (`services/fiscalAttest/corrections.ts`): compares the
+    current build with the current fiches by key; modifications (same volgnummer), additions
+    (next volgnummer), cancellations. Exported as the next batch (`v0025 = 1`). Approved
+    customer split requests show up here as changes.
     → fiscal-attests, Phase 6
 42. [ ] (Optional) Reminder cron from 1 January.
     → fiscal-attests, Phase 8

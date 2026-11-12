@@ -11,5 +11,11 @@
     "compile": "swc src -d dist --config-file ../../../.swcrc --copy-files --strip-leading-paths",
     "typecheck": "tsc --noEmit",
     "test": "node --test dist/"
+  },
+  "dependencies": {
+    "pdfkit": "^0.15.2"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.13.9"
   }
 }

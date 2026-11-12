@@ -56,3 +56,22 @@ extend type Customer {
   fiscalAttestSplits: [FiscalAttestChildYear!]!
   saveFiscalAttestPayersApi: String!
 }
+
+"""
+A fiscal attest (281.86) the customer can download.
+"""
+type CustomerFiscalAttest {
+  uuid: String!
+  incomeYear: Int!
+  sequenceNumber: Int!
+  childName: String!
+  totalAmount: Float!
+  downloadUrl: String!
+}
+
+extend type Customer {
+  """
+  The customer's uploaded fiscal attests (only for the customer themself or an admin).
+  """
+  fiscalAttests: [CustomerFiscalAttest!]!
+}

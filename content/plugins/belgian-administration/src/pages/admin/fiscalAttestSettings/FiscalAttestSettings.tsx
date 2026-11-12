@@ -25,6 +25,10 @@ interface FiscalAttestSettingsData {
   authorityType: string;
   authorityName?: string | null;
   authorityReference?: string | null;
+  authorityCompanyNumber?: string | null;
+  authorityAddress?: string | null;
+  authorityPostcode?: string | null;
+  authorityCity?: string | null;
   signatoryName?: string | null;
   signatoryFunction?: string | null;
   senderContactName?: string | null;
@@ -46,6 +50,7 @@ function dataFilter(data: any) {
   return {
     ...data,
     fiscalAttestCompanyNumber: normalizeCompanyNumber(data.fiscalAttestCompanyNumber),
+    fiscalAttestAuthorityCompanyNumber: normalizeCompanyNumber(data.fiscalAttestAuthorityCompanyNumber),
     fiscalAttestMaxDailyRates: (data.fiscalAttestMaxDailyRates || [])
       .filter((row: any) => row && row.year !== '' && row.amount !== '')
       .map((row: any) => ({ year: parseInt(row.year, 10), amount: parseFloat(row.amount) }))
@@ -182,6 +187,30 @@ export default function FiscalAttestSettings({ saveSettingApi, fiscalAttestSetti
                   label="Recognition reference (optional)"
                   value={s.authorityReference ?? ''}
                 />
+                <Field
+                  type="text"
+                  name="fiscalAttestAuthorityCompanyNumber"
+                  label="Company number (KBO) of the recognising body"
+                  placeholder="0207.xxx.xxx"
+                  value={s.authorityCompanyNumber ?? ''}
+                  validationRules={['companyNumber']}
+                  instruction="E.g. the municipality's company number. Needed on the Belcotax fiche."
+                />
+                <Field
+                  type="text"
+                  name="fiscalAttestAuthorityAddress"
+                  label="Address of the recognising body"
+                  value={s.authorityAddress ?? ''}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Field
+                    type="text"
+                    name="fiscalAttestAuthorityPostcode"
+                    label="Postcode"
+                    value={s.authorityPostcode ?? ''}
+                  />
+                  <Field type="text" name="fiscalAttestAuthorityCity" label="City" value={s.authorityCity ?? ''} />
+                </div>
               </Card.Session>
 
               <Card.Session title="Signatory (printed on the attest)">
@@ -253,6 +282,10 @@ export const query = `
       authorityType
       authorityName
       authorityReference
+      authorityCompanyNumber
+      authorityAddress
+      authorityPostcode
+      authorityCity
       signatoryName
       signatoryFunction
       senderContactName

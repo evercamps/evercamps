@@ -24,3 +24,10 @@ export function isValidNationalNumber(raw: unknown): boolean {
 export function isTruthyFlag(value: unknown): boolean {
   return value === true || value === 1 || value === '1';
 }
+
+/** 85073003328 -> 85.07.30-033.28 (anything else is returned unchanged) */
+export function formatNationalNumber(raw: unknown): string {
+  const d = String(raw ?? '').replace(/\D/g, '');
+  if (d.length !== 11) return String(raw ?? '');
+  return `${d.slice(0, 2)}.${d.slice(2, 4)}.${d.slice(4, 6)}-${d.slice(6, 9)}.${d.slice(9)}`;
+}

@@ -27,6 +27,11 @@ export interface FiscalAttestSettings {
   authorityType: AuthorityType;
   authorityName: string;
   authorityReference: string;
+  // the recognising body itself (fiche zones 2109 / 2155 / 2156 / 2100 / 2154)
+  authorityCompanyNumber: string;
+  authorityAddress: string;
+  authorityPostcode: string;
+  authorityCity: string;
   signatoryName: string;
   signatoryFunction: string;
   senderContactName: string;
@@ -45,6 +50,10 @@ export const SETTING_NAMES = {
   authorityType: 'fiscalAttestAuthorityType',
   authorityName: 'fiscalAttestAuthorityName',
   authorityReference: 'fiscalAttestAuthorityReference',
+  authorityCompanyNumber: 'fiscalAttestAuthorityCompanyNumber',
+  authorityAddress: 'fiscalAttestAuthorityAddress',
+  authorityPostcode: 'fiscalAttestAuthorityPostcode',
+  authorityCity: 'fiscalAttestAuthorityCity',
   signatoryName: 'fiscalAttestSignatoryName',
   signatoryFunction: 'fiscalAttestSignatoryFunction',
   senderContactName: 'fiscalAttestSenderContactName',
@@ -91,6 +100,10 @@ export async function getFiscalAttestSettings(): Promise<FiscalAttestSettings> {
     authorityType: (authorityType in AUTHORITY_TYPES ? authorityType : 'municipality') as AuthorityType,
     authorityName: await text(SETTING_NAMES.authorityName),
     authorityReference: await text(SETTING_NAMES.authorityReference),
+    authorityCompanyNumber: await text(SETTING_NAMES.authorityCompanyNumber),
+    authorityAddress: await text(SETTING_NAMES.authorityAddress),
+    authorityPostcode: await text(SETTING_NAMES.authorityPostcode),
+    authorityCity: await text(SETTING_NAMES.authorityCity),
     signatoryName: await text(SETTING_NAMES.signatoryName),
     signatoryFunction: await text(SETTING_NAMES.signatoryFunction),
     senderContactName: await text(SETTING_NAMES.senderContactName),

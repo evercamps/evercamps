@@ -419,35 +419,56 @@ refuses to run if final attests already exist for that year; use corrections ins
 
 ## Phase 4: PDF attests for parents
 
-- `services/renderAttestPdf.ts`: a 281.86-style layout, rendered with `pdfkit` (a plugin
-  dependency in its own `package.json`, no headless browser). Saved through `uploadFile`.
-- Customer account: `pages/frontStore/account/FiscalAttests.tsx`, a per-year list with
-  downloads (GraphQL `customer.fiscalAttests`, limited to the logged-in customer), next to the
-  payer-split block from 2b. A co-parent who has an account (matched by `customer_id`) sees
-  their own attest there too. Without an account, they get it by email (admin bulk send).
-- Admin: download one, download all as a ZIP, and a bulk "send by email" action through the
-  existing mailer.
+*Built (Stage 9).*
+
+- `services/fiscalAttest/pdf.ts`: a 281.86-style A4 page per fiche (organiser, recognition,
+  payer, child, periods with days/daily rate/amount, declaration, signatory), rendered with
+  `pdfkit` (plugin dependency). Rendered on request from the stored snapshot; nothing is saved
+  (`pdf_path` stays empty).
+- Customer account: `pages/frontStore/account/FiscalAttests.tsx` lists the customer's current
+  fiches once exported to Belcotax (GraphQL `customer.fiscalAttests`, owner/admin only), with
+  `GET /api/my-fiscal-attests/:uuid/pdf` (checks `customer_id`). A co-parent with an account
+  (matched by `customer_id`) sees their own attest.
+- Admin: PDF per fiche and one PDF with all current fiches of a year.
+- **Not built:** email (no mailer in the app), ZIP download.
 
 ## Phase 5: Belcotax XML export
 
-- `services/belcotax/<incomeYear>/buildBelcotaxXml.ts`: one mapping per income year, following
-  the official XSD and technical spec (FOD Financiën → Belcotax-on-web → technical documentation).
-- Structure: sending (sender company number and contact) → declaration (organiser, income year,
-  form 281.86) → one 281.86 fiche per `fiscal_attest` → control totals (number of fiches, sum
-  of amounts). The totals must match exactly or the whole file is rejected.
-- Validate against the stored XSD before download. Test-upload in the Belcotax-on-web **test
-  environment** first.
-- Creates a `fiscal_attest_batch` (`exported`) and links the attests. After the manual upload,
-  the admin enters the Belcotax reference (`submitted`), then marks it `accepted` or `rejected`.
+*Built (Stage 9).*
+
+- `services/fiscalAttest/fiches.ts`: an attest with more than 4 periods is split into several
+  fiches (`key` = child + payer + `#n`), each its own volgnummer. `fiscal_attest.data` is the
+  `FicheData` snapshot (organiser, recognising body incl. company number/address, signatory,
+  child, payer, periods).
+- `services/fiscalAttest/belcotax/xml.ts`: Verzendingen > Verzending (v00xx) > Aangiften >
+  Aangifte (a10xx) > Opgaven > Opgave32586 > Fiche28186, then r80xx/r90xx totals. Zone order
+  follows the Tactics/FodAttest28186 library; amounts in cents, dates DD-MM-YYYY.
+  - `f2028`: 0 original, 1 modification, 2 addition, 3 cancellation; `v0025`: 0 for the
+    year's first upload, 1 after that. `v0010`: `BELCOTST` (test) / `BELCOTAX`.
+  - `f86_2031` from the authority type (municipality → 2, Opgroeien/ONE → 1, school → 4).
+  - Payer name split (customers only have a full name): the child's last name if the full
+    name starts/ends with it, else first word = first name.
+  - Totals: r8010 = fiches + 2, r8011/r9012 = sum of volgnummers, r8012/r9013 = sum of
+    2 × fiche total, r9011 = fiches + 4.
+  - No XSD validation in the app; check each new income year with the test environment.
+- `services/fiscalAttest/batches.ts`: export (test = file only; production = batch +
+  linked fiches), XML download, status + reference, rejected → fiches pending again, and
+  "discard" for everything not exported yet.
 
 ## Phase 6: Corrections & cancellations
 
-- Edit an attest → a new row with `replaces_attest_id` (same fiche number, following Belcotax's
-  correction rules), the old row becomes `corrected`, the PDF is regenerated, and it goes in a
-  `correction` batch.
-- A refund after submission → `cancellation` batch.
-- Changes to source data after generation never change attests by themselves. The attest page
-  shows a "source changed" badge by re-running `buildAttests` and comparing.
+*Built (Stage 9).* `services/fiscalAttest/corrections.ts`
+
+- Only when every current fiche was exported, settings are complete and there are no blocking
+  issues (a blocked registration would otherwise look like a cancellation).
+- Compares the current build (chunked) with the current fiches by `key` using a fingerprint
+  (child, payer, recognising body, period dates/days/amounts):
+  - changed → **modification**: new `final` row, same volgnummer, `replaces_attest_id`; the
+    old row becomes `corrected`.
+  - new → **addition**: next volgnummer.
+  - gone (refund, exclusion, split change) → **cancellation**: a `cancelled` row with the old
+    content and same volgnummer; the old row becomes `corrected`.
+- The new rows are pending until exported as the next batch. Parents download the new PDF.
 - **Merge tool:** the plugin registers `hookAfter('mergeParticipants', …)` (already `hookable`
   in `camp/services/participant/mergeParticipants.ts`) to repoint
   `fiscal_attest.participant_id` from the duplicate to the survivor. It also copies the
@@ -468,8 +489,9 @@ refuses to run if final attests already exist for that year; use corrections ins
   - A "remind parents" email for missing data.
 - **Payer requests:** customer split requests made after the attests are final
   (`fiscal_attest_payer.status = 'requested'`), with approve (→ correction, Phase 6) or reject.
-- **Generate** → **PDFs** / **Email** / **Export Belcotax XML**.
-- **Batches:** history, XML download, reference, status.
+- **Generate** → below the preview (`components/admin/FiscalAttestBelcotax.tsx`): generated
+  fiches with PDFs, **Belcotax** (test file, export, batches with status/reference/XML,
+  discard) and **Corrections** (check, review, create).
 
 API routes under `src/api/*` (`access: "private"`): `previewFiscalAttests`,
 `generateFiscalAttests`, `exportBelcotaxBatch`, `updateBelcotaxBatchStatus`,
