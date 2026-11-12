@@ -71,7 +71,7 @@ content/plugins/belgian-administration/
     │   └── FiscalAttestSetting/
     ├── pages/
     │   ├── admin/participantEdit+participantNew/NationalNumberField.tsx   # existing
-    │   ├── admin/all/FiscalAttestMenu.tsx           # adminMenu group / settingPageMenu card
+    │   ├── admin/all/FiscalAttestMenuItem.tsx       # item in the Camp menu group / settingPageMenu card
     │   ├── admin/fiscalAttestSettings/              # route.json + settings form
     │   ├── admin/fiscalAttests/                     # year overview, preview, batches
     │   └── frontStore/account/FiscalAttests.tsx     # customer download list
@@ -456,9 +456,9 @@ refuses to run if final attests already exist for that year; use corrections ins
 
 ## Phase 7: Admin UI
 
-- **Menu:** `pages/admin/all/FiscalAttestMenu.tsx` adds a "Fiscal attests" `NavigationItemGroup`
-  in `adminMenu`. The core Camp group (`CampsMenuGroup.tsx`) has a fixed item list, so the plugin
-  can't add itself inside it without a core change. A settings card goes in `settingPageMenu`.
+- **Menu:** `pages/admin/all/FiscalAttestMenuItem.tsx` adds "Fiscal attests" inside the core
+  **Camp** group: `NavigationItemGroup` renders its items in an `Area` with the group's id
+  (`campMenuGroup`), so plugins can add items there. A settings card goes in `settingPageMenu`.
 - **`/fiscal-attests?year=YYYY`:** counts, blocking issues (linking to the participant, customer
   or product to fix), and **Preview**.
 - **Preview grid:** filters for missing national number, age ≥ 14, period options without dates

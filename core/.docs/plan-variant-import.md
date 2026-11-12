@@ -299,6 +299,22 @@ Steps marked **(decision)** need an answer before you start them.
     That's the same place the WooCommerce tickets had it ("Rijksregisternummer ouder").
     - Shown wherever the admin enables it, instead of only for dated camps.
     → fiscal-attests, Phase 2
+30b. [x] **Payer national number on the checkout page, saved on the customer** (decided).
+    - **Field:** "Your national number (rijksregisternummer)" in the payment step, above
+      "Place Order" (`pages/frontStore/checkout/PayerNationalNumber.tsx`, area
+      `beforePlaceOrderButton`). Shown when the cart has a fiscal-attest camp. Required and
+      mod-97 checked, unless "I am not a Belgian national" is ticked. Pre-filled from the
+      cart or the logged-in customer.
+    - **Saving:** posted with the billing address. The plugin middleware
+      `api/addCartAddress/[escapeHtml]savePayerNationalNumber[saveAddress].ts` (runs on
+      core's `addCartAddress` route) saves it on the cart (`cart.payer_national_number`,
+      migration `Version-1.4.0`) and on the logged-in customer (`customer.national_number`,
+      overwritten).
+    - **At order time** (`hookAfter('saveOrderItems')`): the checkout number becomes
+      `order_item_registration.payer_national_number` for every registration in the order,
+      and `customer.national_number`.
+    - The per-participant field "Rijksregisternummer ouder" (step 29) is only a fallback now;
+      no need to enable it.
 31. [x] **Plugin:** "Fiscal data" block on the customer account page.
     - **Edits:** the customer's own national number and their children's (with "not
       applicable"), through API `POST /api/fiscal-data`. That API only allows the
