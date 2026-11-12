@@ -295,10 +295,11 @@ Today the plugin only covers the **admin** participant form. Its `participantDat
   - **Plugin:** `hookAfter('saveOrderItems', …)` validates it with `isValidNationalNumber` and
     copies it to `participant.national_number` when that's still empty. `saveOrderItems` is
     already wrapped in `hookable` (`checkout/services/orderCreator.ts`).
-- **Payer, at checkout:** a checkout-page component in the plugin
-  (`pages/frontStore/checkout/PayerNationalNumber.tsx`), shown only when a cart item resolves to
-  a dated period option (Phase 1b). It's stored through the same `hookAfter('saveOrderItems')` hook into
-  `order_item_registration.payer_national_number` and, when empty, into `customer.national_number`.
+- **Payer, at checkout:** (as built) a second participant field, `payer_national_number`
+  ("Rijksregisternummer ouder"), the same place the WooCommerce tickets asked it. The plugin's
+  `hookAfter('saveOrderItems')` copies it into `order_item_registration.payer_national_number`
+  and, when empty, into `customer.national_number`. The child's `national_number` is copied
+  to the participant by core, which fills empty participant columns from the extra fields.
 - **Afterwards:** a "Fiscal data" block in the customer account
   (`pages/frontStore/account/`, area `accountPageInfo`) to fill in or fix the payer's and
   children's numbers. Imported and older registrations will mostly be missing them.

@@ -120,7 +120,12 @@ export const saveCart = async (cart: Cart) => {
           for (const r of newRegs) {
             if (r.cartItemRegistrationId && currentById.has(r.cartItemRegistrationId)) {
               const existing = currentById.get(r.cartItemRegistrationId);
-              const extraDataChanged = (r.extraData || null) !== (existing?.extra_data || null);
+              // extra_data comes back from the JSON column as an object
+              const existingExtraData =
+                existing?.extra_data && typeof existing.extra_data === 'object'
+                  ? JSON.stringify(existing.extra_data)
+                  : existing?.extra_data || null;
+              const extraDataChanged = (r.extraData || null) !== existingExtraData;
             if (existing && (existing.first_name !== r.firstName || existing.last_name !== r.lastName || extraDataChanged)) {
                 await update('cart_item_registration')
                   .given({

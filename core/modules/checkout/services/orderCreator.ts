@@ -116,6 +116,55 @@ function parseExtraData(raw: unknown): Record<string, string> {
   return {};
 }
 
+// Extra participant fields whose code is also a participant column (e.g.
+// birth_date, or national_number from the belgian-administration plugin) fill
+// that column when it's still empty. Existing values are never overwritten -
+// the admin's data wins. Identity/link columns are never touched.
+const PROTECTED_PARTICIPANT_COLUMNS = new Set([
+  'participant_id',
+  'uuid',
+  'first_name',
+  'last_name',
+  'customer_id',
+  'created_at'
+]);
+
+async function fillEmptyParticipantFields(
+  participantId: number,
+  extraData: Record<string, string>,
+  connection: PoolClient
+) {
+  if (Object.keys(extraData).length === 0) {
+    return;
+  }
+  const row = await select()
+    .from('participant')
+    .where('participant_id', '=', participantId)
+    .load(connection, false);
+  if (!row) {
+    return;
+  }
+  const given: Record<string, string> = {};
+  for (const [code, value] of Object.entries(extraData)) {
+    if (
+      !PROTECTED_PARTICIPANT_COLUMNS.has(code) &&
+      Object.prototype.hasOwnProperty.call(row, code) &&
+      (row[code] === null || row[code] === '') &&
+      value !== undefined &&
+      value !== null &&
+      String(value).trim() !== ''
+    ) {
+      given[code] = value;
+    }
+  }
+  if (Object.keys(given).length > 0) {
+    await update('participant')
+      .given(given)
+      .where('participant_id', '=', participantId)
+      .execute(connection, false);
+  }
+}
+
 async function saveOrderItems(
   cart: Cart,
   orderId: number,
@@ -173,6 +222,8 @@ async function saveOrderItems(
           participantId = participant.insertId;
         }
 
+        await fillEmptyParticipantFields(participantId, extraData, connection);
+
         const registration = await insert('registration')
           .given({
             registration_participant_id: participantId,
@@ -183,17 +234,20 @@ async function saveOrderItems(
 
         const registrationId = registration.insertId;
 
+        const customerId = cart.getData('customer_id');
+
         await insert('order_item_registration')
           .given({
             order_item_id: orderItem.insertId,
             first_name: reg.firstName,
             last_name: reg.lastName,
             registration_id: registrationId,
+            // The payer of this registration (fiscal attests); was never set.
+            customer_id: customerId || null,
             extra_data: Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null
           })
           .execute(connection);
 
-        const customerId = cart.getData('customer_id');
         if (customerId) {
           await update('participant')
             .given({ customer_id: customerId })

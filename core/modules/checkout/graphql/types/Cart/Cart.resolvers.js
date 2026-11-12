@@ -72,6 +72,12 @@ export default {
       .load(pool);
       return registrations.map((registration) => ({
         ...camelCase(registration),
+        // extra_data is a JSON column (pg returns an object) and freshly added
+        // participants carry an object too; the GraphQL type is a JSON string.
+        extraData:
+          registration.extraData && typeof registration.extraData === 'object'
+            ? JSON.stringify(registration.extraData)
+            : registration.extraData ?? null,
         editApi: buildUrl('updateCartItemRegistration', {
           cart_id: cartUuid,
           item_id: cartItem.uuid,

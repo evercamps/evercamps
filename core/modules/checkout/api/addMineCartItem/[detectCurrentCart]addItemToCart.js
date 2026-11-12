@@ -14,6 +14,7 @@ import {
 import { createNewCart } from '../../services/createNewCart.js';
 import { getCartByUUID } from '../../services/getCartByUUID.js';
 import { saveCart } from '../../services/saveCart.js';
+import { collectParticipantExtraData } from '../../../camp/services/participantCheckoutFields.js';
 
 export default async (request, response, next) => {
   try {
@@ -61,11 +62,18 @@ export default async (request, response, next) => {
     }
   }
 
+    // Extra participant fields (birth date, national number, ...): configured
+    // in Camp settings, checked for required values and validated by plugins.
+    // (The product page posts them, but this handler used to drop them.)
+    const extraData =
+      first_name && last_name ? await collectParticipantExtraData(request.body) : undefined;
+
     // If everything is fine, add the product to the cart
     const item = await cart.addItem(product.product_id, parseInt(qty, 10), {
       request,
       first_name,
       last_name,
+      extraData,
       product_variant_id
     });
     await saveCart(cart);
@@ -86,7 +94,8 @@ export default async (request, response, next) => {
     response.json({
       error: {
         status: INTERNAL_SERVER_ERROR,
-        message: error.message
+        // (was `error.message` - the logger function - so the reason was lost)
+        message: e.message
       }
     });
   }

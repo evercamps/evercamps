@@ -9,6 +9,7 @@
   "description": "Belgium-specific administration for EverCamps: validated national numbers for participants and payers, and fiscal attests (281.86) with Belcotax export.",
   "scripts": {
     "compile": "swc src -d dist --config-file ../../../.swcrc --copy-files --strip-leading-paths",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/"
   }
 }

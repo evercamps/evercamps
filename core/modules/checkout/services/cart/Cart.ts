@@ -220,7 +220,12 @@ export async function getCart(uuid: string): Promise<Cart> {
       cartItemId: r.cart_item_id,
       firstName: r.first_name,
       lastName: r.last_name,
-      extraData: r.extra_data ?? null
+      // extra_data is a JSON column, which pg returns as an object; keep it a
+      // JSON string like everywhere else in the cart (UI parses it).
+      extraData:
+        r.extra_data && typeof r.extra_data === 'object'
+          ? JSON.stringify(r.extra_data)
+          : r.extra_data ?? null
     });
   });
 

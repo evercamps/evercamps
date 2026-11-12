@@ -1,0 +1,5 @@
+{
+  "methods": ["POST"],
+  "path": "/fiscal-attest-payers",
+  "access": "public"
+}

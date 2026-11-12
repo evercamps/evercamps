@@ -2,6 +2,15 @@ import { hookable } from '../../../lib/util/hookable.js';
 import { getValue } from '../../../lib/util/registry.js';
 import { Cart, Item } from './cart/Cart.js';
 
+// Registration extra data is kept as a JSON string in the cart (like after a
+// reload from the JSON column), whatever shape the API passed in.
+function toJsonString(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
 async function addCartItem(
   cart: Cart,
   productID: number,
@@ -42,7 +51,7 @@ async function addCartItem(
             {
               firstName: context.first_name,
               lastName: context.last_name,
-              ...(context.extraData !== undefined && { extraData: context.extraData })
+              ...(context.extraData !== undefined && { extraData: toJsonString(context.extraData) })
             }
           ]);
         }
@@ -61,7 +70,7 @@ async function addCartItem(
           {
             firstName: context.first_name,
             lastName: context.last_name,
-            ...(context.extraData !== undefined && { extraData: context.extraData })
+            ...(context.extraData !== undefined && { extraData: toJsonString(context.extraData) })
           }
         ]);
       }
