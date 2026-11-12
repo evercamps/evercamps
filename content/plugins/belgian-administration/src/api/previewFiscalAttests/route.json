@@ -1,0 +1,5 @@
+{
+  "methods": ["GET"],
+  "path": "/fiscal-attests/preview",
+  "access": "private"
+}

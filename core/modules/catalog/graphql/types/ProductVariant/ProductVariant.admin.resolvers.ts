@@ -51,6 +51,15 @@ export default {
   },
   Product: {
     createVariantApi: (product: Product) => buildUrl('createProductVariant', { id: product.uuid }),
+    variantAttributeGroup: async (product: Product, _: unknown, { pool }: Context) => {
+      const query = select('attribute_group.attribute_group_id', 'attribute_group.group_name').from('product');
+      query
+        .innerJoin('attribute_group')
+        .on('attribute_group.attribute_group_id', '=', 'product.group_id');
+      query.where('product.product_id', '=', product.productId);
+      const row = await query.load(pool);
+      return row ? { groupId: row.attribute_group_id, groupName: row.group_name } : null;
+    },
     // Select attributes of the product's attribute group, plus any attribute
     // its variants already use (e.g. imported "kampweek" outside the group).
     variantAttributes: async (product: Product, _: unknown, { pool }: Context) => {
@@ -79,7 +88,7 @@ export default {
       const attributes = await select()
         .from('attribute')
         .where('attribute_id', 'IN', ids)
-        .and('type', '=', 'select')
+        .and('type', 'IN', ['select', 'period'])
         .execute(pool);
       const options = await select()
         .from('attribute_option')

@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 interface WooCommerceSetting {
   wooCommerceStoreUrl?: string;
   wooCommerceConsumerKey?: string;
+  wooCommerceCustomerNationalNumberMetaKey?: string;
 }
 
 interface ImportBatch {
@@ -244,7 +245,7 @@ export default function WooCommerceSettings({
   saveSettingApi,
   importProductsApi,
   importOrdersApi,
-  setting: { wooCommerceStoreUrl, wooCommerceConsumerKey },
+  setting: { wooCommerceStoreUrl, wooCommerceConsumerKey, wooCommerceCustomerNationalNumberMetaKey },
   wooCommerceImportBatches
 }: Props) {
   return (
@@ -289,6 +290,16 @@ export default function WooCommerceSettings({
                   type="password"
                 />
               </Card.Session>
+              <Card.Session title="Customer data">
+                <Field
+                  name="wooCommerceCustomerNationalNumberMetaKey"
+                  label="Meta key of the customer's national number"
+                  placeholder="e.g. billing_rijksregisternummer"
+                  instruction="The custom field on WooCommerce customers (meta_data key) that holds the national number. Leave empty to use the first key containing 'rijksregister' or 'national'. Only fills customers that don't have a number yet."
+                  value={wooCommerceCustomerNationalNumberMetaKey ?? ''}
+                  type="text"
+                />
+              </Card.Session>
             </Card>
           </Form>
           <div className="mt-8">
@@ -329,6 +340,7 @@ export const query = `
     setting {
       wooCommerceStoreUrl
       wooCommerceConsumerKey
+      wooCommerceCustomerNationalNumberMetaKey
     }
     wooCommerceImportBatches {
       uuid

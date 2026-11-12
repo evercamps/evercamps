@@ -1,0 +1,12 @@
+extend type Cart {
+  """
+  The payer's national number entered at checkout (fiscal attest).
+  """
+  payerNationalNumber: String
+  payerNationalNumberNotApplicable: Boolean
+  """
+  The cart has a camp that's eligible for a fiscal attest, so checkout asks
+  for the payer's national number.
+  """
+  needsPayerNationalNumber: Boolean!
+}

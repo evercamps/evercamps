@@ -22,6 +22,8 @@ export interface ProductVariantInput {
   price?: number | string;
   total_seats?: number | string;
   is_default?: boolean | string | number;
+  // false = disabled: kept (with its registrations) but not bookable in the shop
+  status?: boolean | string | number;
   // One option per attribute, e.g. kampweek "Week 1 zomer 2027". Replaces the
   // variant's current options when given.
   options?: { attribute_id: number | string; option_id: number | string }[];
@@ -171,7 +173,8 @@ async function createProductVariantFunc(productUuid: string, data: ProductVarian
         sku,
         price: toPrice(data.price ?? 0),
         title: data.title ? String(data.title).trim() : null,
-        is_default: false
+        is_default: false,
+        status: data.status === undefined ? true : toBool(data.status)
       })
       .execute(connection, false);
     const variantId = variant.insertId;
@@ -204,6 +207,9 @@ async function updateProductVariantFunc(variantUuid: string, data: ProductVarian
     }
     if (data.price !== undefined) {
       given.price = toPrice(data.price);
+    }
+    if (data.status !== undefined) {
+      given.status = toBool(data.status);
     }
     if (Object.keys(given).length > 0) {
       given.updated_at = new Date();

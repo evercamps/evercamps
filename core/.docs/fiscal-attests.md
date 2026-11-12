@@ -71,13 +71,13 @@ content/plugins/belgian-administration/
     │   └── FiscalAttestSetting/
     ├── pages/
     │   ├── admin/participantEdit+participantNew/NationalNumberField.tsx   # existing
-    │   ├── admin/all/FiscalAttestMenu.tsx           # adminMenu group / settingPageMenu card
+    │   ├── admin/all/FiscalAttestMenuItem.tsx       # item in the Camp menu group / settingPageMenu card
     │   ├── admin/fiscalAttestSettings/              # route.json + settings form
     │   ├── admin/fiscalAttests/                     # year overview, preview, batches
     │   └── frontStore/account/FiscalAttests.tsx     # customer download list
     └── migration/
         ├── Version-1.0.0.ts       # existing participant.national_number columns
-        ├── Version-1.1.0.ts       # payer national number + fiscal_attest_eligible attribute (care dates live in core, see 1b)
+        ├── Version-1.1.0.ts       # payer national number (care dates live in core, see 1b)
         └── Version-1.2.0.ts       # fiscal_attest, fiscal_attest_batch, amount override + payer tables
 ```
 
@@ -96,7 +96,7 @@ Framework imports (`pool`, `getSetting`, `hookable`/`hookAfter`, `select`/`inser
 | Payer: national number | — | **New**, in this plugin |
 | Care period from–to, number of days | `attribute_option.start_date/end_date/day_count` on the period option (e.g. *Week 1 zomer*) | **New core columns** (Phase 1b) |
 | Amount paid | manual override, else `order_item` + `order.payment_status` (`paid`, `partial_refunded`, `refunded`) | Exists; imported registrations need linking (Phase 2c) |
-| Eligible camp | product attribute `fiscal_attest_eligible` | **New attribute** (Phase 1b-bis) |
+| Eligible camp | column `product.fiscal_attest_eligible` | **New column** (Phase 1b-bis) |
 | Payer split between parents | `fiscal_attest_payer` (customer dashboard / admin) | **New** (Phase 2b) |
 
 How it links up: `order` → `order_item` → `order_item_registration` (`registration_id`,
@@ -181,23 +181,29 @@ Rules used by the plugin (`lib/carePeriod.ts`):
   without variants that has several weeks in a multiselect), or an option with `start_date` but
   no `end_date`.
 
-### 1b-bis. Eligibility per camp as an attribute (plugin)
+### 1b-bis. Eligibility per camp: product column (plugin)
 
 Not every camp qualifies; residential camps with overnight stays may not, for example. So
-eligibility is set per camp by the admin, as a normal product attribute. The plugin migration
-(`Version-1.1.0.ts`) creates it, guarded with `WHERE NOT EXISTS` on `attribute_code`:
+eligibility is set **per product** by the admin, as a column on `product` (decided: not a
+catalog attribute):
 
-| `attribute_code` | `attribute_name` | `type` | Options | Frontend | Filterable |
-|---|---|---|---|---|---|
-| `fiscal_attest_eligible` | Fiscaal attest | `select` | *Ja*, *Nee* | no | no |
-
-- The migration links it to every existing attribute group (`attribute_group_link`), so it shows
-  up on the product form. The README says to add it to any group created later.
+- `product.fiscal_attest_eligible boolean NOT NULL DEFAULT false`, added by the plugin migration
+  `Version-1.3.0.ts`. That migration also converts and removes the `fiscal_attest_eligible`
+  select attribute that an earlier `Version-1.1.0` created.
+- Only possible for products with **Manage Registrations** enabled.
+  - Set on the admin product form in the **Status card**, right under "Manage Registrations"
+    (plugin `pages/admin/productEdit+productNew/FiscalAttestEligible.tsx` in the core area
+    `productStatusRegistrations`). The choice is disabled, and saved as "not eligible", while
+    Manage Registrations is off.
+  - The plugin's `productDataBeforeCreate`/`Update` processors enforce the same rule
+    server-side (API, importer).
+  - Saved by core `createProduct`/`updateProduct` like any other product column.
+  - GraphQL: `Product.fiscalAttestEligible`.
+  - Core change for this: `Area` passes extra props to its components as `areaProps`, and the
+    Status card keeps the live Manage Registrations value and offers that area.
 - Product-level only. Eligibility doesn't differ between weeks of the same camp.
-- **Not set** on a product that does have a dated period = **warning** in the preview ("eligibility
-  not set"), so forgotten camps get noticed. They're left out until it's set to *Ja*.
-- Showing it on the frontend later ("Fiscaal aftrekbaar") only takes toggling
-  `display_on_frontend`.
+- A camp with a dated period that is **not** marked eligible = **warning** in the preview, so
+  forgotten camps get noticed. They're left out until marked eligible.
 
 ### 1c. Payer national number (`Version-1.1.0.ts`)
 
@@ -239,9 +245,11 @@ CREATE TABLE IF NOT EXISTS fiscal_attest (
   total_amount NUMERIC(12,2) NOT NULL,
   total_days INT NOT NULL,
   pdf_path TEXT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (income_year, sequence_number)
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+-- A correction keeps its fiche number, so the number is unique per year among
+-- the current attests only:
+CREATE UNIQUE INDEX ON fiscal_attest (income_year, sequence_number) WHERE status = 'final';
 
 -- Manual amount for a registration, set by the admin (imported/historic data, special prices).
 -- Takes precedence over the amount derived from order_item.
@@ -287,10 +295,11 @@ Today the plugin only covers the **admin** participant form. Its `participantDat
   - **Plugin:** `hookAfter('saveOrderItems', …)` validates it with `isValidNationalNumber` and
     copies it to `participant.national_number` when that's still empty. `saveOrderItems` is
     already wrapped in `hookable` (`checkout/services/orderCreator.ts`).
-- **Payer, at checkout:** a checkout-page component in the plugin
-  (`pages/frontStore/checkout/PayerNationalNumber.tsx`), shown only when a cart item resolves to
-  a dated period option (Phase 1b). It's stored through the same `hookAfter('saveOrderItems')` hook into
-  `order_item_registration.payer_national_number` and, when empty, into `customer.national_number`.
+- **Payer, at checkout:** (as built) a second participant field, `payer_national_number`
+  ("Rijksregisternummer ouder"), the same place the WooCommerce tickets asked it. The plugin's
+  `hookAfter('saveOrderItems')` copies it into `order_item_registration.payer_national_number`
+  and, when empty, into `customer.national_number`. The child's `national_number` is copied
+  to the participant by core, which fills empty participant columns from the extra fields.
 - **Afterwards:** a "Fiscal data" block in the customer account
   (`pages/frontStore/account/`, area `accountPageInfo`) to fill in or fix the payer's and
   children's numbers. Imported and older registrations will mostly be missing them.
@@ -370,9 +379,8 @@ SELECT r.registration_id, p.*, oir.payer_national_number, oir.customer_id,
 FROM registration r
 JOIN reg_period rp                     ON rp.registration_id = r.registration_id
 JOIN participant p                     ON p.participant_id = r.registration_participant_id
-JOIN product_attribute_value_index el  ON el.product_id = r.registration_product_id
-JOIN attribute ea                      ON ea.attribute_id = el.attribute_id AND ea.attribute_code = 'fiscal_attest_eligible'
-JOIN attribute_option eo               ON eo.attribute_option_id = el.option_id AND eo.option_text = 'Ja'
+JOIN product pr                        ON pr.product_id = r.registration_product_id
+                                          AND pr.fiscal_attest_eligible AND pr.manage_registrations
 LEFT JOIN order_item_registration oir  ON oir.registration_id = r.registration_id
 LEFT JOIN order_item oi                ON oi.order_item_id = oir.order_item_id
 LEFT JOIN "order" o                    ON o.order_id = oi.order_item_order_id
@@ -396,7 +404,7 @@ WHERE (o.payment_status IN ('paid', 'partial_refunded') OR ov.registration_id IS
      unparseable; no amount, or amount ≤ 0; payer shares don't add up to 100%.
    - **Warning:** no child or payer national number (or `national_number_not_applicable`);
      `day_count` empty, so days were derived from the weekdays between start and end; a dated
-     camp whose `fiscal_attest_eligible` isn't set; the amount comes from an override.
+     camp that isn't marked `fiscal_attest_eligible`; the amount comes from an override.
 3. **Split by payer** (`fiscal_attest_payer` rows with `status = 'active'`, or 100% the order
    customer when there are none), then **group** by `(participant, payer)`, with one period line
    per camp (from, to, days, daily rate, the payer's share of the amount).
@@ -411,35 +419,56 @@ refuses to run if final attests already exist for that year; use corrections ins
 
 ## Phase 4: PDF attests for parents
 
-- `services/renderAttestPdf.ts`: a 281.86-style layout, rendered with `pdfkit` (a plugin
-  dependency in its own `package.json`, no headless browser). Saved through `uploadFile`.
-- Customer account: `pages/frontStore/account/FiscalAttests.tsx`, a per-year list with
-  downloads (GraphQL `customer.fiscalAttests`, limited to the logged-in customer), next to the
-  payer-split block from 2b. A co-parent who has an account (matched by `customer_id`) sees
-  their own attest there too. Without an account, they get it by email (admin bulk send).
-- Admin: download one, download all as a ZIP, and a bulk "send by email" action through the
-  existing mailer.
+*Built (Stage 9).*
+
+- `services/fiscalAttest/pdf.ts`: a 281.86-style A4 page per fiche (organiser, recognition,
+  payer, child, periods with days/daily rate/amount, declaration, signatory), rendered with
+  `pdfkit` (plugin dependency). Rendered on request from the stored snapshot; nothing is saved
+  (`pdf_path` stays empty).
+- Customer account: `pages/frontStore/account/FiscalAttests.tsx` lists the customer's current
+  fiches once exported to Belcotax (GraphQL `customer.fiscalAttests`, owner/admin only), with
+  `GET /api/my-fiscal-attests/:uuid/pdf` (checks `customer_id`). A co-parent with an account
+  (matched by `customer_id`) sees their own attest.
+- Admin: PDF per fiche and one PDF with all current fiches of a year.
+- **Not built:** email (no mailer in the app), ZIP download.
 
 ## Phase 5: Belcotax XML export
 
-- `services/belcotax/<incomeYear>/buildBelcotaxXml.ts`: one mapping per income year, following
-  the official XSD and technical spec (FOD Financiën → Belcotax-on-web → technical documentation).
-- Structure: sending (sender company number and contact) → declaration (organiser, income year,
-  form 281.86) → one 281.86 fiche per `fiscal_attest` → control totals (number of fiches, sum
-  of amounts). The totals must match exactly or the whole file is rejected.
-- Validate against the stored XSD before download. Test-upload in the Belcotax-on-web **test
-  environment** first.
-- Creates a `fiscal_attest_batch` (`exported`) and links the attests. After the manual upload,
-  the admin enters the Belcotax reference (`submitted`), then marks it `accepted` or `rejected`.
+*Built (Stage 9).*
+
+- `services/fiscalAttest/fiches.ts`: an attest with more than 4 periods is split into several
+  fiches (`key` = child + payer + `#n`), each its own volgnummer. `fiscal_attest.data` is the
+  `FicheData` snapshot (organiser, recognising body incl. company number/address, signatory,
+  child, payer, periods).
+- `services/fiscalAttest/belcotax/xml.ts`: Verzendingen > Verzending (v00xx) > Aangiften >
+  Aangifte (a10xx) > Opgaven > Opgave32586 > Fiche28186, then r80xx/r90xx totals. Zone order
+  follows the Tactics/FodAttest28186 library; amounts in cents, dates DD-MM-YYYY.
+  - `f2028`: 0 original, 1 modification, 2 addition, 3 cancellation; `v0025`: 0 for the
+    year's first upload, 1 after that. `v0010`: `BELCOTST` (test) / `BELCOTAX`.
+  - `f86_2031` from the authority type (municipality → 2, Opgroeien/ONE → 1, school → 4).
+  - Payer name split (customers only have a full name): the child's last name if the full
+    name starts/ends with it, else first word = first name.
+  - Totals: r8010 = fiches + 2, r8011/r9012 = sum of volgnummers, r8012/r9013 = sum of
+    2 × fiche total, r9011 = fiches + 4.
+  - No XSD validation in the app; check each new income year with the test environment.
+- `services/fiscalAttest/batches.ts`: export (test = file only; production = batch +
+  linked fiches), XML download, status + reference, rejected → fiches pending again, and
+  "discard" for everything not exported yet.
 
 ## Phase 6: Corrections & cancellations
 
-- Edit an attest → a new row with `replaces_attest_id` (same fiche number, following Belcotax's
-  correction rules), the old row becomes `corrected`, the PDF is regenerated, and it goes in a
-  `correction` batch.
-- A refund after submission → `cancellation` batch.
-- Changes to source data after generation never change attests by themselves. The attest page
-  shows a "source changed" badge by re-running `buildAttests` and comparing.
+*Built (Stage 9).* `services/fiscalAttest/corrections.ts`
+
+- Only when every current fiche was exported, settings are complete and there are no blocking
+  issues (a blocked registration would otherwise look like a cancellation).
+- Compares the current build (chunked) with the current fiches by `key` using a fingerprint
+  (child, payer, recognising body, period dates/days/amounts):
+  - changed → **modification**: new `final` row, same volgnummer, `replaces_attest_id`; the
+    old row becomes `corrected`.
+  - new → **addition**: next volgnummer.
+  - gone (refund, exclusion, split change) → **cancellation**: a `cancelled` row with the old
+    content and same volgnummer; the old row becomes `corrected`.
+- The new rows are pending until exported as the next batch. Parents download the new PDF.
 - **Merge tool:** the plugin registers `hookAfter('mergeParticipants', …)` (already `hookable`
   in `camp/services/participant/mergeParticipants.ts`) to repoint
   `fiscal_attest.participant_id` from the duplicate to the survivor. It also copies the
@@ -448,9 +477,9 @@ refuses to run if final attests already exist for that year; use corrections ins
 
 ## Phase 7: Admin UI
 
-- **Menu:** `pages/admin/all/FiscalAttestMenu.tsx` adds a "Fiscal attests" `NavigationItemGroup`
-  in `adminMenu`. The core Camp group (`CampsMenuGroup.tsx`) has a fixed item list, so the plugin
-  can't add itself inside it without a core change. A settings card goes in `settingPageMenu`.
+- **Menu:** `pages/admin/all/FiscalAttestMenuItem.tsx` adds "Fiscal attests" inside the core
+  **Camp** group: `NavigationItemGroup` renders its items in an `Area` with the group's id
+  (`campMenuGroup`), so plugins can add items there. A settings card goes in `settingPageMenu`.
 - **`/fiscal-attests?year=YYYY`:** counts, blocking issues (linking to the participant, customer
   or product to fix), and **Preview**.
 - **Preview grid:** filters for missing national number, age ≥ 14, period options without dates
@@ -460,8 +489,9 @@ refuses to run if final attests already exist for that year; use corrections ins
   - A "remind parents" email for missing data.
 - **Payer requests:** customer split requests made after the attests are final
   (`fiscal_attest_payer.status = 'requested'`), with approve (→ correction, Phase 6) or reject.
-- **Generate** → **PDFs** / **Email** / **Export Belcotax XML**.
-- **Batches:** history, XML download, reference, status.
+- **Generate** → below the preview (`components/admin/FiscalAttestBelcotax.tsx`): generated
+  fiches with PDFs, **Belcotax** (test file, export, batches with status/reference/XML,
+  discard) and **Corrections** (check, review, create).
 
 API routes under `src/api/*` (`access: "private"`): `previewFiscalAttests`,
 `generateFiscalAttests`, `exportBelcotaxBatch`, `updateBelcotaxBatchStatus`,
@@ -504,7 +534,7 @@ deadline. No automatic upload.
 2. **`attribute_option.value_date` / `value_int`:** left as they are; not used by this feature.
 3. **Core change for checkout:** approved. `AVAILABLE_PARTICIPANT_FIELDS` becomes extensible
    through a processor (Phase 2).
-4. **Eligible camp types:** set per camp with the `fiscal_attest_eligible` product attribute
+4. **Eligible camp types:** set per camp with the `product.fiscal_attest_eligible` column
    (Phase 1b-bis).
 5. **Payer:** the order customer by default. A split between parents can be set from the
    customer dashboard and by the admin (Phase 2b).

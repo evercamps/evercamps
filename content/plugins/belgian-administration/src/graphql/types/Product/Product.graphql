@@ -1,0 +1,7 @@
+extend type Product {
+  """
+  1 when the camp qualifies for a fiscal attest (281.86), else 0. Column
+  product.fiscal_attest_eligible, set on the admin product form.
+  """
+  fiscalAttestEligible: Int
+}

@@ -37,7 +37,6 @@ interface AttributeIndex {
 interface Product {
   attributeIndex?: AttributeIndex[];
   groupId?: string;
-  variantGroupId?: string;
 }
 
 interface AttributesProps {
@@ -78,35 +77,16 @@ export default function Attributes({
     <Card>
       <Card.Session title="Attribute group">
         <div>
-          {product.variantGroupId && (
-            <div>
-              <input
-                type="hidden"
-                value={currentGroup.groupId}
-                name="group_id"
-              />
-              <div className="border rounded border-divider p-4">
-                <span>{currentGroup.groupName}</span>
-              </div>
-              <div className="italic text-textSubdued">
-                Can not change the attribute group of a product that is already
-                in a variant group.
-              </div>
-            </div>
-          )}
-
-          {!product.variantGroupId && (
-            <Field
-              name="group_id"
-              value={currentGroup.groupId}
-              onChange={handleGroupChange}
-              options={items.map((g) => ({
-                value: parseInt(g.groupId, 10),
-                text: g.groupName
-              }))}
-              type="select"
-            />
-          )}
+          <Field
+            name="group_id"
+            value={currentGroup.groupId}
+            onChange={handleGroupChange}
+            options={items.map((g) => ({
+              value: parseInt(g.groupId, 10),
+              text: g.groupName
+            }))}
+            type="select"
+          />
         </div>
       </Card.Session>
 
@@ -145,6 +125,7 @@ export default function Attributes({
                   break;
 
                 case 'select':
+                case 'period':
                   field = (
                     <Field
                       name={`attributes[${index}][value]`}
@@ -217,7 +198,6 @@ export const query = `
   query Query ($filters: [FilterInput!]) {
     product(id: getContextValue("productId", null)) {
       groupId
-      variantGroupId
       attributeIndex {
         attributeId
         optionId

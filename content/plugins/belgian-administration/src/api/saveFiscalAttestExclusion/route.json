@@ -1,0 +1,5 @@
+{
+  "methods": ["POST"],
+  "path": "/fiscal-attests/exclusions",
+  "access": "private"
+}

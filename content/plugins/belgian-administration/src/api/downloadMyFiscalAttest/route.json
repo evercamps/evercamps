@@ -1,0 +1,5 @@
+{
+  "methods": ["GET"],
+  "path": "/my-fiscal-attests/:uuid/pdf",
+  "access": "public"
+}

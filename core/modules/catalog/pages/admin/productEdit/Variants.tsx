@@ -39,6 +39,7 @@ interface Variant {
   title: string | null;
   price: { value: number; text: string };
   isDefault: boolean;
+  status: boolean;
   totalSeats: number | null;
   usageCount: number;
   updateApi: string;
@@ -52,6 +53,7 @@ interface Draft {
   price: string;
   totalSeats: string;
   isDefault: boolean;
+  status: boolean;
   // attributeId -> optionId ('' = none)
   options: Record<number, string>;
 }
@@ -60,6 +62,10 @@ const VariantsQuery = `
   query Query($id: ID) {
     product(id: $id) {
       createVariantApi
+      variantAttributeGroup {
+        groupId
+        groupName
+      }
       variantAttributes {
         attributeId
         attributeCode
@@ -81,6 +87,7 @@ const VariantsQuery = `
           text
         }
         isDefault
+        status
         totalSeats
         usageCount
         updateApi
@@ -97,7 +104,7 @@ const VariantsQuery = `
 `;
 
 function emptyDraft(): Draft {
-  return { sku: '', title: '', price: '', totalSeats: '0', isDefault: false, options: {} };
+  return { sku: '', title: '', price: '', totalSeats: '0', isDefault: false, status: true, options: {} };
 }
 
 function draftFromVariant(variant: Variant): Draft {
@@ -107,6 +114,7 @@ function draftFromVariant(variant: Variant): Draft {
     price: String(variant.price?.value ?? ''),
     totalSeats: String(variant.totalSeats ?? 0),
     isDefault: variant.isDefault,
+    status: variant.status !== false,
     options: Object.fromEntries(variant.options.map((o) => [o.attributeId, String(o.optionId)]))
   };
 }
@@ -118,6 +126,7 @@ function payloadFromDraft(draft: Draft) {
     price: draft.price === '' ? 0 : draft.price,
     total_seats: draft.totalSeats === '' ? 0 : draft.totalSeats,
     is_default: draft.isDefault,
+    status: draft.status,
     options: Object.entries(draft.options)
       .filter(([, optionId]) => optionId !== '')
       .map(([attributeId, optionId]) => ({
@@ -248,6 +257,14 @@ function VariantForm({
         />
         Default variant (used when no variant is chosen)
       </label>
+      <label className="flex items-center gap-2 mt-2">
+        <input
+          type="checkbox"
+          checked={draft.status}
+          onChange={(e) => setDraft({ ...draft, status: e.target.checked })}
+        />
+        Enabled (bookable in the shop). A disabled variant keeps its registrations.
+      </label>
       <div className="flex gap-4 mt-4">
         <button type="button" className="button primary" disabled={saving} onClick={onSave}>
           {saving ? 'Saving…' : 'Save variant'}
@@ -344,6 +361,23 @@ export default function Variants({ product }: VariantsProps) {
         }
       ]}
     >
+      {data?.variantAttributeGroup && (
+        <Card.Session title="Attribute group">
+          <div>
+            <span className="font-semibold">{data.variantAttributeGroup.groupName}</span>
+            {attributes.length > 0 && (
+              <span className="text-textSubdued">
+                {' '}
+                – variant attributes: {attributes.map((a) => a.attributeName).join(', ')}
+              </span>
+            )}
+          </div>
+          <div className="text-textSubdued text-sm">
+            The attribute group decides which attributes the variants can use. Change it in the
+            Attributes card and save the product.
+          </div>
+        </Card.Session>
+      )}
       <Card.Session>
         {result.fetching && !data && <div>Loading variants…</div>}
         {result.error && <div className="text-critical">Could not load variants.</div>}
@@ -396,6 +430,11 @@ export default function Variants({ product }: VariantsProps) {
                         {variant.isDefault && (
                           <span className="ml-2 text-xs border border-divider rounded px-1">
                             default
+                          </span>
+                        )}
+                        {variant.status === false && (
+                          <span className="ml-2 text-xs border border-critical text-critical rounded px-1">
+                            disabled
                           </span>
                         )}
                       </div>

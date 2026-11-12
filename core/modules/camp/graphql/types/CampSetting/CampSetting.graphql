@@ -1,3 +1,19 @@
 extend type Setting {
   participantCheckoutFields: String
 }
+
+"""
+An extra participant field an admin can enable for checkout (core offers
+birth_date; plugins add more through the availableParticipantCheckoutFields
+value processor).
+"""
+type AvailableParticipantCheckoutField {
+  code: String!
+  label: String!
+  type: String!
+  placeholder: String
+}
+
+extend type Query {
+  availableParticipantCheckoutFields: [AvailableParticipantCheckoutField!]!
+}

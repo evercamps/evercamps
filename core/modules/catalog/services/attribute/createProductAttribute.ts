@@ -80,13 +80,18 @@ async function insertAttributeOptions(
   // Ignore updating options if it is not present in the data
   if (
     options.length === 0 ||
-    !['select', 'multiselect'].includes(attributeType)
+    !['select', 'multiselect', 'period'].includes(attributeType)
   ) {
     return;
   }
 
   // Validate all periods first, so a bad date doesn't leave half the options inserted
-  const periods = options.map((option) => normalizeOptionPeriod(option, option.option_text));
+  // Only "period" attributes have dates on their options; for select /
+  // multiselect the date columns are left as they are.
+  const periods: Record<string, unknown>[] =
+    attributeType === 'period'
+      ? options.map((option) => normalizeOptionPeriod(option, option.option_text))
+      : options.map(() => ({}));
 
   /* Adding new options */
   await Promise.all(

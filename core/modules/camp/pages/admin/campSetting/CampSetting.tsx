@@ -4,9 +4,14 @@ import { Form } from '@components/form/Form';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
-const AVAILABLE_PARTICIPANT_FIELDS = [
-  { code: 'birth_date', label: 'Date of Birth', type: 'date' as const }
-];
+// Fields an admin can enable. Core offers birth_date; plugins add more through
+// the availableParticipantCheckoutFields value processor (see
+// camp/services/participantCheckoutFields.ts), loaded via GraphQL.
+interface AvailableParticipantField {
+  code: string;
+  label: string;
+  type: 'text' | 'date' | 'select';
+}
 
 interface ParticipantCheckoutField {
   code: string;
@@ -37,7 +42,14 @@ function participantFieldsDataFilter(data: Record<string, any>): Record<string, 
   return data;
 }
 
-function ParticipantCheckoutFields({ initialFields }: { initialFields: ParticipantCheckoutField[] }) {
+function ParticipantCheckoutFields({
+  initialFields,
+  availableFields
+}: {
+  initialFields: ParticipantCheckoutField[];
+  availableFields: AvailableParticipantField[];
+}) {
+  const AVAILABLE_PARTICIPANT_FIELDS = availableFields;
   const [fields, setFields] = useState<ParticipantCheckoutField[]>(initialFields);
 
   const usedCodes = fields.map((f) => f.code);
@@ -164,9 +176,14 @@ interface Props {
   setting: {
     participantCheckoutFields?: string;
   };
+  availableParticipantCheckoutFields?: AvailableParticipantField[];
 }
 
-export default function CampSetting({ saveSettingApi, setting: { participantCheckoutFields } }: Props) {
+export default function CampSetting({
+  saveSettingApi,
+  setting: { participantCheckoutFields },
+  availableParticipantCheckoutFields = []
+}: Props) {
   return (
     <div className="main-content-inner">
       <div className="grid grid-cols-6 gap-x-8 grid-flow-row">
@@ -190,6 +207,7 @@ export default function CampSetting({ saveSettingApi, setting: { participantChec
             <Card>
               <ParticipantCheckoutFields
                 initialFields={parseParticipantFields(participantCheckoutFields)}
+                availableFields={availableParticipantCheckoutFields}
               />
             </Card>
           </Form>
@@ -209,6 +227,11 @@ export const query = `
     saveSettingApi: url(routeId: "saveSetting")
     setting {
       participantCheckoutFields
+    }
+    availableParticipantCheckoutFields {
+      code
+      label
+      type
     }
   }
 `;

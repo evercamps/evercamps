@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import type {
+  WooCommerceCustomer,
   WooCommerceSettings,
   WooCommerceProduct,
   WooCommerceOrder,
@@ -88,4 +89,15 @@ export async function* fetchAllOrders(
     }
     page += 1;
   }
+}
+
+/** One WooCommerce customer (for its meta_data); null when it no longer exists. */
+export async function fetchCustomer(
+  client: AxiosInstance,
+  customerId: number
+): Promise<WooCommerceCustomer | null> {
+  const response = await client.get<WooCommerceCustomer>(`/customers/${customerId}`, {
+    validateStatus: () => true
+  });
+  return response.status === 200 ? response.data : null;
 }

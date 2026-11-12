@@ -11,6 +11,10 @@ type ProductVariant {
   price: Price!
   title: String
   isDefault: Boolean!
+  """
+  false = disabled: kept, but not bookable in the shop
+  """
+  status: Boolean!
   totalSeats: Int
 }
 

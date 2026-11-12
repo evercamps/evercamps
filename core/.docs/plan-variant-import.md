@@ -220,61 +220,201 @@ Steps marked **(decision)** need an answer before you start them.
 
 ## Stage 6: Plugin `belgian-administration`
 
-23. [ ] Rename `national-number-field` → `belgian-administration`: folder, `package.json`,
-    `config/default.json`, `npm install`. Clean up the old `migration` / `plugin_enabled.*`
-    rows. Add `src/core.ts`. (The importer already accepts the new name, see step 11.)
+23. [x] Renamed `national-number-field` → `belgian-administration`.
+    - **Files:** `git mv`, `package.json` (`evercamps-belgian-administration`, 1.1.0),
+      `config/default.json`, `npm install` (workspace link), new `src/core.ts`, READMEs.
+    - **tsconfig:** now the same as woocommerce-import, plus the `@evercamps/evercamps/*`
+      paths, so `npx tsc --noEmit` passes.
+    - **Old rows:** `Version-1.1.0` removes the old `migration` row and carries over a
+      `plugin_enabled.national-number-field` override.
     → fiscal-attests, *Delivery*
-24. [ ] **Plugin migration `Version-1.1.0.ts`:** `customer.national_number`,
-    `order_item_registration.payer_national_number`, and the `fiscal_attest_eligible` attribute
-    (*Ja*/*Nee*, linked to all attribute groups).
+24. [x] **Plugin migration `Version-1.1.0.ts`:** `customer.national_number` and
+    `order_item_registration.payer_national_number`.
+    - Both are filled from `extra_data.payer_national_number` (WooCommerce import, step 11);
+      the customer gets the number from their latest registration.
     → fiscal-attests, 1b-bis, 1c
-25. [ ] **Plugin migration `Version-1.2.0.ts`:** `fiscal_attest`, `fiscal_attest_batch`,
-    `fiscal_attest_amount_override`, `fiscal_attest_payer`.
+25. [x] **Plugin migration `Version-1.2.0.ts`:** `fiscal_attest`, `fiscal_attest_batch`,
+    `fiscal_attest_amount_override`, `fiscal_attest_payer`, with CHECK constraints on
+    kind/status/source.
+    - The fiche number is unique per year among **current** (`final`) attests only (partial
+      unique index), because a correction keeps the original fiche number.
     → fiscal-attests, 1d
-26. [ ] Settings page: company number, municipality as recognising body, signatory, sender
-    contact, daily ceiling per year.
+26. [x] Settings page `/admin/fiscal-attests/settings` (Settings → Fiscal attests).
+    - **Fields:** company number (KBO, mod-97 checked, stored digits-only), legal name and
+      address (default to the store settings), recognising body (default *Gemeente / stad*)
+      with name and reference, signatory, Belcotax sender contact, maximum per day per year.
+    - **Code:** settings service `services/fiscalAttest/settings.ts`; admin GraphQL
+      `fiscalAttestSettings`.
     → fiscal-attests, 1a
-27. [ ] Set `fiscal_attest_eligible` on all camps.
+26b. [x] **Eligibility is a product column, not an attribute** (decided).
+    - Plugin migration `Version-1.3.0.ts` adds `product.fiscal_attest_eligible boolean NOT NULL
+      DEFAULT false`. It converts and removes the earlier `fiscal_attest_eligible` attribute.
+    - `Version-1.1.0` no longer creates the attribute.
+    - Only for products with **Manage Registrations**.
+      - Admin product form: "Fiscal attest (281.86)" in the Status card under Manage
+        Registrations. It's disabled, and saved as not eligible, while registrations are off.
+      - A plugin processor enforces this on create/update too.
+      - Core: `Area` forwards extra props as `areaProps`; new area `productStatusRegistrations`.
+      - GraphQL `Product.fiscalAttestEligible`.
+    → fiscal-attests, 1b-bis
+27. [ ] Mark the camps as eligible: per product in the admin ("Fiscal attest" card → Yes), or
+    for every product with a kampweek variant (and registrations) at once:
+    ```sql
+    UPDATE product SET fiscal_attest_eligible = true
+    WHERE manage_registrations AND product_id IN (
+      SELECT pv.product_id FROM product_variant pv
+      JOIN variant_attribute_value vav ON vav.variant_id = pv.product_variant_id
+      JOIN attribute k ON k.attribute_id = vav.attribute_id
+      WHERE k.attribute_code IN ('kampweek', 'pa_kampweek')
+    );
+    ```
 
 ## Stage 7: Collecting national numbers & payers
 
-28. [ ] **Core:** make `AVAILABLE_PARTICIPANT_FIELDS` extensible through a processor (approved).
+28. [x] **Core:** the checkout participant fields are extensible
+    (`camp/services/participantCheckoutFields.ts`).
+    - **Available fields:** value processor `availableParticipantCheckoutFields`. Core offers
+      `birth_date`; Camp settings loads the list through GraphQL
+      `availableParticipantCheckoutFields`.
+    - **One shared check:** `collectParticipantExtraData` is used by both add-to-cart APIs
+      and the edit-participant API. It checks required fields, then plugins validate or
+      normalize through `participantCheckoutExtraData`.
+    - **Fixed:** the product page's add-to-cart (`addMineCartItem`) dropped the extra fields,
+      and its error response sent the logger instead of the message.
+    - **Order creation:** extra fields whose code is a participant column (`birth_date`,
+      `national_number`) now fill that column when it's still empty.
+      `order_item_registration.customer_id` (the payer) is set too.
     → fiscal-attests, Phase 2
-29. [ ] **Plugin:** register `national_number` as a checkout field;
-    `hookAfter('saveOrderItems')` copies the child's number and stores the payer's number.
+29. [x] **Plugin:** registers the checkout fields `national_number` ("Rijksregisternummer
+    kind") and `payer_national_number` ("Rijksregisternummer ouder").
+    - **Validation:** mod-97 checked and stored digits-only.
+    - **Copying:** core copies the child's number to `participant.national_number`.
+      `hookAfter('saveOrderItems')` copies the payer's number to
+      `order_item_registration.payer_national_number`, and to `customer.national_number`
+      when that's empty.
+    - **Enable** both in Camp settings → Participant Fields.
     → fiscal-attests, Phase 2
-30. [ ] **Plugin:** payer national number field at checkout (only for dated camps).
+30. [x] **Payer national number at checkout:** done as the participant field
+    `payer_national_number` (step 29) rather than a separate checkout-page component.
+    That's the same place the WooCommerce tickets had it ("Rijksregisternummer ouder").
+    - Shown wherever the admin enables it, instead of only for dated camps.
     → fiscal-attests, Phase 2
-31. [ ] **Plugin:** "Fiscal data" block in the customer account (fill in or fix numbers).
+30b. [x] **Payer national number on the checkout page, saved on the customer** (decided).
+    - **Field:** "Your national number (rijksregisternummer)" in the payment step, above
+      "Place Order" (`pages/frontStore/checkout/PayerNationalNumber.tsx`, area
+      `beforePlaceOrderButton`). Shown when the cart has a fiscal-attest camp. Required and
+      mod-97 checked, unless "I am not a Belgian national" is ticked. Pre-filled from the
+      cart or the logged-in customer.
+    - **Saving:** posted with the billing address. The plugin middleware
+      `api/addCartAddress/[escapeHtml]savePayerNationalNumber[saveAddress].ts` (runs on
+      core's `addCartAddress` route) saves it on the cart (`cart.payer_national_number`,
+      migration `Version-1.4.0`) and on the logged-in customer (`customer.national_number`,
+      overwritten).
+    - **At order time** (`hookAfter('saveOrderItems')`): the checkout number becomes
+      `order_item_registration.payer_national_number` for every registration in the order,
+      and `customer.national_number`.
+    - The per-participant field "Rijksregisternummer ouder" (step 29) is only a fallback now;
+      no need to enable it.
+31. [x] **Plugin:** "Fiscal data" block on the customer account page.
+    - **Edits:** the customer's own national number and their children's (with "not
+      applicable"), through API `POST /api/fiscal-data`. That API only allows the
+      logged-in customer's own participants.
+    - **Privacy fix:** `Participant.nationalNumber` / `Customer.nationalNumber` are only
+      returned to an admin user or the participant's own customer. The camp participant
+      queries are also reachable through the storefront GraphQL endpoint.
     → fiscal-attests, Phase 2
-32. [ ] **Plugin:** payer split on the customer dashboard + admin
-    (`fiscal_attest_payer`, `saveFiscalAttestPayers`).
+32. [x] **Payer split** (customer side; admin side in step 36) (`services/fiscalAttest/payers.ts`).
+    - **Account block:** "Fiscal attest – split between parents", per child per income year.
+      The customer enters the other parent's name, national number, address and share.
+    - **Storage:** two `fiscal_attest_payer` rows per registration (customer + other parent).
+    - **After final:** once the year's attests are final, a change is stored as
+      `status = 'requested'`.
+    - **Code:** API `POST /api/fiscal-attest-payers`; GraphQL `Customer.fiscalAttestSplits`.
+    - **Still to do (with the admin attest pages, Stage 8):** the admin split form and
+      approving/rejecting requests.
+    - Income year of a registration = start date of its dated option, else the year at the
+      end of its variant title, else the registration date.
     → fiscal-attests, 2b
-33. [ ] **Plugin:** `hookAfter('mergeParticipants')` moves attests and the national number to the
-    kept participant.
+33. [x] **Plugin:** value processor on `participantMergeBeforeDelete`, in the merge tool's
+    transaction. It moves `fiscal_attest.participant_id` to the kept participant and copies
+    the national number when the kept one has none.
+    - The merge tool is on another branch (commit `2e286c5`); this runs once that's merged.
     → fiscal-attests, Phase 6
 
 ## Stage 8: Generating attests
 
-34. [ ] `carePeriod.ts`: the variant option first, the product option second.
+34. [x] `lib/carePeriod.ts` (pure).
+    - **Period:** the variant's dated option first, then the product's. Reports missing,
+      start-without-end, more than one, and invalid dates.
+    - **Days:** `day_count`, or weekdays between the dates.
+    - **Also:** age on a date, and a fallback year (variant title year, else registration date)
+      for registrations without dates.
     → fiscal-attests, 1b
-35. [ ] `collectAttestCandidates` + `buildAttests` (amount: override > order line > blocking;
-    payer split; issues) with unit tests.
+35. [x] `services/fiscalAttest/collectAttestCandidates.ts` + `buildAttests.ts`.
+    - **Collect** (read-only, parameterized SQL): registrations of products with
+      `manage_registrations` + `fiscal_attest_eligible`, in the care-period year. Includes:
+      - registrations without dates, placed in their fallback year, so they show as issues;
+      - order line, order, payer (order customer + billing address);
+      - manual amounts and active splits.
+      Dated camps not marked eligible are listed separately.
+    - **Build** (pure):
+      - amount = manual amount > order line (`line_total_with_discount_incl_tax` ÷
+        registrations on the line) > blocking "no amount";
+      - unpaid orders are left out (warning);
+      - blocking: no or bad dates, no birth date, 14 or older on the first day, amount ≤ 0,
+        shares ≠ 100%, no payer;
+      - warnings: national numbers, days derived, manual amount, above the daily maximum;
+      - one attest per child per payer, with the rounding difference to the first payer.
+    - **Unit tests:** `buildAttests.test.ts`, 13 tests on `node:test`. Run
+      `npm test -w content/plugins/belgian-administration` after compiling.
+    - **Not covered:** partial refunds aren't subtracted (oms has no refund amounts), and the
+      "under 21 with a disability" exception isn't supported.
     → fiscal-attests, Phase 3
-36. [ ] Admin: year overview + preview grid (amount override, payer split, filters, payer
-    requests). `generateFiscalAttests` (preview/commit).
+36. [x] Admin page **Fiscal attests → Attests per year** (`/admin/fiscal-attests`).
+    - **Page:** year picker, totals, settings check, "Generate attests for YYYY".
+    - **Split requests from parents:** approve or reject.
+    - **Camps not marked eligible.**
+    - **Registrations grid** with filters (blocking, warnings, no amount, no dates, national
+      number, age, ready). Per row: period, amount (enter/change/remove a manual amount,
+      pre-filled with the variant price), payers (admin split / reset), issues.
+    - **Generate** (`generateFiscalAttests`) writes `final` rows with fiche numbers and a
+      `data` snapshot (organiser, authority, signatory, child, payer, periods, totals).
+      Refused when that year already has final attests, settings are incomplete, or there are
+      blocking issues.
+    - **APIs (admin):** `GET /api/fiscal-attests/preview?year=`, `POST
+      /api/fiscal-attests/generate`, `/amount`, `/payers`, `/payer-requests`.
+    - This also finishes step 32's admin side: the split form plus approving/rejecting
+      requests. Approving after generation needs a correction (Stage 9).
     → fiscal-attests, Phase 3 & 7
 37. [ ] Dry run on a copy of last year's data; fix the blocking issues it reports (dates,
     eligibility, amounts, birth dates).
 
 ## Stage 9: Output & Belcotax
 
-38. [ ] PDF per attest (`pdfkit`); downloads in the customer account and admin; bulk email.
+38. [x] PDF per attest (`pdfkit`, `services/fiscalAttest/pdf.ts`), one A4 page per fiche.
+    - Admin: per fiche and all current fiches of a year (`GET /api/fiscal-attests/pdf`).
+    - Customer account block `pages/frontStore/account/FiscalAttests.tsx` (GraphQL
+      `Customer.fiscalAttests`, only fiches already exported to Belcotax) with an
+      ownership-checked download (`GET /api/my-fiscal-attests/:uuid/pdf`).
+    - Bulk email: **not done** (there is no mailer in the app yet).
     → fiscal-attests, Phase 4
-39. [ ] Belcotax XML per income year + XSD validation; batches + status tracking.
+39. [x] Belcotax XML (`services/fiscalAttest/belcotax/xml.ts`, unit-tested) + batches.
+    - Fiches: max 4 periods per fiche (`fiches.ts`, `chunkAttest`), each with its own
+      volgnummer; `data.key` / `change_type` (plugin migration `Version-1.6.0`).
+    - Export: test file (`BELCOTST`, changes nothing) or production (creates a
+      `fiscal_attest_batch`, links the fiches). XML download again per batch; status
+      exported/submitted/accepted/rejected + Belcotax reference. Rejected releases the fiches.
+    - "Discard" removes everything not exported yet (and restores replaced fiches).
+    - No XSD validation in the app: check the first file with the Belcotax test environment
+      (step 40). Settings got the recognising body's company number and address (fiche zones).
+    - Generation also blocks a child that turns 14 during the camp, until the amount for the
+      days before the birthday is entered by hand.
     → fiscal-attests, Phase 5
 40. [ ] Test upload in the Belcotax-on-web **test environment**.
-41. [ ] Corrections & cancellations (incl. approving customer split requests).
+41. [x] Corrections & cancellations (`services/fiscalAttest/corrections.ts`): compares the
+    current build with the current fiches by key; modifications (same volgnummer), additions
+    (next volgnummer), cancellations. Exported as the next batch (`v0025 = 1`). Approved
+    customer split requests show up here as changes.
     → fiscal-attests, Phase 6
 42. [ ] (Optional) Reminder cron from 1 January.
     → fiscal-attests, Phase 8
@@ -282,3 +422,47 @@ Steps marked **(decision)** need an answer before you start them.
     different year, and who applies the daily-rate ceiling.
     → fiscal-attests, *Open questions*
 44. [ ] Generate, send to parents, upload to Belcotax (before 1 March).
+
+## Extra changes (after Stage 8)
+
+- [x] **Admin product page:** the old "Variant" card (legacy `variant_group`,
+  `productEdit/VariantGroup.tsx`) is removed, and so is the "Can not change the attribute
+  group… variant group" text in the Attributes card. The new Variants card shows the
+  product's **attribute group** and its variant attributes at the top (admin GraphQL
+  `Product.variantAttributeGroup`).
+  - The storefront still has the legacy variant-group picker (`productView/Variants.tsx`);
+    it renders nothing without a legacy variant group.
+- [x] **Attribute type "period"** (core catalog migration `Version-1.1.3`): a select whose
+  options are periods with start/end dates (and optional days).
+  - `select` / `multiselect` are normal choices again; the date fields only show, and are
+    only saved, for `period`.
+  - Treated like `select` everywhere else: product attribute values, variant options,
+    storefront filters.
+  - `kampweek` / `pa_kampweek` are converted to `period`; the WooCommerce import creates
+    them as `period`.
+  - New options of a period attribute require both dates. Existing options without dates
+    stay allowed, and the attests page flags them.
+- [x] **Variant on/off** (`product_variant.status`, same migration).
+  - Admin Variants card: an "Enabled" checkbox and a "disabled" badge.
+  - Disabled variants are left out of `bookableVariants` (shop picker). A cart item on a
+    disabled variant gets an error, so checkout is blocked.
+  - Registrations and attests on a disabled variant are unaffected.
+- [x] **WooCommerce customer national number.** The order import reads the custom field
+  from the order's or the WooCommerce customer's `meta_data` and fills
+  `customer.national_number` when it's still empty.
+  - The meta key is a setting ("Customer data" on the WooCommerce settings page); left
+    empty, the first key containing "rijksregister" or "national" is used.
+  - Only valid Belgian national numbers are imported. WooCommerce customers are fetched
+    once per run.
+
+- [x] **"Don't generate a fiscal attest" per order** (plugin migration `Version-1.5.0`, table
+  `fiscal_attest_exclusion`).
+  - **What:** an order (all its registrations), or a registration without an order, can be
+    left out, with a reason (*Not Belgian* / *Organisation* / *Other*) and an optional note.
+  - **Where:** set it from the attests overview (per row: "Don't generate for this order" /
+    "Include again"; filter and count "Excluded"), or from the admin order page ("Fiscal
+    attest" card).
+  - **Effect:** `buildAttests` lists excluded registrations without checks and makes no
+    attest for them.
+  - **Code:** API `POST /api/fiscal-attests/exclusions`; admin GraphQL
+    `Order.fiscalAttestExclusion`.

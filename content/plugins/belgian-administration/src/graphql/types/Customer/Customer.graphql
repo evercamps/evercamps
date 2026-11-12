@@ -1,0 +1,77 @@
+extend type Customer {
+  """
+  The customer's own national number (as payer of fiscal attests). Only
+  exposed through currentCustomer / admin customer pages.
+  """
+  nationalNumber: String
+  """
+  Storefront API to save the customer's own and their children's national numbers.
+  """
+  saveFiscalDataApi: String!
+}
+
+"""
+The other parent who pays part of a child's camps in one income year.
+"""
+type FiscalAttestOtherParent {
+  fullName: String!
+  nationalNumber: String
+  street: String
+  postcode: String
+  city: String
+  country: String
+  sharePercent: Float!
+  """
+  'active', or 'requested' when the year's attests were already final
+  """
+  status: String!
+}
+
+type FiscalAttestChildRegistration {
+  registrationId: Int!
+  label: String!
+}
+
+"""
+One child + income year, with the current split of the fiscal attest.
+"""
+type FiscalAttestChildYear {
+  participantUuid: String!
+  firstName: String!
+  lastName: String!
+  year: Int!
+  registrations: [FiscalAttestChildRegistration!]!
+  """
+  The year's attests are final: a change becomes a request for the organiser.
+  """
+  locked: Boolean!
+  otherParent: FiscalAttestOtherParent
+}
+
+extend type Customer {
+  """
+  The customer's children per income year, for splitting the fiscal attest.
+  Only for the customer themself (or an admin user).
+  """
+  fiscalAttestSplits: [FiscalAttestChildYear!]!
+  saveFiscalAttestPayersApi: String!
+}
+
+"""
+A fiscal attest (281.86) the customer can download.
+"""
+type CustomerFiscalAttest {
+  uuid: String!
+  incomeYear: Int!
+  sequenceNumber: Int!
+  childName: String!
+  totalAmount: Float!
+  downloadUrl: String!
+}
+
+extend type Customer {
+  """
+  The customer's uploaded fiscal attests (only for the customer themself or an admin).
+  """
+  fiscalAttests: [CustomerFiscalAttest!]!
+}

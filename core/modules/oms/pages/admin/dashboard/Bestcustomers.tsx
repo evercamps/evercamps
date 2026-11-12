@@ -1,5 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
 import { useAppState } from '@components/context/app';
+import React from 'react';
 
 interface Setting {
   storeCurrency?: string;

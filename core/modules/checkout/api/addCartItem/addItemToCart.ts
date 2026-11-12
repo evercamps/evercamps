@@ -8,7 +8,7 @@ import {
 import { setContextValue } from '../../../graphql/services/contextHelper.js';
 import { getCartByUUID } from '../../services/getCartByUUID.js';
 import { saveCart } from '../../services/saveCart.js';
-import { getSetting } from '../../../setting/services/setting.js';
+import { collectParticipantExtraData } from '../../../camp/services/participantCheckoutFields.js';
 import type { Response, NextFunction } from 'express';
 import { EvercampsRequest } from '../../../../types/request.js';
 
@@ -47,27 +47,10 @@ export default async (request: EvercampsRequest, response: Response, next: NextF
       return;
     }
 
-    // Collect extra field values from the body and assemble extraData
-    let extraData: Record<string, string> | undefined;
-    if (first_name && last_name) {
-      const rawExtraFields = await getSetting('participant_checkout_fields', null);
-      const extraFields: { code: string }[] = (() => {
-        try {
-          const parsed = typeof rawExtraFields === 'string' ? JSON.parse(rawExtraFields) : rawExtraFields;
-          return Array.isArray(parsed) ? parsed : [];
-        } catch { return []; }
-      })();
-      if (extraFields.length > 0) {
-        const collected = Object.fromEntries(
-          extraFields
-            .filter((f) => request.body[f.code] !== undefined)
-            .map((f) => [f.code, request.body[f.code]])
-        );
-        if (Object.keys(collected).length > 0) {
-          extraData = collected;
-        }
-      }
-    }
+    // Extra participant fields (birth date, national number, ...): configured
+    // in Camp settings, checked for required values and validated by plugins.
+    const extraData =
+      first_name && last_name ? await collectParticipantExtraData(request.body) : undefined;
 
     const item = await cart.addItem(product.product_id, parseInt(qty, 10), {
       first_name,

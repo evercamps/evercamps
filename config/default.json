@@ -6,8 +6,8 @@
   "system": {
     "extensions": [
       {
-        "name": "national-number-field",
-        "resolve": "content/plugins/national-number-field",
+        "name": "belgian-administration",
+        "resolve": "content/plugins/belgian-administration",
         "enabled": true,
         "priority": 100
       },

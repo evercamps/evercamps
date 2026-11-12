@@ -22,6 +22,12 @@ export const variantFields: ItemField[] = [
             return requested;
           }
         }
+        // A disabled variant (e.g. a cancelled week) can't be booked; an item
+        // already in the cart gets an error so checkout is blocked.
+        if (variant && variant.status === false) {
+          this.setError('product_variant_id', 'This variant is no longer available');
+          return variant.product_variant_id;
+        }
         this.setError('product_variant_id', undefined);
         return variant ? variant.product_variant_id : null;
       }

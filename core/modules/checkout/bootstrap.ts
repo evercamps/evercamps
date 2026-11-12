@@ -58,6 +58,7 @@ export default (): void => {
         'product_variant.price',
         'product_variant.title',
         'product_variant.is_default',
+        'product_variant.status',
         'inventory_item.inventory_item_id',
         'inventory_item.total_seats'
       ).from('product_variant');

@@ -7,6 +7,7 @@ import {
 } from '../../../../lib/util/httpStatus.js';
 import { getCartByUUID } from '../../services/getCartByUUID.js';
 import { saveCart } from '../../services/saveCart.js';
+import { collectParticipantExtraData } from '../../../camp/services/participantCheckoutFields.js';
 import type { Request, Response, NextFunction } from 'express';
 
 export default async (request: Request, response: Response, next: NextFunction) => {
@@ -28,7 +29,19 @@ export default async (request: Request, response: Response, next: NextFunction) 
       });
       return;
     }
-    const { firstName, lastName, extraData } = request.body;
+    const { firstName, lastName, extraData: rawExtraData } = request.body;
+    // Same checks as when the participant was added (required fields, plugin
+    // validation such as the national number); keep the format we received.
+    let extraData = rawExtraData;
+    if (rawExtraData !== undefined) {
+      const validated = await collectParticipantExtraData(rawExtraData);
+      extraData =
+        typeof rawExtraData === 'string'
+          ? validated
+            ? JSON.stringify(validated)
+            : null
+          : validated ?? null;
+    }
     const item = await cart.updateCartItemRegistration(item_id, reg_id, {
       firstName,
       lastName,
