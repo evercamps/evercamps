@@ -1,6 +1,6 @@
 import { pool } from '../../core.js';
 import { fallbackYear, resolveCarePeriod, toDateString, type PeriodOption } from '../../lib/carePeriod.js';
-import type { CandidateRegistration, PayerShare } from './buildAttests.js';
+import type { CandidateRegistration, EditablePeriodOption, PayerShare } from './buildAttests.js';
 
 // Read-only: everything buildAttests needs for one income year
 // (core/.docs/fiscal-attests.md, Phase 3). Registrations of products that
@@ -132,6 +132,44 @@ export async function collectAttestCandidates(year: number): Promise<CollectedYe
   );
   const customerById = new Map(fallbackCustomers.map((c) => [c.customer_id, c]));
 
+  // 3b. The variant's attribute options (dated or not), so the admin page can
+  // set the camp week's dates in place. Falls back to the dated product options.
+  const variantOptions = await query(
+    `SELECT r.registration_id, ao.attribute_option_id, ao.option_text, a.attribute_name,
+            ao.start_date, ao.end_date, ao.day_count
+     FROM registration r
+     JOIN variant_attribute_value vav ON vav.variant_id = r.product_variant_id
+     JOIN attribute_option ao ON ao.attribute_option_id = vav.option_id
+     JOIN attribute a ON a.attribute_id = vav.attribute_id
+     WHERE r.registration_id = ANY($1)
+     UNION ALL
+     SELECT r.registration_id, ao.attribute_option_id, ao.option_text, a.attribute_name,
+            ao.start_date, ao.end_date, ao.day_count
+     FROM registration r
+     JOIN product_attribute_value_index pav ON pav.product_id = r.registration_product_id
+     JOIN attribute_option ao ON ao.attribute_option_id = pav.option_id
+     JOIN attribute a ON a.attribute_id = pav.attribute_id
+     WHERE r.registration_id = ANY($1)
+       AND r.product_variant_id IS NULL
+       AND (ao.start_date IS NOT NULL OR ao.end_date IS NOT NULL)`,
+    [eligibleIds]
+  );
+  const editableByRegistration = new Map<number, EditablePeriodOption[]>();
+  for (const o of variantOptions) {
+    const list = editableByRegistration.get(o.registration_id) ?? [];
+    if (!list.some((x) => x.optionId === o.attribute_option_id)) {
+      list.push({
+        optionId: o.attribute_option_id,
+        attributeName: o.attribute_name,
+        optionText: o.option_text,
+        startDate: toDateString(o.start_date),
+        endDate: toDateString(o.end_date),
+        dayCount: o.day_count === null ? null : Number(o.day_count)
+      });
+    }
+    editableByRegistration.set(o.registration_id, list);
+  }
+
   // 4. Manual amounts and active payer splits.
   const overrides = await query(
     `SELECT registration_id, amount, note FROM fiscal_attest_amount_override WHERE registration_id = ANY($1)`,
@@ -185,6 +223,7 @@ export async function collectAttestCandidates(year: number): Promise<CollectedYe
       variantTitle: r.variant_title ?? null,
       suggestedPrice: r.variant_price === null || r.variant_price === undefined ? null : Number(r.variant_price),
       periodOptions: optionsByRegistration.get(r.registration_id) ?? [],
+      editableOptions: editableByRegistration.get(r.registration_id) ?? [],
       order: order
         ? {
             orderId: order.order_id,

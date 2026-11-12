@@ -10,3 +10,4 @@ export { getSetting } from '../../../../dist/modules/setting/services/setting.js
 export { buildUrl } from '../../../../dist/lib/router/buildUrl.js';
 export { setContextValue } from '../../../../dist/modules/graphql/services/contextHelper.js';
 export { debug, error } from '../../../../dist/lib/log/logger.js';
+export { normalizeOptionPeriod } from '../../../../dist/modules/catalog/services/attribute/optionPeriod.js';

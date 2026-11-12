@@ -1,5 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
 import { useAlertContext } from '@components/modal/Alert';
+import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { toast } from 'react-toastify';
 
@@ -31,12 +32,22 @@ interface Issue {
   message: string;
 }
 
+interface EditableOption {
+  optionId: number;
+  attributeName: string;
+  optionText: string;
+  startDate: string | null;
+  endDate: string | null;
+  dayCount: number | null;
+}
+
 interface RegistrationPreview {
   registrationId: number;
   participantName: string;
   productName: string;
   label: string;
   period: { startDate: string; endDate: string; days: number } | null;
+  editableOptions: EditableOption[];
   amount: number | null;
   amountSource: 'override' | 'order' | 'none';
   suggestedPrice: number | null;
@@ -77,6 +88,7 @@ interface Preview {
 }
 
 interface Props {
+  optionPeriodApi: string;
   previewApi: string;
   generateApi: string;
   amountApi: string;
@@ -124,6 +136,122 @@ async function post(url: string, body: unknown) {
 
 function payerLabel(p: Payer) {
   return `${p.fullName || '?'} (${p.sharePercent}%)`;
+}
+
+// Popup to set the dates of the camp week (attribute option, e.g. kampweek
+// "Week 1 zomer 2026") straight from the overview. The option is shared, so
+// every registration on that week gets the dates.
+function PeriodModal({
+  registration,
+  optionPeriodApi,
+  onClose,
+  onSaved
+}: {
+  registration: RegistrationPreview;
+  optionPeriodApi: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [drafts, setDrafts] = React.useState(
+    registration.editableOptions.map((o) => ({
+      ...o,
+      startDate: o.startDate ?? '',
+      endDate: o.endDate ?? '',
+      dayCount: o.dayCount === null ? '' : String(o.dayCount)
+    }))
+  );
+  const [saving, setSaving] = React.useState(false);
+
+  const update = (index: number, patch: Partial<(typeof drafts)[number]>) =>
+    setDrafts(drafts.map((x, i) => (i === index ? { ...x, ...patch } : x)));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      for (const d of drafts) {
+        const original = registration.editableOptions.find((o) => o.optionId === d.optionId);
+        const unchanged =
+          !!original &&
+          (original.startDate ?? '') === d.startDate &&
+          (original.endDate ?? '') === d.endDate &&
+          (original.dayCount === null ? '' : String(original.dayCount)) === d.dayCount;
+        if (!unchanged) {
+          await post(optionPeriodApi, {
+            optionId: d.optionId,
+            startDate: d.startDate,
+            endDate: d.endDate,
+            dayCount: d.dayCount
+          });
+        }
+      }
+      toast.success('Dates saved');
+      onSaved();
+      onClose();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card title={`Camp week dates – ${registration.productName}`}>
+      <Card.Session>
+        <div className="text-textSubdued text-sm mb-4">
+          These dates belong to the week option itself: every registration on it gets them. Leave
+          Days empty to count the weekdays between the dates.
+        </div>
+        {drafts.map((d, index) => (
+          <div key={d.optionId} className="mb-4">
+            <div className="font-semibold mb-2">
+              {d.attributeName}: {d.optionText}
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <label className="block">
+                <span className="text-sm">Start date</span>
+                <input
+                  className="form-field w-full"
+                  type="date"
+                  value={d.startDate}
+                  onChange={(e) => update(index, { startDate: e.target.value })}
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm">End date</span>
+                <input
+                  className="form-field w-full"
+                  type="date"
+                  value={d.endDate}
+                  onChange={(e) => update(index, { endDate: e.target.value })}
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm">Days</span>
+                <input
+                  className="form-field w-full"
+                  type="number"
+                  min="1"
+                  placeholder="Auto"
+                  value={d.dayCount}
+                  onChange={(e) => update(index, { dayCount: e.target.value })}
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+      </Card.Session>
+      <Card.Session>
+        <div className="flex justify-end gap-4">
+          <button type="button" className="button secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="button primary" disabled={saving} onClick={save}>
+            {saving ? 'Saving…' : 'Save dates'}
+          </button>
+        </div>
+      </Card.Session>
+    </Card>
+  );
 }
 
 function AmountCell({
@@ -368,6 +496,7 @@ function PayersCell({
 }
 
 export default function FiscalAttests({
+  optionPeriodApi,
   previewApi,
   generateApi,
   amountApi,
@@ -386,6 +515,16 @@ export default function FiscalAttests({
   const [filter, setFilter] = React.useState('all');
   const [generating, setGenerating] = React.useState(false);
   const { openAlert, closeAlert } = useAlertContext();
+  const periodModal = useModal();
+  const [editingPeriod, setEditingPeriod] = React.useState<RegistrationPreview | null>(null);
+  const openPeriod = (registration: RegistrationPreview) => {
+    setEditingPeriod(registration);
+    periodModal.openModal();
+  };
+  const closePeriod = () => {
+    periodModal.closeModal();
+    setEditingPeriod(null);
+  };
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -647,7 +786,19 @@ export default function FiscalAttests({
                             <div className="text-xs text-textSubdued">{r.period.days} days</div>
                           </>
                         ) : (
-                          '–'
+                          <div>–</div>
+                        )}
+                        {r.editableOptions.length > 0 && (
+                          <a
+                            href="#"
+                            className="text-interactive text-xs hover:underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              openPeriod(r);
+                            }}
+                          >
+                            {r.period ? 'Edit dates' : 'Set dates'}
+                          </a>
                         )}
                       </td>
                       <td>
@@ -682,6 +833,25 @@ export default function FiscalAttests({
           </Card>
         </>
       )}
+
+      {periodModal.state.showing && editingPeriod && (
+        <div className={periodModal.className} onAnimationEnd={periodModal.onAnimationEnd}>
+          <div
+            className="modal-wrapper flex self-center justify-center items-center"
+            tabIndex={-1}
+            role="dialog"
+          >
+            <div className="modal">
+              <PeriodModal
+                registration={editingPeriod}
+                optionPeriodApi={optionPeriodApi}
+                onClose={closePeriod}
+                onSaved={load}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -693,6 +863,7 @@ export const layout = {
 
 export const query = `
   query Query {
+    optionPeriodApi: url(routeId: "saveFiscalAttestOptionPeriod")
     previewApi: url(routeId: "previewFiscalAttests")
     generateApi: url(routeId: "generateFiscalAttests")
     amountApi: url(routeId: "saveFiscalAttestAmount")

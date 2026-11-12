@@ -21,6 +21,17 @@ export interface PayerShare {
   sharePercent: number;
 }
 
+// An attribute option of the registration's variant (e.g. kampweek "Week 1
+// zomer 2026"), whose dates the admin can set from the attests page.
+export interface EditablePeriodOption {
+  optionId: number;
+  attributeName: string;
+  optionText: string;
+  startDate: string | null;
+  endDate: string | null;
+  dayCount: number | null;
+}
+
 export interface CandidateRegistration {
   registrationId: number;
   participantId: number;
@@ -34,6 +45,7 @@ export interface CandidateRegistration {
   variantTitle: string | null;
   suggestedPrice: number | null;
   periodOptions: PeriodOption[];
+  editableOptions?: EditablePeriodOption[];
   order: { orderId: number; orderNumber: string; paymentStatus: string; amount: number | null } | null;
   overrideAmount: number | null;
   // active fiscal_attest_payer rows; empty = 100% defaultPayer
@@ -105,6 +117,7 @@ export interface RegistrationPreview {
   productName: string;
   label: string;
   period: CarePeriod | null;
+  editableOptions: EditablePeriodOption[];
   amount: number | null;
   amountSource: 'override' | 'order' | 'none';
   suggestedPrice: number | null;
@@ -341,6 +354,7 @@ function preview(
     productName: c.productName,
     label: period?.label ?? c.variantTitle ?? c.productName,
     period,
+    editableOptions: c.editableOptions ?? [],
     amount,
     amountSource,
     suggestedPrice: c.suggestedPrice,
