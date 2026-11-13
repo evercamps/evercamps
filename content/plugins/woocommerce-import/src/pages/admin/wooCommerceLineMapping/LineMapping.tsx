@@ -1,4 +1,6 @@
+import { OptionPeriodInput, type OptionPeriodValue } from '@components/admin/catalog/OptionPeriodInput';
 import { Card } from '@components/admin/cms/Card';
+import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { toast } from 'react-toastify';
 
@@ -28,6 +30,7 @@ interface UnmappedLineGroup {
   orderCount: number;
   registrationCount: number;
   skus: string[];
+  unitPrice: number | null;
   firstOrderAt: string | null;
   lastOrderAt: string | null;
   orderNumbers: string[];
@@ -51,10 +54,15 @@ interface Overview {
   variantsByProduct: Record<number, VariantChoice[]>;
 }
 
-interface Props {
-  listApi: string;
+interface Apis {
   productsApi: string;
   saveApi: string;
+  variantFormApi: string;
+  createVariantApi: string;
+}
+
+interface Props extends Apis {
+  listApi: string;
 }
 
 async function getJson(url: string) {
@@ -173,26 +181,362 @@ function ProductPicker({
   );
 }
 
+interface FormOption {
+  optionId: number;
+  text: string;
+  startDate: string | null;
+  endDate: string | null;
+  dayCount: number | null;
+  usedByProduct: boolean;
+}
+
+interface FormAttribute {
+  attributeId: number;
+  name: string;
+  code: string;
+  type: string;
+  usedByProduct: boolean;
+  options: FormOption[];
+}
+
+interface VariantForm {
+  product: { productId: number; name: string; sku: string };
+  attributes: FormAttribute[];
+  defaults: { price: number | null; totalSeats: number };
+  suggestion: {
+    attributeId: number | null;
+    optionId: number | null;
+    newOptionText: string;
+    startDate: string | null;
+    endDate: string | null;
+  };
+}
+
+// One attribute of the new variant: an existing option, or a new one (a
+// period attribute's new option gets its dates here too).
+interface OptionChoice {
+  mode: 'existing' | 'new';
+  optionId: number | null;
+  text: string;
+  period: OptionPeriodValue;
+}
+
+function slug(text: string) {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function optionLabel(o: FormOption) {
+  const dates = o.startDate ? ` (${o.startDate} – ${o.endDate ?? '?'})` : '';
+  return `${o.text}${dates}${o.usedByProduct ? ' · has a variant' : ''}`;
+}
+
+/**
+ * Popup: create the variant a line was booked on, on the chosen product -
+ * with a new period option (name + dates) when the week doesn't exist yet -
+ * and map the line name to it.
+ */
+function NewVariantModal({
+  product,
+  lineName,
+  year,
+  unitPrice,
+  apis,
+  onClose,
+  onCreated
+}: {
+  product: ProductRef;
+  lineName: string;
+  year: number | null;
+  unitPrice: number | null;
+  apis: Apis;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = React.useState<VariantForm | null>(null);
+  // the attributes the variant gets options of
+  const [attributeIds, setAttributeIds] = React.useState<number[]>([]);
+  const [choices, setChoices] = React.useState<Record<number, OptionChoice>>({});
+  const [title, setTitle] = React.useState<string | null>(null); // null = follow the option
+  const [sku, setSku] = React.useState<string | null>(null);
+  const [price, setPrice] = React.useState('');
+  const [seats, setSeats] = React.useState('0');
+  const [bookable, setBookable] = React.useState(year === null || year >= new Date().getFullYear());
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    const params: Record<string, string> = { productId: String(product.productId), lineName };
+    if (year) params.year = String(year);
+    getJson(withQuery(apis.variantFormApi, params))
+      .then((data: VariantForm) => {
+        setForm(data);
+        const used = data.attributes.filter((a) => a.usedByProduct).map((a) => a.attributeId);
+        const ids = used.length > 0 ? used : data.suggestion.attributeId ? [data.suggestion.attributeId] : [];
+        setAttributeIds(ids);
+        const initial: Record<number, OptionChoice> = {};
+        for (const attribute of data.attributes) {
+          const suggested = attribute.attributeId === data.suggestion.attributeId;
+          const onlyOption = attribute.options.length === 1 ? attribute.options[0].optionId : null;
+          initial[attribute.attributeId] = {
+            mode: suggested && !data.suggestion.optionId && attribute.type === 'period' ? 'new' : 'existing',
+            optionId: suggested ? data.suggestion.optionId : onlyOption,
+            text: suggested ? data.suggestion.newOptionText : '',
+            period: {
+              startDate: suggested ? data.suggestion.startDate ?? '' : '',
+              endDate: suggested ? data.suggestion.endDate ?? '' : '',
+              dayCount: ''
+            }
+          };
+        }
+        setChoices(initial);
+        setPrice(String(unitPrice ?? data.defaults.price ?? ''));
+        setSeats(String(data.defaults.totalSeats ?? 0));
+      })
+      .catch((e: Error) => toast.error(e.message));
+  }, [product.productId, lineName, year, apis.variantFormApi, unitPrice]);
+
+  if (!form) {
+    return (
+      <Card title="New variant">
+        <Card.Session>Loading…</Card.Session>
+      </Card>
+    );
+  }
+
+  const attributeById = new Map(form.attributes.map((a) => [a.attributeId, a]));
+  const periodAttributes = form.attributes.filter((a) => a.type === 'period');
+  const update = (attributeId: number, patch: Partial<OptionChoice>) =>
+    setChoices({ ...choices, [attributeId]: { ...choices[attributeId], ...patch } });
+  const choiceText = (attributeId: number) => {
+    const choice = choices[attributeId];
+    if (!choice) return '';
+    if (choice.mode === 'new') return choice.text;
+    return attributeById.get(attributeId)?.options.find((o) => o.optionId === choice.optionId)?.text ?? '';
+  };
+  // Title / sku follow the period option (else the first attribute) until edited.
+  const mainAttributeId =
+    attributeIds.find((id) => attributeById.get(id)?.type === 'period') ?? attributeIds[0] ?? null;
+  const mainText = mainAttributeId ? choiceText(mainAttributeId) : '';
+  const shownTitle = title ?? mainText;
+  const shownSku = sku ?? [slug(form.product.sku || form.product.name), slug(mainText)].filter(Boolean).join('-');
+  const singleChoice = attributeIds.length === 1 ? choices[attributeIds[0]] : null;
+  const usedChoice =
+    !!singleChoice &&
+    singleChoice.mode === 'existing' &&
+    !!attributeById.get(attributeIds[0])?.options.find((o) => o.optionId === singleChoice.optionId)?.usedByProduct;
+
+  const create = async () => {
+    setSaving(true);
+    try {
+      const result = await post(apis.createVariantApi, {
+        productId: product.productId,
+        lineName,
+        sku: shownSku,
+        title: shownTitle,
+        price,
+        totalSeats: seats,
+        bookable,
+        options: attributeIds.map((attributeId) => {
+          const choice = choices[attributeId];
+          return choice.mode === 'new'
+            ? {
+                attributeId,
+                newOption: {
+                  text: choice.text,
+                  startDate: choice.period.startDate,
+                  endDate: choice.period.endDate,
+                  dayCount: choice.period.dayCount
+                }
+              }
+            : { attributeId, optionId: choice.optionId };
+        })
+      });
+      toast.success(
+        `Variant created${result.createdOptionIds.length ? ' (with new option)' : ''}; ` +
+          `${result.mapping?.orderItems ?? 0} order line(s) and ${result.mapping?.registrations ?? 0} registration(s) mapped.`
+      );
+      onCreated();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card title={`New variant – ${form.product.name}`}>
+      <Card.Session>
+        <div className="text-textSubdued text-sm mb-4">
+          For order line <b>{lineName}</b>. The variant is created on this product and the order
+          lines with this name are mapped to it.
+        </div>
+        {attributeIds.length === 0 && (
+          <div className="text-critical mb-4">
+            There is no period attribute yet. Create one under Catalog → Attributes first.
+          </div>
+        )}
+        {form.attributes.every((a) => !a.usedByProduct) && periodAttributes.length > 1 && (
+          <label className="block mb-4">
+            <span className="text-sm">Attribute</span>
+            <select
+              className="form-field w-full"
+              value={attributeIds[0] ?? ''}
+              onChange={(e) => setAttributeIds([Number(e.target.value)])}
+            >
+              {periodAttributes.map((a) => (
+                <option key={a.attributeId} value={a.attributeId}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {attributeIds.map((attributeId) => {
+          const attribute = attributeById.get(attributeId)!;
+          const choice = choices[attributeId];
+          return (
+            <div key={attributeId} className="mb-4">
+              <div className="font-semibold mb-2">{attribute.name}</div>
+              <div className="flex gap-4 mb-2 text-sm">
+                <label className="flex gap-1 items-center">
+                  <input
+                    type="radio"
+                    checked={choice.mode === 'existing'}
+                    onChange={() => update(attributeId, { mode: 'existing' })}
+                  />
+                  Existing option
+                </label>
+                <label className="flex gap-1 items-center">
+                  <input
+                    type="radio"
+                    checked={choice.mode === 'new'}
+                    onChange={() => update(attributeId, { mode: 'new' })}
+                  />
+                  New option
+                </label>
+              </div>
+              {choice.mode === 'existing' ? (
+                <select
+                  className="form-field w-full"
+                  value={choice.optionId ?? ''}
+                  onChange={(e) =>
+                    update(attributeId, { optionId: e.target.value ? Number(e.target.value) : null })
+                  }
+                >
+                  <option value="">— choose option —</option>
+                  {attribute.options.map((o) => (
+                    <option key={o.optionId} value={o.optionId}>
+                      {optionLabel(o)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="grid gap-2">
+                  <input
+                    type="text"
+                    className="form-field w-full"
+                    placeholder="Option name, e.g. Week 1 zomer 2021"
+                    value={choice.text}
+                    onChange={(e) => update(attributeId, { text: e.target.value })}
+                  />
+                  {attribute.type === 'period' && (
+                    <OptionPeriodInput
+                      value={choice.period}
+                      required
+                      onChange={(period) => update(attributeId, { period })}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {usedChoice && (
+          <div className="text-critical text-sm mb-4">
+            This product already has a variant with this option: pick it in the variant list instead.
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-4">
+          <label className="block">
+            <span className="text-sm">Variant title</span>
+            <input className="form-field w-full" value={shownTitle} onChange={(e) => setTitle(e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="text-sm">SKU</span>
+            <input className="form-field w-full" value={shownSku} onChange={(e) => setSku(e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="text-sm">Price{unitPrice !== null ? ` (order line: ${unitPrice})` : ''}</span>
+            <input
+              className="form-field w-full"
+              type="number"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm">Seats</span>
+            <input
+              className="form-field w-full"
+              type="number"
+              min="0"
+              value={seats}
+              onChange={(e) => setSeats(e.target.value)}
+            />
+          </label>
+        </div>
+        <label className="flex gap-2 items-center mt-4 text-sm">
+          <input type="checkbox" checked={bookable} onChange={(e) => setBookable(e.target.checked)} />
+          Bookable in the shop (leave off for past seasons)
+        </label>
+      </Card.Session>
+      <Card.Session>
+        <div className="flex justify-end gap-4">
+          <button type="button" className="button secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="button primary"
+            disabled={saving || attributeIds.length === 0 || usedChoice}
+            onClick={create}
+          >
+            {saving ? 'Creating…' : 'Create variant and map'}
+          </button>
+        </div>
+      </Card.Session>
+    </Card>
+  );
+}
+
 /** Product + variant choice for one line name, and the Save button. */
 function MappingEditor({
   lineName,
   year,
+  unitPrice,
   initialProduct,
   initialVariantId,
   preloadedVariants,
-  productsApi,
-  saveApi,
+  apis,
   onSaved
 }: {
   lineName: string;
   year: number | null;
+  unitPrice: number | null;
   initialProduct: ProductRef | null;
   initialVariantId: number | null;
   preloadedVariants: Record<number, VariantChoice[]>;
-  productsApi: string;
-  saveApi: string;
+  apis: Apis;
   onSaved: () => void;
 }) {
+  const { productsApi, saveApi } = apis;
+  const variantModal = useModal();
   const [product, setProduct] = React.useState<ProductRef | null>(initialProduct);
   const [changingProduct, setChangingProduct] = React.useState(!initialProduct);
   const [variants, setVariants] = React.useState<VariantChoice[] | null>(
@@ -257,19 +601,48 @@ function MappingEditor({
         </div>
       )}
       {product && !changingProduct && (
-        <select
-          className="form-field border rounded px-2 py-1"
-          value={variantId ?? ''}
-          onChange={(e) => setVariantId(e.target.value ? Number(e.target.value) : null)}
-          disabled={!variants}
-        >
-          <option value="">{variants ? '— choose variant —' : 'Loading variants…'}</option>
-          {(variants ?? []).map((v) => (
-            <option key={v.variantId} value={v.variantId}>
-              {variantLabel(v)}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2 items-center">
+          <select
+            className="form-field border rounded px-2 py-1 flex-1"
+            value={variantId ?? ''}
+            onChange={(e) => setVariantId(e.target.value ? Number(e.target.value) : null)}
+            disabled={!variants}
+          >
+            <option value="">{variants ? '— choose variant —' : 'Loading variants…'}</option>
+            {(variants ?? []).map((v) => (
+              <option key={v.variantId} value={v.variantId}>
+                {variantLabel(v)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="text-interactive text-sm whitespace-nowrap"
+            onClick={() => variantModal.openModal()}
+          >
+            + New variant
+          </button>
+        </div>
+      )}
+      {product && variantModal.state.showing && (
+        <div className={variantModal.className} onAnimationEnd={variantModal.onAnimationEnd}>
+          <div className="modal-wrapper flex self-center justify-center items-center" tabIndex={-1} role="dialog">
+            <div className="modal">
+              <NewVariantModal
+                product={product}
+                lineName={lineName}
+                year={year}
+                unitPrice={unitPrice}
+                apis={apis}
+                onClose={() => variantModal.closeModal()}
+                onCreated={() => {
+                  variantModal.closeModal();
+                  onSaved();
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
       {seasonDiffers && (
         <label className="text-sm flex gap-2 items-center">
@@ -294,14 +667,12 @@ function MappingEditor({
 function UnmappedRow({
   group,
   overview,
-  productsApi,
-  saveApi,
+  apis,
   onSaved
 }: {
   group: UnmappedLineGroup;
   overview: Overview;
-  productsApi: string;
-  saveApi: string;
+  apis: Apis;
   onSaved: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -336,11 +707,11 @@ function UnmappedRow({
         <MappingEditor
           lineName={group.productName}
           year={group.year}
+          unitPrice={group.unitPrice}
           initialProduct={group.product}
           initialVariantId={group.suggestedVariantId}
           preloadedVariants={overview.variantsByProduct}
-          productsApi={productsApi}
-          saveApi={saveApi}
+          apis={apis}
           onSaved={onSaved}
         />
       </td>
@@ -351,14 +722,12 @@ function UnmappedRow({
 function MappedRow({
   mapping,
   overview,
-  productsApi,
-  saveApi,
+  apis,
   onSaved
 }: {
   mapping: MappedLineName;
   overview: Overview;
-  productsApi: string;
-  saveApi: string;
+  apis: Apis;
   onSaved: () => void;
 }) {
   const [editing, setEditing] = React.useState(false);
@@ -371,11 +740,11 @@ function MappedRow({
           <MappingEditor
             lineName={mapping.productName}
             year={null}
+            unitPrice={null}
             initialProduct={mapping.product}
             initialVariantId={mapping.variantId}
             preloadedVariants={overview.variantsByProduct}
-            productsApi={productsApi}
-            saveApi={saveApi}
+            apis={apis}
             onSaved={() => {
               setEditing(false);
               onSaved();
@@ -396,7 +765,14 @@ function MappedRow({
   );
 }
 
-export default function LineMapping({ listApi, productsApi, saveApi }: Props) {
+export default function LineMapping({
+  listApi,
+  productsApi,
+  saveApi,
+  variantFormApi,
+  createVariantApi
+}: Props) {
+  const apis: Apis = { productsApi, saveApi, variantFormApi, createVariantApi };
   const [overview, setOverview] = React.useState<Overview | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [filter, setFilter] = React.useState<'all' | 'product' | 'noProduct'>('all');
@@ -477,8 +853,7 @@ export default function LineMapping({ listApi, productsApi, saveApi }: Props) {
                     key={`${version}:${group.productName}`}
                     group={group}
                     overview={overview!}
-                    productsApi={productsApi}
-                    saveApi={saveApi}
+                    apis={apis}
                     onSaved={load}
                   />
                 ))}
@@ -505,8 +880,7 @@ export default function LineMapping({ listApi, productsApi, saveApi }: Props) {
                       key={`${version}:${mapping.productName}`}
                       mapping={mapping}
                       overview={overview}
-                      productsApi={productsApi}
-                      saveApi={saveApi}
+                      apis={apis}
                       onSaved={load}
                     />
                   ))}
@@ -530,5 +904,7 @@ export const query = `
     listApi: url(routeId: "lineMappingList")
     productsApi: url(routeId: "lineMappingProducts")
     saveApi: url(routeId: "lineMappingSave")
+    variantFormApi: url(routeId: "lineMappingVariantForm")
+    createVariantApi: url(routeId: "lineMappingCreateVariant")
   }
 `;

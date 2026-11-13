@@ -101,5 +101,26 @@ export const routes: RouteDefinition[] = [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'lineMappingSave', after: ['escapeHtml'], before: ['apiResponse'] }
     ]
+  },
+
+  {
+    routeId: 'lineMappingVariantForm',
+    region: 'api',
+    path: '/wc-import/line-mapping/variant-form',
+    methods: ['GET'],
+    middleware: [
+      { id: 'lineMappingVariantForm', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
+  },
+
+  {
+    routeId: 'lineMappingCreateVariant',
+    region: 'api',
+    path: '/wc-import/line-mapping/create-variant',
+    methods: ['POST'],
+    middleware: [
+      { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'lineMappingCreateVariant', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
   }
 ];

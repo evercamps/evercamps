@@ -1,0 +1,5 @@
+{
+  "methods": ["POST"],
+  "path": "/wc-import/line-mapping/create-variant",
+  "access": "private"
+}

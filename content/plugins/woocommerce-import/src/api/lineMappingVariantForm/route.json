@@ -1,0 +1,5 @@
+{
+  "methods": ["GET"],
+  "path": "/wc-import/line-mapping/variant-form",
+  "access": "private"
+}

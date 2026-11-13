@@ -35,8 +35,9 @@ function tokens(text: string): string[] {
  * Best guess of the variant a line name refers to. The part after " - " is
  * the WooCommerce variation ("Week 1 zomer"); its words (dates left out) are matched against
  * the variant's title and options. Every number in it must match (week 1 is
- * not week 10), a different year rules a variant out. Only a single best
- * match is suggested.
+ * not week 10). When the line's year is known, a variant of another year -
+ * or without a year (a pre-season "Zomer 1") - is ruled out. Only a single
+ * best match is suggested.
  */
 export function suggestVariant(
   lineName: string,
@@ -65,7 +66,7 @@ export function suggestVariant(
     }
     const variantYears = yearsIn(text);
     let score = lineTokens.filter((t) => variantTokens.has(t)).length;
-    if (lineYear !== null && variantYears.length > 0) {
+    if (lineYear !== null) {
       if (!variantYears.includes(lineYear)) {
         continue;
       }
@@ -80,4 +81,58 @@ export function suggestVariant(
     }
   }
   return bestScore >= 2 && !tie ? best : null;
+}
+
+/**
+ * Option text for a new period option from a line name:
+ * "Kleuterkamp 2021 - Zomer 1" -> "Zomer 1 2021",
+ * "Kleuterkamp - Zomer 1: 06/07 - 10/07 - kermis" (2020) -> "Zomer 1 2020".
+ */
+export function optionTextFromLineName(lineName: string, year: number | null): string {
+  const dash = lineName.search(/\s[-–]\s/);
+  let text = dash >= 0 ? lineName.slice(dash + 3) : lineName;
+  text = text.split(':')[0];
+  text = text.replace(DATE, ' ').replace(YEAR, ' ');
+  text = text.replace(/\s+/g, ' ').replace(/^[\s\-–]+|[\s\-–]+$/g, '').trim();
+  return year ? `${text} ${year}`.trim() : text;
+}
+
+function isoDate(year: number, month: number, day: number): string | null {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    return null;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Start and end date written in a line name ("Zomer 1: 06/07 - 10/07",
+ * "Basketkamp 28/12/20 tot en met 30/12/20"). A date without a year gets
+ * `year`; an end before the start rolls into the next year.
+ */
+export function datesFromLineName(
+  lineName: string,
+  year: number | null
+): { startDate: string; endDate: string } | null {
+  const matches = [...lineName.matchAll(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?\b/g)];
+  if (matches.length < 2) {
+    return null;
+  }
+  const yearOf = (m: RegExpMatchArray) =>
+    m[3] ? (m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10)) : year;
+  const startYear = yearOf(matches[0]);
+  let endYear = yearOf(matches[1]);
+  if (startYear === null || endYear === null) {
+    return null;
+  }
+  const startDate = isoDate(startYear, parseInt(matches[0][2], 10), parseInt(matches[0][1], 10));
+  let endDate = isoDate(endYear, parseInt(matches[1][2], 10), parseInt(matches[1][1], 10));
+  if (!startDate || !endDate) {
+    return null;
+  }
+  if (endDate < startDate && !matches[1][3]) {
+    endYear += 1;
+    endDate = isoDate(endYear, parseInt(matches[1][2], 10), parseInt(matches[1][1], 10));
+  }
+  return endDate && endDate >= startDate ? { startDate, endDate } : null;
 }

@@ -1,7 +1,13 @@
 // Unit tests for guessing the variant of a WooCommerce order line name (no database).
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { suggestVariant, yearOfLineName, type GuessableVariant } from './lineNameGuess.js';
+import {
+  datesFromLineName,
+  optionTextFromLineName,
+  suggestVariant,
+  yearOfLineName,
+  type GuessableVariant
+} from './lineNameGuess.js';
 
 const variants: GuessableVariant[] = [
   { variantId: 1, title: 'Week 1 zomer 2022', options: 'Week 1 zomer 2022 (2022-07-04)' },
@@ -53,5 +59,40 @@ describe('suggestVariant with real WooCommerce names', () => {
 
   it('ignores dates in the name', () => {
     assert.equal(suggestVariant('Kleuterkamp - Zomer 1: 06/07 - 10/07 - kermis', kleuter, 2020), 11);
+  });
+});
+
+describe('new option from a line name', () => {
+  it('builds the option text with the season', () => {
+    assert.equal(optionTextFromLineName('Kleuterkamp 2021 - Zomer 1', 2021), 'Zomer 1 2021');
+    assert.equal(optionTextFromLineName('Kleuterkamp - Zomer 1: 06/07 - 10/07 - kermis', 2020), 'Zomer 1 2020');
+    assert.equal(optionTextFromLineName('Basketbalkamp Krokus - Krokus', null), 'Krokus');
+  });
+
+  it('reads the dates from the name', () => {
+    assert.deepEqual(datesFromLineName('Kleuterkamp - Zomer 1: 06/07 - 10/07 - kermis', 2020), {
+      startDate: '2020-07-06',
+      endDate: '2020-07-10'
+    });
+    assert.deepEqual(datesFromLineName('Basketkamp 28/12/20 tot en met 30/12/20', null), {
+      startDate: '2020-12-28',
+      endDate: '2020-12-30'
+    });
+    assert.deepEqual(datesFromLineName('Kamp 30/12 - 02/01', 2020), {
+      startDate: '2020-12-30',
+      endDate: '2021-01-02'
+    });
+    assert.equal(datesFromLineName('Kleuterkamp 2021 - Zomer 1', 2021), null);
+  });
+});
+
+describe('suggestVariant and options without a year', () => {
+  it('does not suggest a pre-season option for a known year', () => {
+    const options: GuessableVariant[] = [
+      { variantId: 1, title: 'Zomer 1', options: '' },
+      { variantId: 2, title: 'Zomer 1 2021', options: '' }
+    ];
+    assert.equal(suggestVariant('Zomer 1 2020', options, 2020), null);
+    assert.equal(suggestVariant('Zomer 1 2021', options, 2021), 2);
   });
 });

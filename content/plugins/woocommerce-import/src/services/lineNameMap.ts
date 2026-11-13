@@ -29,6 +29,8 @@ export interface UnmappedLineGroup {
   orderCount: number;
   registrationCount: number;
   skus: string[];
+  // highest unit price (incl. tax) on the lines, to prefill a new variant's price
+  unitPrice: number | null;
   firstOrderAt: string | null;
   lastOrderAt: string | null;
   orderNumbers: string[];
@@ -132,6 +134,7 @@ export async function getLineMappingOverview(): Promise<LineMappingOverview> {
             COUNT(DISTINCT oi.order_item_order_id)::int AS order_count,
             COALESCE(SUM(rc.registration_count), 0)::int AS registration_count,
             array_agg(DISTINCT oi.product_sku) AS skus,
+            MAX(oi.product_price_incl_tax) AS unit_price,
             array_agg(DISTINCT p.product_id) FILTER (WHERE p.product_id IS NOT NULL) AS product_ids,
             MIN(o.created_at) AS first_order_at,
             MAX(o.created_at) AS last_order_at,
@@ -188,6 +191,7 @@ export async function getLineMappingOverview(): Promise<LineMappingOverview> {
       orderCount: g.order_count,
       registrationCount: g.registration_count,
       skus: g.skus ?? [],
+      unitPrice: g.unit_price === null ? null : Number(g.unit_price),
       firstOrderAt: toIso(g.first_order_at),
       lastOrderAt: toIso(g.last_order_at),
       orderNumbers: g.order_numbers ?? [],

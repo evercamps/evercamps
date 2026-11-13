@@ -22,3 +22,5 @@ export { resolveOrderStatus } from '../../../../dist/modules/oms/services/update
 export { debug, error } from '../../../../dist/lib/log/logger.js';
 export { uploadFile } from '../../../../dist/modules/cms/services/uploadFile.js';
 export { getEnabledExtensions } from '../../../../dist/bin/extension/index.js';
+export { createProductVariant } from '../../../../dist/modules/catalog/services/product/productVariants.js';
+export { normalizeOptionPeriod } from '../../../../dist/modules/catalog/services/attribute/optionPeriod.js';
