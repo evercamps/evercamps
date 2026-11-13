@@ -64,5 +64,42 @@ export const routes: RouteDefinition[] = [
     middleware: [
       { id: 'batchFailures', after: ['escapeHtml'], before: ['apiResponse'] }
     ]
+  },
+
+  {
+    routeId: 'wooCommerceLineMapping',
+    region: 'admin',
+    middleware: [{ id: 'index', after: ['auth'], before: ['buildQuery'] }]
+  },
+
+  {
+    routeId: 'lineMappingList',
+    region: 'api',
+    path: '/wc-import/line-mapping',
+    methods: ['GET'],
+    middleware: [
+      { id: 'lineMappingList', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
+  },
+
+  {
+    routeId: 'lineMappingProducts',
+    region: 'api',
+    path: '/wc-import/line-mapping/products',
+    methods: ['GET'],
+    middleware: [
+      { id: 'lineMappingProducts', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
+  },
+
+  {
+    routeId: 'lineMappingSave',
+    region: 'api',
+    path: '/wc-import/line-mapping/save',
+    methods: ['POST'],
+    middleware: [
+      { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'lineMappingSave', after: ['escapeHtml'], before: ['apiResponse'] }
+    ]
   }
 ];

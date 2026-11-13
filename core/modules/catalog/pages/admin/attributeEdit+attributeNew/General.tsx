@@ -1,3 +1,4 @@
+import { OptionPeriodInput } from '@components/admin/catalog/OptionPeriodInput';
 import { Card } from '@components/admin/cms/Card';
 import Area from '@components/Area';
 import { Field } from '@components/form/Field';
@@ -164,6 +165,9 @@ function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
     ]);
   };
 
+  const updateOption = (uuid: string | number | undefined, patch: Partial<AttributeOption>) =>
+    setOptions((current) => current.map((o) => (o.uuid === uuid ? { ...o, ...patch } : o)));
+
   const removeOption = (
     uuid: string | number | undefined,
     e: React.MouseEvent<HTMLAnchorElement>
@@ -178,9 +182,12 @@ function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
       {options.length > 0 && isPeriod && (
         <div className="flex mb-2 space-x-8 text-textSubdued">
           <div className="w-1/3">Option</div>
-          <div className="w-1/5">Start date</div>
-          <div className="w-1/5">End date</div>
-          <div className="w-1/12">Days</div>
+          <div className="flex-1 grid grid-cols-3 gap-4">
+            <div>Start date</div>
+            <div>End date</div>
+            <div>Days</div>
+          </div>
+          <div className="invisible">Remove option</div>
         </div>
       )}
       {options.map((option, index) => (
@@ -205,35 +212,43 @@ function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
               fiscal attests. Required for new options; existing options
               without dates (e.g. older imported seasons) stay allowed. */}
           {isPeriod && (
-            <>
-              <div className="w-1/5">
-                <Field
-                  type="date"
-                  name={`options[${index}][start_date]`}
-                  value={option.startDate ?? ''}
-                  placeholder="YYYY-MM-DD"
-                  validationRules={option.isNew ? ['notEmpty'] : []}
-                />
-              </div>
-              <div className="w-1/5">
-                <Field
-                  type="date"
-                  name={`options[${index}][end_date]`}
-                  value={option.endDate ?? ''}
-                  placeholder="YYYY-MM-DD"
-                  validationRules={option.isNew ? ['notEmpty'] : []}
-                />
-              </div>
-              <div className="w-1/12">
-                <Field
-                  type="text"
-                  name={`options[${index}][day_count]`}
-                  value={option.dayCount ?? ''}
-                  validationRules={['number']}
-                  placeholder="Auto"
-                />
-              </div>
-            </>
+            <div className="flex-1">
+              <OptionPeriodInput
+                showLabels={false}
+                required={!!option.isNew}
+                value={{
+                  startDate: option.startDate ?? '',
+                  endDate: option.endDate ?? '',
+                  dayCount: option.dayCount === null || option.dayCount === undefined ? '' : String(option.dayCount)
+                }}
+                onChange={(period) =>
+                  updateOption(option.uuid, {
+                    startDate: period.startDate,
+                    endDate: period.endDate,
+                    dayCount: period.dayCount === '' ? null : Number(period.dayCount)
+                  })
+                }
+              />
+              {/* The form posts these (and validates them); the date pickers above only edit the state. */}
+              <Field
+                type="hidden"
+                name={`options[${index}][start_date]`}
+                value={option.startDate ?? ''}
+                validationRules={option.isNew ? ['notEmpty'] : []}
+              />
+              <Field
+                type="hidden"
+                name={`options[${index}][end_date]`}
+                value={option.endDate ?? ''}
+                validationRules={option.isNew ? ['notEmpty'] : []}
+              />
+              <Field
+                type="hidden"
+                name={`options[${index}][day_count]`}
+                value={option.dayCount ?? ''}
+                validationRules={['number']}
+              />
+            </div>
           )}
 
           <div className="self-center">
