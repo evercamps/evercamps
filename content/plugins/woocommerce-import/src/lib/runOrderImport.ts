@@ -854,7 +854,7 @@ async function linkRegistrationToOrderItem(
     if (hasPayerColumn && participant.payerNationalNumber) {
       await connection.query(
         `UPDATE order_item_registration
-         SET payer_national_number = $1,
+         SET payer_national_number = $1::text,
              extra_data = COALESCE(extra_data::jsonb, '{}'::jsonb) || jsonb_build_object('payer_national_number', $1::text)
          WHERE order_item_registration_id = $2
            AND (payer_national_number IS NULL OR payer_national_number = '')`,
