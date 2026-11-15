@@ -85,7 +85,9 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
 
   if (choosing) {
     return (
-      <div className="p-8">
+      // Same white card as the product selector (RegistrationSkuSelector
+      // renders inside <Card>); without it the modal shows through.
+      <div className="card shadow p-8">
         <div className="flex justify-between items-center mb-4">
           <h3>Choose a variant of {choosing.productName}</h3>
           <a
