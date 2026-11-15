@@ -1,15 +1,29 @@
 # Release 0.0.2
 
 types of todo's:
-- [planning]: create a plan inside the core/docs/release-x folder in a markdown file about steps to be taken to update.
+- [planning]: create a plan inside the core/docs/release-x folder in a markdown file about steps to be taken to update. (master branch)
 - [execute]: execute directly on a separate feature or fix branch 
 - [analysis]: create an analysis page with possible solutions to the problem. (master branch)
 
 ## features
--  
+- product detail:
+    - Editing variants or adding a new one is created with some sort of accordion. Move this to a popup/modal. It should also be possible to disable/enable a variant inline [execute]
+    - it should be easier to add the product to a collection. Now I have to go to collections first and then add it. [planning]
+    - if there is only one default variant, don't show it, fill in the general fields with the data.[planning]
+
+- registrations overview:
+    - it should be possible to filter on product variant as well [execute]
+
+- wc-import line mapping overview
+    - the search button does not do a lot anymore. A product picker should be appearing. [execute]
 
 ## fixes
--
-
+- when adding a field rijksregisternumber to the checkout fields in settings > sportscamp. There are 2 fields created on customer details. I think there is some duplicate code with two flows in it. Can you check this? [planning]
+- it's like I cannot add a new attribute group. Do we still need this anyway? Isn't it easier to add the variants that we need? Why is it possible to change this on the product detail page? Changing variant group, does not change a lot to adding a new variant. [analysis]
+- participant detail: 
+    - Adding a registration to a product, has a transparant background when selecting the variant. Change this to white. [execute]
+    - Can you check if it creates an order. What options do we have to keep the finances up to date? [analysis]
+- product overview: 
+    - keyword filtering is not working for title, it works only with a full word search [execute]
 ## tasks
 - We need to start testing the flows from a user perspective. Recognize the different flows a user can subscribe to a sportcamp and set up a test flow so we can test everything manually. [analysis]
