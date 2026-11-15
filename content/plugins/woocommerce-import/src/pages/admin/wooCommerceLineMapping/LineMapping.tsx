@@ -1,8 +1,10 @@
 import { OptionPeriodInput, type OptionPeriodValue } from '@components/admin/catalog/OptionPeriodInput';
 import { Card } from '@components/admin/cms/Card';
+import ProductSkuSelector from '@components/admin/promotion/couponEdit/ProductSkuSelector';
 import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { toast } from 'react-toastify';
+import { useClient } from 'urql';
 
 // Imported WooCommerce order lines without a variant, one row per line name
 // (services/lineNameMap.ts). WooCommerce sends product_id = 0 for lines of a
@@ -103,81 +105,107 @@ function variantLabel(v: VariantChoice) {
   return v.options && !name.includes(v.options) ? `${name} — ${v.options}` : name;
 }
 
-/** Product name without the year and " - variation" part: a start for the search. */
-function searchHint(lineName: string) {
-  return lineName
-    .split(/\s[-–]\s/)[0]
-    .replace(/[\s\-–]*\b(?:19|20)\d{2}\b/g, '')
-    .trim();
-}
+const ProductNameQuery = `
+  query Query($id: ID) {
+    product(id: $id) {
+      name
+    }
+  }
+`;
 
-function ProductPicker({
+/**
+ * Popup: pick the product with the admin product selector (search + paging,
+ * shared with the coupon / collection editors), then the variant the line was
+ * booked on. A product with a single variant is taken straight away; one
+ * without variants is taken without, so "+ New variant" can create it.
+ */
+function ProductPickerModal({
   productsApi,
-  initialTerm,
-  onPick
+  currentProductId,
+  onPick,
+  onClose
 }: {
   productsApi: string;
-  initialTerm: string;
-  onPick: (product: ProductRef) => void;
+  currentProductId: number | null;
+  onPick: (product: ProductRef, variantId: number | null, variants: VariantChoice[]) => void;
+  onClose: () => void;
 }) {
-  const [term, setTerm] = React.useState(initialTerm);
-  const [results, setResults] = React.useState<ProductRef[]>([]);
-  const [searching, setSearching] = React.useState(false);
+  const client = useClient();
+  const [choosing, setChoosing] = React.useState<{
+    product: ProductRef;
+    variants: VariantChoice[];
+  } | null>(null);
 
-  const search = async () => {
-    if (!term.trim()) return;
-    setSearching(true);
-    try {
-      setResults(await getJson(withQuery(productsApi, { q: term })));
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSearching(false);
+  const onSelectProduct = async (_sku: string, _uuid: string, productId: number) => {
+    const [nameResult, variants] = await Promise.all([
+      client.query(ProductNameQuery, { id: productId }).toPromise(),
+      getJson(withQuery(productsApi, { id: String(productId) })) as Promise<VariantChoice[]>
+    ]);
+    const product: ProductRef = {
+      productId,
+      name: nameResult.data?.product?.name ?? `#${productId}`
+    };
+    if (variants.length <= 1) {
+      onPick(product, variants[0]?.variantId ?? null, variants);
+      return;
     }
+    setChoosing({ product, variants });
   };
 
+  if (choosing) {
+    return (
+      <Card title={`Choose a variant of ${choosing.product.name}`}>
+        <div className="modal-content">
+          <Card.Session>
+            <div className="divide-y">
+              {choosing.variants.map((v) => (
+                <div key={v.variantId} className="grid grid-cols-8 gap-8 py-4 border-divider items-center">
+                  <div className="col-span-6">
+                    <h4>{variantLabel(v)}</h4>
+                    <p className="text-textSubdued">
+                      {v.sku}
+                      {v.price !== null ? ` · ${v.price}` : ''}
+                    </p>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <button
+                      type="button"
+                      className="button secondary"
+                      onClick={() => onPick(choosing.product, v.variantId, choosing.variants)}
+                    >
+                      Select
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card.Session>
+        </div>
+        <Card.Session>
+          <div className="flex justify-between gap-8">
+            <button type="button" className="button secondary" onClick={() => setChoosing(null)}>
+              Back to products
+            </button>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => onPick(choosing.product, null, choosing.variants)}
+            >
+              Choose variant later
+            </button>
+          </div>
+        </Card.Session>
+      </Card>
+    );
+  }
+
   return (
-    <div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          className="form-field border rounded px-2 py-1 flex-1"
-          placeholder="Search product"
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              search();
-            }
-          }}
-        />
-        <button type="button" className="button secondary" onClick={search} disabled={searching}>
-          {searching ? 'Searching…' : 'Search'}
-        </button>
-      </div>
-      {results.length > 0 && (
-        <ul className="mt-1 border rounded max-h-48 overflow-y-auto">
-          {results.map((p) => (
-            <li key={p.productId}>
-              <button
-                type="button"
-                className="w-full text-left px-2 py-1 hover:bg-gray-100"
-                onClick={() => {
-                  setResults([]);
-                  onPick(p);
-                }}
-              >
-                {p.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {!searching && results.length === 0 && term && (
-        <div className="text-sm text-gray-500 mt-1">Search and pick a product.</div>
-      )}
-    </div>
+    <ProductSkuSelector
+      onSelect={onSelectProduct}
+      onUnSelect={() => {}}
+      selectedChecker={(p: { productId: number }) => p.productId === currentProductId}
+      closeModal={onClose}
+    />
   );
 }
 
@@ -537,8 +565,8 @@ function MappingEditor({
 }) {
   const { productsApi, saveApi } = apis;
   const variantModal = useModal();
+  const productModal = useModal();
   const [product, setProduct] = React.useState<ProductRef | null>(initialProduct);
-  const [changingProduct, setChangingProduct] = React.useState(!initialProduct);
   const [variants, setVariants] = React.useState<VariantChoice[] | null>(
     initialProduct ? preloadedVariants[initialProduct.productId] ?? null : null
   );
@@ -581,26 +609,40 @@ function MappingEditor({
 
   return (
     <div className="grid gap-2">
-      {changingProduct || !product ? (
-        <ProductPicker
-          productsApi={productsApi}
-          initialTerm={product?.name ?? searchHint(lineName)}
-          onPick={(p) => {
-            setProduct(p);
-            setVariants(null);
-            setVariantId(null);
-            setChangingProduct(false);
-          }}
-        />
-      ) : (
-        <div className="flex gap-2 items-center">
-          <span className="font-semibold">{product.name}</span>
-          <button type="button" className="text-interactive text-sm" onClick={() => setChangingProduct(true)}>
-            change
+      <div className="flex gap-2 items-center">
+        {product ? (
+          <>
+            <span className="font-semibold">{product.name}</span>
+            <button type="button" className="text-interactive text-sm" onClick={() => productModal.openModal()}>
+              change
+            </button>
+          </>
+        ) : (
+          <button type="button" className="button secondary" onClick={() => productModal.openModal()}>
+            Choose product
           </button>
+        )}
+      </div>
+      {productModal.state.showing && (
+        <div className={productModal.className} onAnimationEnd={productModal.onAnimationEnd}>
+          <div className="modal-wrapper flex self-center justify-center items-center" tabIndex={-1} role="dialog">
+            <div className="modal">
+              <ProductPickerModal
+                productsApi={productsApi}
+                currentProductId={product?.productId ?? null}
+                onClose={() => productModal.closeModal()}
+                onPick={(p, pickedVariantId, pickedVariants) => {
+                  setProduct(p);
+                  setVariants(pickedVariants);
+                  setVariantId(pickedVariantId);
+                  productModal.closeModal();
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
-      {product && !changingProduct && (
+      {product && (
         <div className="flex gap-2 items-center">
           <select
             className="form-field border rounded px-2 py-1 flex-1"
