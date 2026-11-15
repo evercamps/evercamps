@@ -1,4 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
+import { Checkbox } from '@components/form/fields/Checkbox';
+import { Input } from '@components/form/fields/Input';
+import { Select } from '@components/form/fields/Select';
 import '@components/form/fields/Toggle.scss';
 import { useAlertContext } from '@components/modal/Alert';
 import { useModal } from '@components/modal/useModal';
@@ -199,12 +202,10 @@ function VariantForm({
   const [optionFilter, setOptionFilter] = React.useState<OptionFilter>('active');
   const hasInactiveOptions = attributes.some((a) => a.options.some((o) => o.status === false));
 
-  const field = (key: string, label: string, input: React.ReactNode) => (
-    <div className="form-field-container" key={key}>
-      <label>{label}</label>
-      <div className="field-wrapper flex flex-grow">{input}</div>
-    </div>
-  );
+  // Same form components as the rest of the product page (Input / Select /
+  // Checkbox: label, border, dropdown arrow). They get no `name`, so nothing
+  // here is posted with the product form.
+  const cell = (key: string, content: React.ReactNode) => <div key={key}>{content}</div>;
 
   return (
     // The modal is rendered inside the product <form>: Enter in an input would
@@ -224,114 +225,100 @@ function VariantForm({
         <div className="modal-content">
           <Card.Session>
             {attributes.length > 0 && (
-              <div className="flex items-center justify-end gap-2 mb-4 text-textSubdued">
-                <label htmlFor="variant-option-filter">Show options</label>
-                <select
-                  id="variant-option-filter"
-                  className="form-field"
-                  style={{ width: 'auto' }}
-                  value={optionFilter}
-                  onChange={(e) => setOptionFilter(e.target.value as OptionFilter)}
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="all">All</option>
-                </select>
-                {!hasInactiveOptions && <span className="text-sm">(no inactive options)</span>}
+              <div className="flex justify-end mb-4">
+                <div className="w-1/3">
+                  <Select
+                    label="Show options"
+                    value={optionFilter}
+                    disableDefaultOption
+                    placeholder="Show options"
+                    options={[
+                      { value: 'active', text: 'Active' },
+                      { value: 'inactive', text: 'Inactive' },
+                      { value: 'all', text: 'All' }
+                    ]}
+                    onChange={(e) => setOptionFilter(e.target.value as OptionFilter)}
+                    instruction={hasInactiveOptions ? undefined : 'No inactive options'}
+                  />
+                </div>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
               {attributes.map((attribute) =>
-                field(
+                cell(
                   `attribute-${attribute.attributeId}`,
-                  attribute.attributeName,
-                  <select
-                    className="form-field"
+                  <Select
+                    label={attribute.attributeName}
                     value={draft.options[attribute.attributeId] ?? ''}
+                    disableDefaultOption={false}
+                    placeholder="—"
+                    options={visibleOptions(
+                      attribute.options,
+                      optionFilter,
+                      draft.options[attribute.attributeId] ?? ''
+                    ).map((option) => ({
+                      value: option.attributeOptionId,
+                      text: `${option.optionText}${optionPeriod(option)}${
+                        option.status === false ? ' (inactive)' : ''
+                      }`
+                    }))}
                     onChange={(e) =>
                       setDraft({
                         ...draft,
                         options: { ...draft.options, [attribute.attributeId]: e.target.value }
                       })
                     }
-                  >
-                    <option value="">—</option>
-                    {visibleOptions(
-                      attribute.options,
-                      optionFilter,
-                      draft.options[attribute.attributeId] ?? ''
-                    ).map((option) => (
-                      <option key={option.attributeOptionId} value={option.attributeOptionId}>
-                        {option.optionText}
-                        {optionPeriod(option)}
-                        {option.status === false ? ' (inactive)' : ''}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 )
               )}
-              {field(
+              {cell(
                 'title',
-                'Title',
-                <input
-                  className="form-field"
-                  type="text"
+                <Input
+                  label="Title"
                   value={draft.title}
                   placeholder="e.g. Week 1 zomer 2027"
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                 />
               )}
-              {field(
+              {cell(
                 'sku',
-                'SKU',
-                <input
-                  className="form-field"
-                  type="text"
+                <Input
+                  label="SKU"
                   value={draft.sku}
                   onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
                 />
               )}
-              {field(
+              {cell(
                 'price',
-                'Price',
-                <input
-                  className="form-field"
-                  type="number"
-                  min="0"
-                  step="0.01"
+                <Input
+                  label="Price"
                   value={draft.price}
                   onChange={(e) => setDraft({ ...draft, price: e.target.value })}
                 />
               )}
-              {field(
+              {cell(
                 'seats',
-                'Seats',
-                <input
-                  className="form-field"
-                  type="number"
-                  min="0"
-                  step="1"
+                <Input
+                  label="Seats"
                   value={draft.totalSeats}
                   onChange={(e) => setDraft({ ...draft, totalSeats: e.target.value })}
                 />
               )}
             </div>
-            <label className="flex items-center gap-2 mt-4">
-              <input
-                type="checkbox"
-                checked={draft.isDefault}
+            <div className="mt-4">
+              <Checkbox
+                label="Default variant (used when no variant is chosen)"
+                isChecked={draft.isDefault}
                 onChange={(e) => setDraft({ ...draft, isDefault: e.target.checked })}
               />
-              Default variant (used when no variant is chosen)
-            </label>
-            <label className="flex items-center gap-2 mt-2">
-              <input
-                type="checkbox"
-                checked={draft.status}
+            </div>
+            <div className="mt-2">
+              <Checkbox
+                label="Enabled (bookable in the shop). A disabled variant keeps its registrations."
+                isChecked={draft.status}
                 onChange={(e) => setDraft({ ...draft, status: e.target.checked })}
               />
-              Enabled (bookable in the shop). A disabled variant keeps its registrations.
-            </label>
+            </div>
           </Card.Session>
         </div>
         <Card.Session>
