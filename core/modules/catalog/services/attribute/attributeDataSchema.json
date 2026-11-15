@@ -53,6 +53,9 @@
           },
           "day_count": {
             "type": ["string", "integer", "null"]
+          },
+          "status": {
+            "type": ["string", "integer", "boolean", "null"]
           }
         },
         "required": ["option_text"]

@@ -15,6 +15,11 @@ type AttributeOption {
   Number of care days; null means "weekdays between start and end date".
   """
   dayCount: Int
+  """
+  False when the option is inactive (e.g. a camp week of a past season). It
+  stays on the variants/products that use it; admin pickers hide it by default.
+  """
+  status: Boolean!
 }
 
 """

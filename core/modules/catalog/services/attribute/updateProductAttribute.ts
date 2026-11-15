@@ -15,6 +15,7 @@ import { getValueSync, getValue } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import attributeDataSchema from './attributeDataSchema.json' with { type: 'json' };
 import { normalizeOptionPeriod, type OptionPeriodInput } from './optionPeriod.js';
+import { normalizeOptionStatus, type OptionStatusInput } from './optionStatus.js';
 
 export type AttributeData = {
   attribute_code?: string;
@@ -45,7 +46,7 @@ async function updateAttributeOptions(
   attributeId: number,
   attributeType: string,
   attributeCode: string,
-  options: ({ option_text: string, option_id: string | number } & OptionPeriodInput)[],
+  options: ({ option_text: string, option_id: string | number } & OptionPeriodInput & OptionStatusInput)[],
   connection: PoolClient
 ) {
   // Ignore updating options if it is not present in the data or if the attribute type is not select or multiselect
@@ -100,7 +101,8 @@ async function updateAttributeOptions(
             option_text: option.option_text,
             attribute_id: attributeId,
             attribute_code: attributeCode,
-            ...periods[index]
+            ...periods[index],
+            ...normalizeOptionStatus(option)
           })
           .where('attribute_option_id', '=', option.option_id)
           .execute(connection, false);
@@ -110,7 +112,8 @@ async function updateAttributeOptions(
             option_text: option.option_text,
             attribute_id: attributeId,
             attribute_code: attributeCode,
-            ...periods[index]
+            ...periods[index],
+            ...normalizeOptionStatus(option)
           })
           .execute(connection, false);
       }

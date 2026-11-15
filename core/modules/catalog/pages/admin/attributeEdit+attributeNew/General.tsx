@@ -3,6 +3,7 @@ import { Card } from '@components/admin/cms/Card';
 import Area from '@components/Area';
 import { Field } from '@components/form/Field';
 import { Input } from '@components/form/fields/Input';
+import { Toggle } from '@components/form/fields/Toggle';
 import React from 'react';
 import Select from 'react-select';
 import { useQuery } from 'urql';
@@ -21,6 +22,8 @@ interface AttributeOption {
   startDate?: string | null;
   endDate?: string | null;
   dayCount?: number | null;
+  // false = inactive (hidden in the admin pickers by default)
+  status?: boolean;
   // added in this form, not saved yet (dates are required for those)
   isNew?: boolean;
 }
@@ -187,6 +190,7 @@ function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
             <div>End date</div>
             <div>Days</div>
           </div>
+          <div className="w-16">Active</div>
           <div className="invisible">Remove option</div>
         </div>
       )}
@@ -250,6 +254,16 @@ function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
               />
             </div>
           )}
+
+          {/* Inactive options (e.g. camp weeks of a past season) stay on the
+              variants that use them, but the admin pickers hide them by default. */}
+          <div className="w-16 self-center" title="Active">
+            <Toggle
+              name={`options[${index}][status]`}
+              value={option.status === false ? 0 : 1}
+              onChange={(value) => updateOption(option.uuid, { status: !!value })}
+            />
+          </div>
 
           <div className="self-center">
             <a
@@ -391,6 +405,7 @@ export const query = `
         startDate
         endDate
         dayCount
+        status
       }
       groups {
         items {

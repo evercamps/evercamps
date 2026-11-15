@@ -20,7 +20,11 @@ interface Option {
   optionText: string;
   startDate?: string | null;
   endDate?: string | null;
+  // false = inactive option (e.g. a camp week of a past season)
+  status: boolean;
 }
+
+type OptionFilter = 'active' | 'inactive' | 'all';
 
 interface VariantAttribute {
   attributeId: number;
@@ -79,6 +83,7 @@ const VariantsQuery = `
           optionText
           startDate
           endDate
+          status
         }
       }
       variants {
@@ -163,6 +168,17 @@ function optionPeriod(option: Option): string {
   return option.startDate && option.endDate ? ` (${option.startDate} – ${option.endDate})` : '';
 }
 
+// Options shown in a variant's attribute dropdown for the chosen filter. The
+// option the variant already has is always kept, so editing a variant never
+// silently drops an inactive option.
+function visibleOptions(options: Option[], filter: OptionFilter, selected: string): Option[] {
+  return options.filter((option) => {
+    if (String(option.attributeOptionId) === selected) return true;
+    if (filter === 'all') return true;
+    return filter === 'active' ? option.status !== false : option.status === false;
+  });
+}
+
 function VariantForm({
   heading,
   draft,
@@ -180,6 +196,9 @@ function VariantForm({
   onCancel: () => void;
   saving: boolean;
 }) {
+  const [optionFilter, setOptionFilter] = React.useState<OptionFilter>('active');
+  const hasInactiveOptions = attributes.some((a) => a.options.some((o) => o.status === false));
+
   const field = (key: string, label: string, input: React.ReactNode) => (
     <div className="form-field-container" key={key}>
       <label>{label}</label>
@@ -204,6 +223,23 @@ function VariantForm({
       <Card title={heading}>
         <div className="modal-content">
           <Card.Session>
+            {attributes.length > 0 && (
+              <div className="flex items-center justify-end gap-2 mb-4 text-textSubdued">
+                <label htmlFor="variant-option-filter">Show options</label>
+                <select
+                  id="variant-option-filter"
+                  className="form-field"
+                  style={{ width: 'auto' }}
+                  value={optionFilter}
+                  onChange={(e) => setOptionFilter(e.target.value as OptionFilter)}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="all">All</option>
+                </select>
+                {!hasInactiveOptions && <span className="text-sm">(no inactive options)</span>}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               {attributes.map((attribute) =>
                 field(
@@ -220,10 +256,15 @@ function VariantForm({
                     }
                   >
                     <option value="">—</option>
-                    {attribute.options.map((option) => (
+                    {visibleOptions(
+                      attribute.options,
+                      optionFilter,
+                      draft.options[attribute.attributeId] ?? ''
+                    ).map((option) => (
                       <option key={option.attributeOptionId} value={option.attributeOptionId}>
                         {option.optionText}
                         {optionPeriod(option)}
+                        {option.status === false ? ' (inactive)' : ''}
                       </option>
                     ))}
                   </select>

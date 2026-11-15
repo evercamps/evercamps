@@ -41,6 +41,9 @@
           "option_id": {
             "type": ["string", "integer"],
             "pattern": "^[1-9][0-9]*$"
+          },
+          "status": {
+            "type": ["string", "integer", "boolean", "null"]
           }
         },
         "required": ["option_text"]
