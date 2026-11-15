@@ -1,5 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
 import { useAlertContext } from '@components/modal/Alert';
+import { OptionPeriodInput } from '@components/admin/catalog/OptionPeriodInput';
 import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { toast } from 'react-toastify';
@@ -220,37 +221,10 @@ function PeriodModal({
             <div className="font-semibold mb-2">
               {d.attributeName}: {d.optionText}
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <label className="block">
-                <span className="text-sm">Start date</span>
-                <input
-                  className="form-field w-full"
-                  type="date"
-                  value={d.startDate}
-                  onChange={(e) => update(index, { startDate: e.target.value })}
-                />
-              </label>
-              <label className="block">
-                <span className="text-sm">End date</span>
-                <input
-                  className="form-field w-full"
-                  type="date"
-                  value={d.endDate}
-                  onChange={(e) => update(index, { endDate: e.target.value })}
-                />
-              </label>
-              <label className="block">
-                <span className="text-sm">Days</span>
-                <input
-                  className="form-field w-full"
-                  type="number"
-                  min="1"
-                  placeholder="Auto"
-                  value={d.dayCount}
-                  onChange={(e) => update(index, { dayCount: e.target.value })}
-                />
-              </label>
-            </div>
+            <OptionPeriodInput
+              value={d}
+              onChange={(period) => update(index, period)}
+            />
           </div>
         ))}
       </Card.Session>

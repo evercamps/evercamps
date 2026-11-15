@@ -38,6 +38,7 @@ interface Props {
   saveSettingApi: string;
   importProductsApi: string;
   importOrdersApi: string;
+  lineMappingUrl: string;
   setting: WooCommerceSetting;
   wooCommerceImportBatches: ImportBatch[];
 }
@@ -245,6 +246,7 @@ export default function WooCommerceSettings({
   saveSettingApi,
   importProductsApi,
   importOrdersApi,
+  lineMappingUrl,
   setting: { wooCommerceStoreUrl, wooCommerceConsumerKey, wooCommerceCustomerNationalNumberMetaKey },
   wooCommerceImportBatches
 }: Props) {
@@ -318,6 +320,16 @@ export default function WooCommerceSettings({
                 importingLabel="Importing…"
                 importApi={importOrdersApi}
               />
+              <Card.Session title="Order lines without a variant">
+                <div>
+                  Order lines of products or variations deleted in WooCommerce are imported without a
+                  variant.{' '}
+                  <a className="text-interactive" href={lineMappingUrl}>
+                    Map them to a product variant
+                  </a>
+                  .
+                </div>
+              </Card.Session>
               <BatchHistory batches={wooCommerceImportBatches ?? []} />
             </Card>
           </div>
@@ -337,6 +349,7 @@ export const query = `
     saveSettingApi: url(routeId: "saveSetting")
     importProductsApi: url(routeId: "importProducts")
     importOrdersApi: url(routeId: "importOrders")
+    lineMappingUrl: url(routeId: "wooCommerceLineMapping")
     setting {
       wooCommerceStoreUrl
       wooCommerceConsumerKey

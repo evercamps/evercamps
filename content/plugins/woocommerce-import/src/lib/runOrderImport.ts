@@ -35,6 +35,7 @@ import { ensureSeasonVariant, isUnseasonedTwin } from './importVariants.js';
 import { campKey, parseCampProductName, seasonForDate } from './season.js';
 import { findCampProduct } from './campProducts.js';
 import { createCustomerNationalNumberImporter, isValidNationalNumber } from './customerNationalNumber.js';
+import { findLineNameMap } from '../services/lineNameMap.js';
 
 interface ImportedParticipant {
   firstName: string;
@@ -59,6 +60,12 @@ async function resolveLocalProductId(
     if (map?.product_id) {
       return map.product_id;
     }
+  }
+
+  // A line name mapped by hand on the "Unmapped order lines" admin page.
+  const named = await findLineNameMap(productName);
+  if (named) {
+    return named.product_id;
   }
 
   // Legacy orders: WooCommerce gives product_id = 0,
@@ -142,6 +149,17 @@ async function resolveLocalVariantId(
   return variationMap.product_variant_id;
 }
 
+async function isMappedVariation(externalVariationId: number | null): Promise<boolean> {
+  if (!externalVariationId) {
+    return false;
+  }
+  const row = await select('product_variant_id')
+    .from('woocommerce_variation_map')
+    .where('external_variation_id', '=', externalVariationId)
+    .load(pool);
+  return !!row?.product_variant_id;
+}
+
 // Season of an order line: the year of its WooCommerce product ("X 2022" ->
 // 2022, stored on woocommerce_product_map.external_year by the product
 // import, or read from the line's product name), else the order date
@@ -164,6 +182,14 @@ async function resolveOrderLineVariantId(
   productId: number | null,
   orderDate: string
 ): Promise<number | null> {
+  // A line whose WC variation isn't known here (deleted product/variation)
+  // uses the variant chosen by hand for its name, as is (no season shift).
+  if (!(await isMappedVariation(item.externalVariationId))) {
+    const named = await findLineNameMap(item.product_name);
+    if (named && named.product_id === productId) {
+      return named.product_variant_id;
+    }
+  }
   const baseVariantId = await resolveLocalVariantId(
     item.externalVariationId,
     productId,
