@@ -72,6 +72,12 @@ interface Draft {
 const VariantsQuery = `
   query Query($id: ID) {
     product(id: $id) {
+      sku
+      price {
+        regular {
+          value
+        }
+      }
       createVariantApi
       variantAttributeGroup {
         groupId
@@ -171,6 +177,37 @@ function optionPeriod(option: Option): string {
   return option.startDate && option.endDate ? ` (${option.startDate} – ${option.endDate})` : '';
 }
 
+// Lowercase, accents removed, everything else that isn't a letter or digit
+// becomes "-": "Week 1 zomer 2027" -> "week-1-zomer-2027".
+function slugify(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Title of a new variant, from its chosen options (in attribute order).
+function autoTitle(draft: Draft, attributes: VariantAttribute[]): string {
+  return attributes
+    .map(
+      (attribute) =>
+        attribute.options.find(
+          (option) => String(option.attributeOptionId) === draft.options[attribute.attributeId]
+        )?.optionText
+    )
+    .filter(Boolean)
+    .join(' / ');
+}
+
+// SKU of a new variant: product SKU + slug of the variant title.
+function autoSku(productSku: string, title: string): string {
+  const slug = slugify(title);
+  if (!slug) return '';
+  return productSku ? `${productSku}-${slug}` : slug;
+}
+
 // Options shown in a variant's attribute dropdown for the chosen filter. The
 // option the variant already has is always kept, so editing a variant never
 // silently drops an inactive option.
@@ -189,7 +226,8 @@ function VariantForm({
   attributes,
   onSave,
   onCancel,
-  saving
+  saving,
+  autofill = null
 }: {
   heading: string;
   draft: Draft;
@@ -198,7 +236,28 @@ function VariantForm({
   onSave: () => void;
   onCancel: () => void;
   saving: boolean;
+  // Set when adding a variant: the title is filled in from the chosen options
+  // until the user types in it (clearing the field turns it back on), and the
+  // SKU is always product SKU + slug of the title. The SKU is never editable
+  // here; an existing variant keeps its SKU.
+  autofill?: { productSku: string } | null;
 }) {
+  const titleTouched = React.useRef(false);
+  const update = (next: Draft, titleChanged = false) => {
+    if (!autofill) {
+      setDraft(next);
+      return;
+    }
+    if (titleChanged) {
+      titleTouched.current = next.title !== '';
+    }
+    let result = next;
+    if (!titleTouched.current) {
+      result = { ...result, title: autoTitle(result, attributes) };
+    }
+    setDraft({ ...result, sku: autoSku(autofill.productSku, result.title) });
+  };
+
   const [optionFilter, setOptionFilter] = React.useState<OptionFilter>('active');
   const hasInactiveOptions = attributes.some((a) => a.options.some((o) => o.status === false));
 
@@ -263,7 +322,7 @@ function VariantForm({
                       }`
                     }))}
                     onChange={(e) =>
-                      setDraft({
+                      update({
                         ...draft,
                         options: { ...draft.options, [attribute.attributeId]: e.target.value }
                       })
@@ -277,15 +336,23 @@ function VariantForm({
                   label="Title"
                   value={draft.title}
                   placeholder="e.g. Week 1 zomer 2027"
-                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                  instruction={autofill ? 'Filled in from the options' : undefined}
+                  onChange={(e) => update({ ...draft, title: e.target.value }, true)}
                 />
               )}
               {cell(
                 'sku',
                 <Input
                   label="SKU"
+                  disabled
+                  instruction={
+                    autofill
+                      ? draft.sku
+                        ? 'Product SKU + variant title'
+                        : 'Choose an option or enter a title'
+                      : undefined
+                  }
                   value={draft.sku}
-                  onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
                 />
               )}
               {cell(
@@ -293,7 +360,7 @@ function VariantForm({
                 <Input
                   label="Price"
                   value={draft.price}
-                  onChange={(e) => setDraft({ ...draft, price: e.target.value })}
+                  onChange={(e) => update({ ...draft, price: e.target.value })}
                 />
               )}
               {cell(
@@ -301,7 +368,7 @@ function VariantForm({
                 <Input
                   label="Seats"
                   value={draft.totalSeats}
-                  onChange={(e) => setDraft({ ...draft, totalSeats: e.target.value })}
+                  onChange={(e) => update({ ...draft, totalSeats: e.target.value })}
                 />
               )}
             </div>
@@ -309,14 +376,14 @@ function VariantForm({
               <Checkbox
                 label="Default variant (used when no variant is chosen)"
                 isChecked={draft.isDefault}
-                onChange={(e) => setDraft({ ...draft, isDefault: e.target.checked })}
+                onChange={(e) => update({ ...draft, isDefault: e.target.checked })}
               />
             </div>
             <div className="mt-2">
               <Checkbox
                 label="Enabled (bookable in the shop). A disabled variant keeps its registrations."
                 isChecked={draft.status}
-                onChange={(e) => setDraft({ ...draft, status: e.target.checked })}
+                onChange={(e) => update({ ...draft, status: e.target.checked })}
               />
             </div>
           </Card.Session>
@@ -467,7 +534,15 @@ export default function Variants({ product }: VariantsProps) {
       actions={[
         {
           name: 'Add variant',
-          onAction: () => openForm('new', emptyDraft())
+          // New variant: price taken over from the product.
+          onAction: () =>
+            openForm('new', {
+              ...emptyDraft(),
+              price:
+                data?.price?.regular?.value === undefined || data?.price?.regular?.value === null
+                  ? ''
+                  : String(data.price.regular.value)
+            })
         }
       ]}
     >
@@ -506,6 +581,7 @@ export default function Variants({ product }: VariantsProps) {
                 onSave={save}
                 onCancel={closeForm}
                 saving={saving}
+                autofill={editing === 'new' ? { productSku: data?.sku ?? '' } : null}
               />
             </div>
           </div>
