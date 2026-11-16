@@ -39,6 +39,14 @@ export default async function registerDefaultRegistrationCollectionFilters(this:
         query.andWhere('product.uuid', '=', value);
         currentFilters.push({ key: 'product_uuid', operation, value });
       }
+    },
+    {
+      key: 'variant_uuid',
+      operation: ['eq'],
+      callback: (query: any, operation: string, value: string, currentFilters: any[]) => {
+        query.andWhere('product_variant.uuid', '=', value);
+        currentFilters.push({ key: 'variant_uuid', operation, value });
+      }
     }
   ];
 

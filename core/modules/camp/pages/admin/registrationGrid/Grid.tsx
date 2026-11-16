@@ -37,6 +37,11 @@ export const query = `
     items {
       uuid
       name
+      variants {
+        uuid
+        sku
+        title
+      }
     }
   }
 }
@@ -61,9 +66,16 @@ interface Registration {
   deleteApi: string;
 }
 
+interface ProductVariant {
+  uuid: string;
+  sku: string;
+  title: string | null;
+}
+
 interface Product {
   uuid: string;
   name: string;
+  variants: ProductVariant[];
 }
 
 interface ActionsProps {
@@ -165,6 +177,12 @@ export default function RegistrationGrid({
     : 20;
   const selectedValue = currentFilters.find((f) => f.key === 'product_uuid')?.value;
   const selectedOption = products.find((p) => p.uuid === selectedValue);
+  const selectedVariantValue = currentFilters.find((f) => f.key === 'variant_uuid')?.value;
+  // Only offer the variants of the selected product.
+  const variantOptions = selectedOption?.variants || [];
+  const selectedVariant = products
+    .flatMap((p) => p.variants || [])
+    .find((v) => v.uuid === selectedVariantValue);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   return (
@@ -215,6 +233,8 @@ export default function RegistrationGrid({
                             onSelect: () => {
                               const url = new URL(document.location.href);
                               url.searchParams.set('product_uuid', product.uuid);
+                              // A variant belongs to one product; drop it when the product changes.
+                              url.searchParams.delete('variant_uuid');
                               window.location.href = url.href;
                             }
                           }))}
@@ -224,6 +244,31 @@ export default function RegistrationGrid({
                       )
                     },
                     sortOrder: 10
+                  },
+                  {
+                    component: {
+                      default: () =>
+                        variantOptions.length > 0 ? (
+                          <Filter
+                            options={variantOptions.map((variant) => ({
+                              label: variant.title || variant.sku,
+                              value: variant.uuid,
+                              onSelect: () => {
+                                const url = new URL(document.location.href);
+                                url.searchParams.set('variant_uuid', variant.uuid);
+                                window.location.href = url.href;
+                              }
+                            }))}
+                            selectedOption={
+                              selectedVariant
+                                ? selectedVariant.title || selectedVariant.sku
+                                : undefined
+                            }
+                            title="Variant"
+                          />
+                        ) : null
+                    },
+                    sortOrder: 15
                   }
                 ]}
               />
