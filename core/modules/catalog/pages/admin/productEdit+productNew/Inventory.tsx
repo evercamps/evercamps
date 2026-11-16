@@ -79,7 +79,7 @@ export default function Inventory({
           <Field
             id="qty"
             name="qty"
-            value={inventory.qty}
+            value={inventory.qty ?? 0}
             placeholder="Quantity"
             label="Quantity"
             type="text"

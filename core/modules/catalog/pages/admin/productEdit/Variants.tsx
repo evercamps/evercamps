@@ -1,3 +1,4 @@
+import { slugify } from '@components/admin/catalog/productEdit/useAutofillFromName';
 import { Card } from '@components/admin/cms/Card';
 import { Checkbox } from '@components/form/fields/Checkbox';
 import { Input } from '@components/form/fields/Input';
@@ -187,17 +188,6 @@ function variantLabel(variant: Variant): string {
 
 function optionPeriod(option: Option): string {
   return option.startDate && option.endDate ? ` (${option.startDate} – ${option.endDate})` : '';
-}
-
-// Lowercase, accents removed, everything else that isn't a letter or digit
-// becomes "-": "Week 1 zomer 2027" -> "week-1-zomer-2027".
-function slugify(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
 
 // Title of a new variant, from its chosen options (in attribute order).

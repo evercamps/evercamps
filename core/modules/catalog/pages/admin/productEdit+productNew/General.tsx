@@ -1,4 +1,5 @@
 import { Card } from '@components/admin/cms/Card';
+import { useAutofillFromName } from '@components/admin/catalog/productEdit/useAutofillFromName';
 import CategorySelector from '@components/admin/promotion/couponEdit/CategorySelector';
 import Area from '@components/Area';
 import { Field } from '@components/form/Field';
@@ -60,6 +61,8 @@ interface SKUPriceWeightProps {
   weight?: Weight;
   setting: Setting;
   configurable?: boolean;
+  // new-product page: SKU follows the name, weight starts at 0
+  isNew?: boolean;
 }
 
 function SKUPriceWeight({
@@ -67,8 +70,11 @@ function SKUPriceWeight({
   price,
   weight,
   setting,
-  configurable = false
+  configurable = false,
+  isNew = false
 }: SKUPriceWeightProps) {
+  const [skuValue, onSkuEdited] = useAutofillFromName(isNew, sku);
+
   return (
     <div className="mt-6">
       <div className="grid grid-cols-3 gap-4">
@@ -76,7 +82,8 @@ function SKUPriceWeight({
           <Field
             id="sku"
             name="sku"
-            value={sku}
+            value={skuValue}
+            onChange={onSkuEdited}
             placeholder="SKU"
             label="SKU"
             type="text"
@@ -101,7 +108,7 @@ function SKUPriceWeight({
           <Field
             id="weight"
             name="weight"
-            value={weight?.value}
+            value={weight?.value ?? (isNew ? 0 : undefined)}
             placeholder="Weight"
             label="Weight"
             type="text"
@@ -338,7 +345,8 @@ export default function General({
                 price: product?.price?.regular,
                 weight: product?.weight,
                 setting,
-                configurable: product?.type === 'configurable'
+                configurable: product?.type === 'configurable',
+                isNew: !product?.productId
               },
               sortOrder: 20,
               id: 'SKUPriceWeight'
