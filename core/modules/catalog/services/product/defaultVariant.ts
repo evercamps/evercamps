@@ -91,6 +91,17 @@ export async function syncDefaultVariant(
   product: { product_id: number; sku: string; price: number | string },
   connection: PoolClient
 ): Promise<void> {
+  // Only simple products mirror the product fields into their default
+  // variant. A configurable product keeps its variants, even when only one
+  // (default) variant is left.
+  const productRow = await select('type')
+    .from('product')
+    .where('product_id', '=', product.product_id)
+    .load(connection, false);
+  if (productRow && productRow.type !== 'simple') {
+    return;
+  }
+
   const variants = await select('product_variant_id', 'sku', 'is_default')
     .from('product_variant')
     .where('product_id', '=', product.product_id)

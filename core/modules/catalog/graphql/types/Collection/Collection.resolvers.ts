@@ -25,6 +25,7 @@ interface Collection {
 
 interface Product {
   productId: number;
+  uuid: string;
 }
 
 export default {
@@ -127,7 +128,12 @@ export default {
 
       const results = await query.execute(pool);
 
-      return results.map((row) => camelCase(row));
+      // productUuid lets Collection.removeProductUrl build the remove link
+      // for this product.
+      return results.map((row) => ({
+        ...camelCase(row),
+        productUuid: product.uuid
+      }));
     }
   }
 };

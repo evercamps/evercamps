@@ -228,23 +228,9 @@ export default async function registerDefaultProductCollectionFilters(
           return;
         }
 
-        switch (filterValue) {
-          case 'simple':
-            query.andWhere(
-              'product.variant_group_id',
-              'IS NULL',
-              null
-            );
-            break;
-
-          case 'configurable':
-            query.andWhere(
-              'product.variant_group_id',
-              'IS NOT NULL',
-              null
-            );
-            break;
-        }
+        // product.type is maintained by the variant service ('simple' until
+        // a second variant is added, then 'configurable').
+        query.andWhere('product.type', '=', filterValue);
 
         currentFilters.push({
           key: 'type',

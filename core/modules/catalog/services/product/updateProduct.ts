@@ -291,10 +291,14 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
     throw new Error('Requested product not found');
   }
 
+  // product.type ('simple' | 'configurable') is owned by the variant service,
+  // never by the product form.
+  const { type: _type, ...productFields } = data as ProductData & { type?: unknown };
+
   let newProduct: Record<string, any> = {};
   try {
     newProduct = await update('product')
-      .given(data)
+      .given(productFields)
       .where('uuid', '=', uuid)
       .execute(connection);
   } catch (e) {

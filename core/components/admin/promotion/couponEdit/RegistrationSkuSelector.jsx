@@ -17,6 +17,9 @@ const SearchQuery = `
         sku
         name
         manageRegistrations
+        variants {
+          productVariantId
+        }
         price {
           regular {
             text
@@ -188,7 +191,9 @@ function RegistrationSkuSelector({
                             );
                           }}
                         >
-                          Select
+                          {/* Simple products are added straight away; products
+                              with several variants open the variant picker. */}
+                          {product.variants?.length > 1 ? 'Select' : 'Add'}
                         </button>
                       )}
                       {selectedChecker(product) && (
