@@ -9,6 +9,8 @@ types of todo's:
 - emails 
     - create email template logic inside the application. So emails can be sent. Have default emails as a fallback. Smtp settings should be added. Have a log of sent emails. [analysis]
     - Create separate plugin to send emails by using brevo. add open, clicked to the email logs [analysis]
+- attendance tracker: for another website I've made a tool where people can say when they come to the training, now they want to add it as well subscriptions for the sports camps. They need the 
+    => make it possible to add attendance through a plugin. [plan]
 
 ## fixes
 - orders
