@@ -49,6 +49,9 @@ export default {
   // midnight); expose them as plain YYYY-MM-DD strings.
   AttributeOption: {
     startDate: (option: { startDate?: unknown }) => formatOptionDate(option.startDate),
-    endDate: (option: { endDate?: unknown }) => formatOptionDate(option.endDate)
+    endDate: (option: { endDate?: unknown }) => formatOptionDate(option.endDate),
+    // Options loaded without the status column (or before migration 1.1.4)
+    // count as active.
+    status: (option: { status?: unknown }) => option.status !== false
   }
 };
