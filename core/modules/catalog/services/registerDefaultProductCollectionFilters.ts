@@ -47,16 +47,42 @@ export default async function registerDefaultProductCollectionFilters(
       key: 'keyword',
       operation: ['eq'],
       callback: (query, operation, filterValue, currentFilters) => {
+        const keyword = (filterValue ?? '').trim();
+        if (!keyword) {
+          return;
+        }
         const where = query.getWhere();
-        const bindingKey = `keyword_${uniqid()}`;
+        // The query builder only substitutes the first occurrence of each
+        // binding key, so every placeholder needs its own key.
+        const id = uniqid();
+        const nameKey = `keyword_name_${id}`;
+        const skuKey = `keyword_sku_${id}`;
+        const ftsKey = `keyword_fts_${id}`;
+        // Escape LIKE wildcards so the keyword is matched literally
+        const likeValue = `%${keyword.replace(/[\\%_]/g, '\\$&')}%`;
 
-        where.addRaw(
-          'AND',
-          `to_tsvector('simple', product_description.name || ' ' || product_description.description) @@ websearch_to_tsquery('simple', :${bindingKey})`,
-          {
-            [bindingKey]: filterValue
-          }
-        );
+        if (isAdmin) {
+          // Admin grids: case-insensitive partial match on the title or SKU
+          where.addRaw(
+            'AND',
+            `(product_description.name ILIKE :${nameKey} OR product.sku ILIKE :${skuKey})`,
+            {
+              [nameKey]: likeValue,
+              [skuKey]: likeValue
+            }
+          );
+        } else {
+          // Storefront: keep full-text search (name + description) and also
+          // allow a case-insensitive partial match on the product title
+          where.addRaw(
+            'AND',
+            `(to_tsvector('simple', product_description.name || ' ' || product_description.description) @@ websearch_to_tsquery('simple', :${ftsKey}) OR product_description.name ILIKE :${nameKey})`,
+            {
+              [ftsKey]: keyword,
+              [nameKey]: likeValue
+            }
+          );
+        }
 
         currentFilters.push({
           key: 'keyword',
