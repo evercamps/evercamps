@@ -41,6 +41,8 @@ interface Product {
   };
   weight?: Weight;
   category?: Category;
+  // 'simple' | 'configurable'; undefined on the new-product page
+  type?: string;
 }
 
 interface TaxClass {
@@ -57,53 +59,63 @@ interface SKUPriceWeightProps {
   price?: Price;
   weight?: Weight;
   setting: Setting;
+  configurable?: boolean;
 }
 
 function SKUPriceWeight({
   sku,
   price,
   weight,
-  setting
+  setting,
+  configurable = false
 }: SKUPriceWeightProps) {
   return (
-    <div className="grid grid-cols-3 gap-4 mt-6">
-      <div>
-        <Field
-          id="sku"
-          name="sku"
-          value={sku}
-          placeholder="SKU"
-          label="SKU"
-          type="text"
-          validationRules={['notEmpty']}
-        />
-      </div>
+    <div className="mt-6">
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Field
+            id="sku"
+            name="sku"
+            value={sku}
+            placeholder="SKU"
+            label="SKU"
+            type="text"
+            validationRules={['notEmpty']}
+          />
+        </div>
 
-      <div>
-        <Field
-          id="price"
-          name="price"
-          value={price?.value}
-          placeholder="Price"
-          label="Price"
-          type="text"
-          validationRules={['notEmpty']}
-          suffix={setting.storeCurrency}
-        />
-      </div>
+        <div>
+          <Field
+            id="price"
+            name="price"
+            value={price?.value}
+            placeholder="Price"
+            label="Price"
+            type="text"
+            validationRules={['notEmpty']}
+            suffix={setting.storeCurrency}
+          />
+        </div>
 
-      <div>
-        <Field
-          id="weight"
-          name="weight"
-          value={weight?.value}
-          placeholder="Weight"
-          label="Weight"
-          type="text"
-          validationRules={['notEmpty']}
-          suffix={setting.weightUnit}
-        />
+        <div>
+          <Field
+            id="weight"
+            name="weight"
+            value={weight?.value}
+            placeholder="Weight"
+            label="Weight"
+            type="text"
+            validationRules={['notEmpty']}
+            suffix={setting.weightUnit}
+          />
+        </div>
       </div>
+      {configurable && (
+        <div className="text-textSubdued text-sm mt-1">
+          SKU and price are the product&apos;s base/listing values. Each variant has its own
+          SKU and price (Variants card).
+        </div>
+      )}
     </div>
   );
 }
@@ -325,7 +337,8 @@ export default function General({
                 sku: product?.sku,
                 price: product?.price?.regular,
                 weight: product?.weight,
-                setting
+                setting,
+                configurable: product?.type === 'configurable'
               },
               sortOrder: 20,
               id: 'SKUPriceWeight'
@@ -387,6 +400,7 @@ export const query = `
   query Query {
     product(id: getContextValue("productId", null)) {
       productId
+      type
       name
       description
       sku

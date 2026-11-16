@@ -14,13 +14,15 @@ const SearchQuery = `
         collectionId
         uuid
         name
+        addProductUrl
       }
       total
     }
   }
 `;
 
-function CollectionSelector({ onSelect, onUnSelect, selectedIDs = [], closeModal }) {
+function CollectionSelector({ onSelect, onUnSelect, selectedIDs: selected, closeModal }) {
+  const selectedIDs = selected || [];
   const limit = 10;
   const [inputValue, setInputValue] = React.useState(null);
   const [page, setPage] = React.useState(1);
@@ -72,7 +74,7 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs = [], closeModal
   }
 
   return (
-    <Card title="Select Products">
+    <Card title="Select collections">
       <div className="modal-content">
         <Card.Session>
           <div>
@@ -117,7 +119,7 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs = [], closeModal
                           className="button secondary"
                           onClick={(e) => {
                             e.preventDefault();
-                            onSelect(collection.collectionId);
+                            onSelect(collection.collectionId, collection);
                           }}
                         >
                           Select
@@ -129,7 +131,7 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs = [], closeModal
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            onUnSelect(collection.collectionId);
+                            onUnSelect(collection.collectionId, collection);
                           }}
                         >
                           <CheckIcon width={20} height={20} />

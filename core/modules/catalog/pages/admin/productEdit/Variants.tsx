@@ -17,6 +17,11 @@ import { useQuery } from 'urql';
 // The whole edit page is one <form> (the product form), so the inputs here
 // have no `name` and every button is type="button": nothing in this card is
 // posted with the product; it talks to its own API routes instead.
+//
+// A simple product (product.type = 'simple') has only its default variant,
+// which is edited through the General / Inventory fields, so the card only
+// offers "Add variant". Adding one makes the product configurable (server
+// side); the page then reloads so General / Inventory switch mode too.
 
 interface Option {
   attributeOptionId: number;
@@ -72,6 +77,7 @@ interface Draft {
 const VariantsQuery = `
   query Query($id: ID) {
     product(id: $id) {
+      type
       sku
       price {
         regular {
@@ -167,6 +173,12 @@ async function callApi(url: string, method: string, body?: unknown): Promise<boo
     return false;
   }
   return true;
+}
+
+// A variant with neither a title nor options can't be told apart in the shop,
+// e.g. the old default variant of a product that just became configurable.
+function needsName(variant: Variant): boolean {
+  return !variant.title && variant.options.length === 0;
 }
 
 function variantLabel(variant: Variant): string {
@@ -463,6 +475,7 @@ export default function Variants({ product }: VariantsProps) {
     variantLabel(a).localeCompare(variantLabel(b), 'nl', { numeric: true, sensitivity: 'base' })
   );
   const attributes: VariantAttribute[] = data?.variantAttributes ?? [];
+  const simple = data?.type === 'simple';
   const refresh = () => reexecute({ requestPolicy: 'network-only' });
 
   const openForm = (target: string, initial: Draft) => {
@@ -497,6 +510,12 @@ export default function Variants({ product }: VariantsProps) {
         : editingVariant
           ? await callApi(editingVariant.updateApi, 'PATCH', payload)
           : false;
+    if (ok && simple && editing === 'new') {
+      // The product is configurable now: reload so General / Inventory
+      // (rendered server side) switch to configurable mode as well.
+      window.location.reload();
+      return;
+    }
     setSaving(false);
     if (ok) {
       toast.success('Variant saved');
@@ -546,7 +565,7 @@ export default function Variants({ product }: VariantsProps) {
         }
       ]}
     >
-      {data?.variantAttributeGroup && (
+      {!simple && data?.variantAttributeGroup && (
         <Card.Session title="Attribute group">
           <div>
             <span className="font-semibold">{data.variantAttributeGroup.groupName}</span>
@@ -591,9 +610,17 @@ export default function Variants({ product }: VariantsProps) {
         {result.fetching && !data && <div>Loading variants…</div>}
         {result.error && <div className="text-critical">Could not load variants.</div>}
 
-        {data && variants.length === 0 && <div>This product has no variants yet.</div>}
+        {simple && (
+          <div className="text-textSubdued">
+            This product has no variants. Price, SKU and seats are edited in General / Inventory.
+            Adding a variant turns it into a product with variants (this can&apos;t be undone
+            automatically). Save your other changes first: the page reloads.
+          </div>
+        )}
 
-        {variants.length > 0 && (
+        {data && !simple && variants.length === 0 && <div>This product has no variants yet.</div>}
+
+        {!simple && variants.length > 0 && (
           <table className="listing">
             <thead>
               <tr>
@@ -615,6 +642,11 @@ export default function Variants({ product }: VariantsProps) {
                       {variant.isDefault && (
                         <span className="ml-2 text-xs border border-divider rounded px-1">
                           default
+                        </span>
+                      )}
+                      {needsName(variant) && variants.length > 1 && (
+                        <span className="ml-2 text-xs border border-critical text-critical rounded px-1">
+                          give this variant a name or option
                         </span>
                       )}
                       {variant.status === false && (
