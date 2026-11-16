@@ -35,10 +35,9 @@ const VariantsQuery = `
   }
 `;
 
-// Pick a product (RegistrationSkuSelector, shared with the coupon editor and
-// left unchanged), then - when the product has several variants, e.g. weeks
-// of a camp - pick the variant. Products with a single (default) variant are
-// registered straight away, as before.
+// Pick a product (RegistrationSkuSelector), then - when the product has
+// several variants, e.g. weeks of a camp - pick the variant. Products with a
+// single (default) variant are registered straight away, as before.
 function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Props) {
   const client = useClient();
   const [choosing, setChoosing] = React.useState<{
@@ -66,6 +65,7 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
       return false;
     }
     toast.success('Registration added');
+    closeModal();
     return true;
   };
 
@@ -101,31 +101,34 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
             Back to products
           </a>
         </div>
-        {choosing.variants.map((variant) => (
-          <div
-            key={variant.productVariantId}
-            className="grid grid-cols-8 gap-8 py-4 border-divider items-center"
-          >
-            <div className="col-span-6">
-              <h4>{variant.title || variant.sku}</h4>
-              <p className="text-textSubdued">
-                {variant.sku} · {variant.price?.text}
-              </p>
+        {/* Scroll the list so many variants still fit inside the modal. */}
+        <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          {choosing.variants.map((variant) => (
+            <div
+              key={variant.productVariantId}
+              className="grid grid-cols-8 gap-8 py-4 border-divider items-center"
+            >
+              <div className="col-span-6">
+                <h4>{variant.title || variant.sku}</h4>
+                <p className="text-textSubdued">
+                  {variant.sku} · {variant.price?.text}
+                </p>
+              </div>
+              <div className="col-span-2 text-right">
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    await postRegistration(choosing.productId, variant.productVariantId);
+                  }}
+                >
+                  Add
+                </button>
+              </div>
             </div>
-            <div className="col-span-2 text-right">
-              <button
-                type="button"
-                className="button secondary"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  await postRegistration(choosing.productId, variant.productVariantId);
-                }}
-              >
-                Select
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   }
