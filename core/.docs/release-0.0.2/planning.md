@@ -30,6 +30,7 @@ types of todo's:
 - participant detail: 
     - Adding a registration to a product, has a transparant background when selecting the variant. Change this to white. [execute]
         - branch: `fix/add-registration-variant-background`
+        => the variant modal popup is not scrollable. Make this scrollable so all variants are visible. Also make sure only active variants are visible, and be able to toggle to active ones.
     - Can you check if it creates an order. What options do we have to keep the finances up to date? [analysis]
         - analysis: [analysis-admin-registration-finances.md](analysis-admin-registration-finances.md)
 - product overview: 
