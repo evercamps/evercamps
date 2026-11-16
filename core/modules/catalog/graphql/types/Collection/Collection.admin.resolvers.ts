@@ -4,6 +4,7 @@ import type { Pool } from 'pg';
 
 interface Collection {
   uuid: string;
+  productUuid?: string;
 }
 
 interface Product {
@@ -24,6 +25,15 @@ export default {
       buildUrl('addProductToCollection', {
         collection_id: collection.uuid
       }),
+
+    // Only set when the collection comes from Product.collections.
+    removeProductUrl: (collection: Collection) =>
+      collection.productUuid
+        ? buildUrl('removeProductFromCollection', {
+            collection_id: collection.uuid,
+            product_id: collection.productUuid
+          })
+        : null,
 
     updateApi: (collection: Collection) =>
       buildUrl('updateCollection', { id: collection.uuid }),

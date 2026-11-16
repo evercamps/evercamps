@@ -186,6 +186,13 @@ async function createProductVariantFunc(productUuid: string, data: ProductVarian
     if (toBool(data.is_default)) {
       await setOnlyDefault(product.product_id, variantId, connection);
     }
+    // Adding a variant turns a simple product into a configurable one. It
+    // never switches back automatically.
+    await update('product')
+      .given({ type: 'configurable' })
+      .where('product_id', '=', product.product_id)
+      .and('type', '=', 'simple')
+      .execute(connection, false);
     return select().from('product_variant').where('product_variant_id', '=', variantId).load(connection, false);
   });
 }
@@ -276,6 +283,17 @@ async function deleteProductVariantFunc(variantUuid: string) {
     await del('product_variant')
       .where('product_variant_id', '=', variant.product_variant_id)
       .execute(connection, false);
+    // A product always keeps a default variant: promote the oldest remaining
+    // one when the default was deleted. The product stays configurable.
+    if (variant.is_default) {
+      const nextQuery = select('product_variant_id').from('product_variant');
+      nextQuery.where('product_id', '=', variant.product_id);
+      nextQuery.orderBy('product_variant_id', 'ASC');
+      const next = await nextQuery.load(connection, false);
+      if (next) {
+        await setOnlyDefault(variant.product_id, next.product_variant_id, connection);
+      }
+    }
     return variant;
   });
 }

@@ -1,6 +1,8 @@
 extend type Collection {
   editUrl: String
   addProductUrl: String
+  "Remove link for the product this collection was loaded from (Product.collections only)."
+  removeProductUrl: String
   updateApi: String!
   deleteApi: String!
 }

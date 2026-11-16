@@ -175,7 +175,10 @@ async function insertProductImages(images: string[], productId: number, connecti
 
 
 async function insertProductData(data: ProductData, connection: PoolClient) {
-  const product = await insert('product').given(data).execute(connection);
+  // product.type is owned by the variant service: a new product is always
+  // 'simple' (column default) until a second variant is added.
+  const { type: _type, ...productFields } = data as ProductData & { type?: unknown };
+  const product = await insert('product').given(productFields).execute(connection);
   const description = await insert('product_description')
     .given(data)
     .prime('product_description_product_id', product.product_id)

@@ -10,6 +10,8 @@ interface InventoryData {
 
 interface Product {
   inventory?: InventoryData;
+  // 'simple' | 'configurable'; undefined on the new-product page
+  type?: string;
 }
 
 interface InventoryProps {
@@ -26,6 +28,9 @@ export default function Inventory({
   }
 }: InventoryProps) {
   const inventory = product?.inventory || {};
+  // A configurable product's seats live on its variants; product qty is
+  // not shown (and not posted, so it stays untouched on save).
+  const configurable = product?.type === 'configurable';
 
   return (
     <Card title="Inventory" subdued>
@@ -63,17 +68,25 @@ export default function Inventory({
         />
       </Card.Session>
 
-      <Card.Session>
-        <Field
-          id="qty"
-          name="qty"
-          value={inventory.qty}
-          placeholder="Quantity"
-          label="Quantity"
-          type="text"
-          validationRules={['notEmpty']}
-        />
-      </Card.Session>
+      {configurable ? (
+        <Card.Session>
+          <div className="text-textSubdued text-sm">
+            Seats are managed per variant (Variants card).
+          </div>
+        </Card.Session>
+      ) : (
+        <Card.Session>
+          <Field
+            id="qty"
+            name="qty"
+            value={inventory.qty ?? 0}
+            placeholder="Quantity"
+            label="Quantity"
+            type="text"
+            validationRules={['notEmpty']}
+          />
+        </Card.Session>
+      )}
     </Card>
   );
 }
@@ -86,6 +99,7 @@ export const layout = {
 export const query = `
   query Query {
     product(id: getContextValue("productId", null)) {
+      type
       inventory {
         qty
         stockAvailability
