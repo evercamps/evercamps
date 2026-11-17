@@ -7,14 +7,15 @@ types of todo's:
 
 ## features
 - emails 
-    - create email template logic inside the application. So emails can be sent. Have default emails as a fallback. Smtp settings should be added. Have a log of sent emails. [analysis]
-    - Create separate plugin to send emails by using brevo. add open, clicked to the email logs [analysis]
-- attendance tracker: for another website I've made a tool where people can say when they come to the training, now they want to add it as well subscriptions for the sports camps. They need the 
-    => make it possible to add attendance through a plugin. [plan]
+    - create email template logic inside the application. So emails can be sent. Have default emails as a fallback. Smtp settings should be added. Have a log of sent emails, that are auto-erased after x-time. [plan]
+    - Create separate plugin to send emails by using brevo. add open, clicked to the email logs [plan]
+- attendance tracker: for another website I've made a tool where people can say when they come to the training, now they want to add it as well subscriptions for the sports camps. They want to keep the attendance tracker for the trainings. I think for the camps it can be useful as well though.
+    => make it possible to add attendance through a plugin. Just create a big overview over how this can be solved in a simple way. [analysis]
+- rijksregisternumber-component: now a text field is used for the rijksregisternumber. there hsould be validation on the frontend wiht proper feedback. There should also be a nice mask to it. Be sure this component is used in every place where the national number field is being used and that it is rendered properly. [plan]
 
 ## fixes
 - orders
     - A failed or cancelled payment keeps the registration and its seat, and cancelling an order doesn't free the seat either. [analysis]
-    - Cancelling an order can delete the same child's registration for another week.
+    - Cancelling an order can delete the same child's registration for another week. [analysis]
 
 ## tasks
