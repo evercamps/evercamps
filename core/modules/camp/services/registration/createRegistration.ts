@@ -110,9 +110,16 @@ async function createRegistration(data: RegistrationData, context: Record<string
       throw new Error('Registration already exists');
     }
     // Insert registration data
-    const registration = await hookable(insertRegistrationData, context)(registrationData, connection); 
+    const registration = await hookable(insertRegistrationData, context)(registrationData, connection);
 
     await commit(connection);
+    // Checkout inserts registrations in orderCreator and doesn't come here.
+    // send_email is only true when the admin API asks for it (imports don't),
+    // see the email module's registration_created subscriber.
+    await emit('registration_created', {
+      registration_id: registration.registration_id,
+      send_email: context.sendEmail === true
+    });
     return registration;
   } catch (e) {
     await rollback(connection);

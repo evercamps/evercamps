@@ -1,0 +1,5 @@
+{
+  "methods": ["POST"],
+  "path": "/email/orders/:id/resend-confirmation",
+  "access": "private"
+}

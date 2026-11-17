@@ -102,7 +102,8 @@ async function createCustomer(data: CustomerData, context: Record<string, unknow
 
     // If status = 1, Emit event customer_registered
     // In case of status = 0, the custom extension will need to emit the event
-    if (parseInt(customer.status, 10) === 1) {
+    // Imports pass context.skipEvents, so imported customers get no welcome email.
+    if (parseInt(customer.status, 10) === 1 && !context.skipEvents) {
       await emit('customer_registered', customer);
     }
 

@@ -85,15 +85,19 @@ export default function RegisterForm({
             }}
             btnText={_('SIGN UP')}
           >
+            {/* Pass elements, not inline components (default: () => <Field />):
+                an inline component is a new type on every render, so React
+                remounts the inputs after each keystroke and they lose their value. */}
             <Area
               id="customerRegisterForm"
               coreComponents={[
                 {
                   component: {
-                    default: () => (
+                    default: (
                       <Field
                         name="full_name"
                         type="text"
+                        autocomplete="name"
                         placeholder={_('Full Name')}
                         validationRules={['notEmpty']}
                       />
@@ -103,10 +107,11 @@ export default function RegisterForm({
                 },
                 {
                   component: {
-                    default: () => (
+                    default: (
                       <Field
                         name="email"
                         type="text"
+                        autocomplete="email"
                         placeholder={_('Email')}
                         validationRules={['notEmpty', 'email']}
                         onChange={(e) => {
@@ -120,10 +125,11 @@ export default function RegisterForm({
                 },
                 {
                   component: {
-                    default: () => (
+                    default: (
                       <Field
                         name="password"
                         type="password"
+                        autocomplete="new-password"
                         placeholder={_('Password')}
                         validationRules={['notEmpty']}
                         onChange={(e) => {
