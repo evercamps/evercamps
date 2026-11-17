@@ -138,6 +138,19 @@ Other useful scripts:
 | `npm run user:create` | Create an admin user |
 | `npm run user:changePassword` | Change an admin user's password |
 
+### Emails
+
+Emails (order confirmation, order canceled, welcome, reset password, registration confirmation, admin new-order notice) are sent by the core `email` module. The texts are code templates in `core/modules/email/templates/` (nl, fr, en; the shop language is used, falling back to en).
+
+- Configure sending in **Admin > Setting > Email Setting**: turn sending on, set the sender and the SMTP server, then use "Send test email". Every email is logged in **Sale > Email log**.
+- The SMTP server can also be set in the config file, which wins over the admin settings and keeps the password out of the database:
+  ```json
+  { "system": { "email": { "smtp": { "host": "smtp.example.com", "port": 587, "security": "starttls", "username": "user", "password": "secret" } } } }
+  ```
+- Set `shop.homeUrl` in the config of each environment; links in emails are built from it (otherwise they point to `http://localhost:<port>`).
+- For local testing, run [Mailpit](https://mailpit.axllent.org/) (`docker run -p 8025:8025 -p 1025:1025 axllent/mailpit`) and use SMTP host `localhost`, port `1025`, security `None`. The mails show up at `http://localhost:8025`.
+- The email log body is removed after 30 days and log rows after 90 days (configurable). Failed sends are retried every 15 minutes, up to 3 attempts within 24 hours.
+
 For contribution workflow (branching, PRs, code of conduct), see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 **Join Us!**

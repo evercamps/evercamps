@@ -47,16 +47,19 @@ export default async (
           token: hash
         })
         .execute(pool);
+      // The plain token only goes into the email (sendResetPasswordEmail),
+      // never into the API response.
+      response.locals.resetPasswordToken = token;
+      response.locals.resetPasswordCustomer = existingCustomer;
     }
 
     response.status(OK);
 
+    // Same response whether the email exists or not
     response.$body = {
-      token,
       email
     };
 
-    // Email sending is handled by extensions
     next();
   } catch (e) {
     error(e);

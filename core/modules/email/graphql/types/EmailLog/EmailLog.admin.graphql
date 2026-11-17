@@ -1,0 +1,73 @@
+"""
+A provider event on a sent email (delivered, opened, clicked, bounce, ...)
+"""
+type EmailLogEvent {
+  event: String!
+  occurredAt: String
+  data: JSON
+}
+
+"""
+One send attempt of an email
+"""
+type EmailLog {
+  uuid: String!
+  templateCode: String!
+  templateName: String
+  recipient: String!
+  subject: String!
+  status: String!
+  transport: String
+  providerMessageId: String
+  error: String
+  attempts: Int
+  entityType: String
+  entityId: Int
+  hasBody: Boolean!
+  bodyHtml: String
+  createdAt: String
+  sentAt: String
+  deliveredAt: String
+  openedAt: String
+  clickedAt: String
+  openCount: Int
+  clickCount: Int
+  events: [EmailLogEvent]
+  viewUrl: String
+  resendApi: String
+  orderUrl: String
+}
+
+type EmailLogCollection {
+  items: [EmailLog]
+  total: Int
+  page: Int
+  limit: Int
+  status: String
+  template: String
+  recipient: String
+}
+
+input EmailLogFilterInput {
+  page: Int
+  limit: Int
+  status: String
+  template: String
+  recipient: String
+}
+
+type EmailTemplateInfo {
+  code: String!
+  name: String!
+}
+
+extend type Query {
+  emailLogs(filters: EmailLogFilterInput): EmailLogCollection
+  emailLog(uuid: String!): EmailLog
+  emailTemplates: [EmailTemplateInfo]
+}
+
+extend type Order {
+  emailLogs: [EmailLog]
+  resendOrderConfirmationApi: String
+}

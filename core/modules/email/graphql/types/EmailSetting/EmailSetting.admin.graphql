@@ -1,0 +1,31 @@
+extend type Setting {
+  emailSendingEnabled: Int
+  emailTransport: String
+  emailFromName: String
+  emailFromAddress: String
+  emailReplyTo: String
+  emailAdminRecipients: String
+  emailCustomerWelcomeEnabled: Int
+  emailLogBodyRetentionDays: Int
+  emailLogRetentionDays: Int
+  smtpHost: String
+  smtpPort: Int
+  smtpSecurity: String
+  smtpUsername: String
+  smtpPasswordSet: Boolean
+  smtpConfiguredInConfig: Boolean
+}
+
+"""
+A registered email transport (smtp in core, more from plugins)
+"""
+type EmailTransportInfo {
+  code: String!
+  name: String!
+  supportsTracking: Boolean!
+  configured: Boolean!
+}
+
+extend type Query {
+  emailTransports: [EmailTransportInfo]
+}

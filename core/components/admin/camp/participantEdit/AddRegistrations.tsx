@@ -40,6 +40,7 @@ const VariantsQuery = `
 // single (default) variant are registered straight away, as before.
 function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Props) {
   const client = useClient();
+  const [sendEmail, setSendEmail] = React.useState(true);
   const [choosing, setChoosing] = React.useState<{
     productId: number;
     productName: string;
@@ -55,7 +56,8 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
       body: JSON.stringify({
         registration_product_id: productId,
         registration_participant_id: participantId,
-        ...(variantId ? { product_variant_id: variantId } : {})
+        ...(variantId ? { product_variant_id: variantId } : {}),
+        send_email: sendEmail
       }),
       credentials: 'include'
     });
@@ -83,6 +85,17 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
     });
   };
 
+  const emailToggle = (
+    <label className="flex items-center gap-2 cursor-pointer">
+      <input
+        type="checkbox"
+        checked={sendEmail}
+        onChange={(e) => setSendEmail(e.target.checked)}
+      />
+      <span>Send a confirmation email to the parent</span>
+    </label>
+  );
+
   if (choosing) {
     return (
       // Same white card as the product selector (RegistrationSkuSelector
@@ -101,6 +114,7 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
             Back to products
           </a>
         </div>
+        <div className="mb-4">{emailToggle}</div>
         {/* Scroll the list so many variants still fit inside the modal. */}
         <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {choosing.variants.map((variant) => (
@@ -134,15 +148,18 @@ function AddRegistrations({ addRegistrationApi, participantId, closeModal }: Pro
   }
 
   return (
-    <RegistrationSkuSelector
-      onSelect={onSelectProduct}
-      closeModal={closeModal}
-      // A participant can be registered for several variants (weeks) of the
-      // same product, so products are never shown as "already added";
-      // duplicates are rejected by createRegistration.
-      selectedChecker={() => false}
-      onUnSelect={() => {}}
-    />
+    <div>
+      <div className="card shadow px-8 py-4 mb-2">{emailToggle}</div>
+      <RegistrationSkuSelector
+        onSelect={onSelectProduct}
+        closeModal={closeModal}
+        // A participant can be registered for several variants (weeks) of the
+        // same product, so products are never shown as "already added";
+        // duplicates are rejected by createRegistration.
+        selectedChecker={() => false}
+        onUnSelect={() => {}}
+      />
+    </div>
   );
 }
 

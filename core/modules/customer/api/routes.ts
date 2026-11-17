@@ -151,6 +151,7 @@ export const routes: RouteDefinition[] = [
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'resetPassword', after: ['bodyParser'], before: ['apiResponse'] },
+      { id: 'sendResetPasswordEmail', after: ['resetPassword'], before: ['apiResponse'] },
     ],
   },
 

@@ -30,3 +30,14 @@ Shipping Address, Adresse de livraison
 Create A New Account, Créer un nouveau compte
 Contact, Contact
 Customer information, Informations client
+Update password, Modifier le mot de passe
+Set a new password, Choisissez un nouveau mot de passe
+New password, Nouveau mot de passe
+Confirm new password, Confirmez le nouveau mot de passe
+SAVE PASSWORD, ENREGISTRER LE MOT DE PASSE
+Passwords do not match, Les mots de passe ne correspondent pas
+Your password must be at least ${length} characters, Votre mot de passe doit contenir au moins ${length} caractères
+Something went wrong. Please try again, Une erreur est survenue. Veuillez réessayer
+This link is invalid or expired., Ce lien est invalide ou a expiré.
+Request a new link, Demander un nouveau lien
+Your password has been changed., Votre mot de passe a été modifié.

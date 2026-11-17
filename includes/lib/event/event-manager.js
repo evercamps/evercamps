@@ -3,6 +3,7 @@ import { getEnabledExtensions } from '../../bin/extension/index.js';
 import { loadBootstrapScript } from '../../bin/lib/bootstrap/bootstrap.js';
 import { getCoreModules } from '../../bin/lib/loadModules.js';
 import { pool } from '../../lib/postgres/connection.js';
+import { loadModuleRoutes } from '../router/loadModuleRoutes.js';
 import { debug, error } from '../log/logger.js';
 import { lockHooks } from '../util/hookable.js';
 import { lockRegistry } from '../util/registry.js';
@@ -20,6 +21,10 @@ const subscribers = await loadSubscribers(modules);
 const init = async () => {
   /** Loading bootstrap script from modules */
   try {
+    // Routes are needed by subscribers that build urls (e.g. links in emails)
+    for (const module of modules) {
+      loadModuleRoutes(module.path);
+    }
     for (const module of modules) {
       await loadBootstrapScript(module, {
         ...JSON.parse(process.env.bootstrapContext || '{}'),

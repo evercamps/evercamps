@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 import { select, del } from '@evershop/postgres-query-builder';
 import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
+// The .js extension is required: Node's ESM loader doesn't resolve
+// extensionless subpaths and dayjs has no "exports" map.
+import timezone from 'dayjs/plugin/timezone.js';
+import utc from 'dayjs/plugin/utc.js';
 import type { NextFunction } from 'express';
 
 import { error } from '../../../../lib/log/logger.js';

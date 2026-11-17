@@ -6,12 +6,17 @@ import { getCoreModules } from '../../bin/lib/loadModules.js';
 import { debug, error } from '../log/logger.js';
 import { lockHooks } from '../util/hookable.js';
 import { lockRegistry } from '../util/registry.js';
+import { loadModuleRoutes } from '../router/loadModuleRoutes.js';
 import { getEnabledJobs } from './jobManager.js';
 
 async function start() {
   const modules = [...getCoreModules(), ...getEnabledExtensions()];
   /** Loading bootstrap script from modules */
   try {
+    // Routes are needed by jobs that build urls (e.g. links in emails)
+    for (const module of modules) {
+      loadModuleRoutes(module.path);
+    }
     for (const module of modules) {
       await loadBootstrapScript(module, {
         ...JSON.parse(process.env.bootstrapContext || '{}'),

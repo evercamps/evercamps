@@ -24,6 +24,9 @@ export default {
   transformIgnorePatterns: [
     "/node_modules/(?!(@evershop)/)"
   ],
-  testMatch: ["**/src/**/tests/**/unit/**/*.test.[jt]s"],
+  testMatch: [
+    "**/src/**/tests/**/unit/**/*.test.[jt]s",
+    "**/core/modules/email/tests/unit/**/*.test.[jt]s"
+  ],
   modulePathIgnorePatterns: ["<rootDir>/packages/evercamps/dist/"]
 };

@@ -228,11 +228,12 @@ async function findOrCreateCustomer(
     return null;
   }
 
+  // skipEvents: no customer_registered event, so no welcome email per imported customer
   const customer = await createCustomer({
     email,
     password: crypto.randomUUID(),
     full_name: fullName
-  });
+  }, { skipEvents: true });
 
   return customer.customer_id;
 }
