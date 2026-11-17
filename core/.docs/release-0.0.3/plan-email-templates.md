@@ -1,4 +1,8 @@
-# Email: templates, SMTP sending and an email log (core)
+# Email: templates in code, SMTP sending and an email log (core)
+
+> **Scope (updated after review):** templates live **in code only**. There is no template editing in
+> the admin UI and no `email_template` table in this release. Database overrides, an editor and a
+> template engine (handlebars) are postponed to a later release (see "Later").
 
 ## Context
 
@@ -110,9 +114,6 @@ by `core/modules/base/bootstrap.ts:6`. Customers have no language column. Availa
 **Module registration.** Core modules are a hardcoded list in `includes/bin/lib/loadModules.js:8-88`.
 Migrations run per module from `migration/Version-x.y.z.js` (`includes/bin/lib/bootstrap/migrate.js`).
 
-**Editor.** `includes/components/form/fields/Ckeditor.tsx:299` (`CkeditorField`) exists but is not used
-anywhere. CKEditor removes markup it doesn't know (table layouts, inline styles), which is not great for email HTML.
-
 **Data for order emails.** `order` (`checkout/migration/Version-1.0.0.ts:108-149`), `order_item`
 (`:191-228`, has `product_name`, `variant_options`), `order_item_registration` (participant
 `first_name`, `last_name`, `registration_id`, `extra_data`; `oms/migration/Version-1.0.0.ts:6`,
@@ -124,73 +125,79 @@ calls `createCustomer`, which emits `customer_registered`. A welcome email would
 ## Decisions
 
 - **New core module `email`** (`core/modules/email`), so the Brevo plugin and other plugins can
-  depend on it. It owns templates, rendering, sending, transports, the log and the jobs.
-- **Templates: defaults in code, overrides in the database.** Each template has a default subject and
-  body per language in code. An admin can customize it; the override is stored in `email_template`.
-  "Reset to default" deletes the override. Lookup order: override for (code, shop language) →
-  default for the shop language → default `en`.
+  depend on it. It owns the code templates, rendering, sending, transports, the log and the jobs.
+- **Templates live in code only.** Each template is a TypeScript file with a subject and body per
+  language (`nl`, `fr`, `en`). Lookup: shop language → `en`. Changing a text means a code change and
+  a deploy. No `email_template` table, no admin editor, no preview page, no "reset to default".
+  Database overrides are a later step and can be added without changing callers (see "Later").
 - **Simple placeholders, no template engine dependency.** `{{ order.number }}` inserts an
   HTML-escaped value; `{{{ itemsTable }}}` inserts HTML that code builds (lists, tables). No loops or
-  conditions in templates; code prepares blocks. This keeps admin-edited templates safe and simple.
-  (Open question 1 if loops are needed.)
+  conditions in templates; code prepares blocks. No handlebars for now.
 - **Layout in code.** A shared HTML layout (store name header, footer with store address/email,
-  inline CSS) wraps the body. Admins edit only the body. A plain-text part is generated from the HTML.
-- **Body editor: HTML textarea + live preview**, not CKEditor (see above). Open question 2.
+  inline CSS) wraps the body. A plain-text part is generated from the HTML.
 - **Transports are pluggable.** Core ships `smtp` (nodemailer). Plugins register more (Brevo).
   One active transport, chosen in settings. If the chosen transport is not registered (plugin
   disabled), fall back to `smtp`.
 - **Sending is synchronous inside the caller**, which is a subscriber (event process) for event
   emails, or the API middleware for password reset (the token should not be written to the `event` table).
 - **Every send attempt is logged** in `email_log`, also when sending is disabled (`skipped`) or fails.
-  The log stores the rendered subject and body, so it can be viewed and resent.
+  The log stores the rendered subject and body, so it can be viewed, retried and resent while the
+  body is kept (see auto-erase).
+- **No attachments.** The transport interface has no `attachments` field.
 - **Tracking columns live in core** (`delivered_at`, `opened_at`, `clicked_at`, counters, plus an
   `email_log_event` table). SMTP leaves them empty. The Brevo plugin fills them through a core
   service `recordEmailEvent`. This avoids a plugin altering a core table and lets the core log
   UI show opens/clicks when the active transport supports tracking.
 - **Idempotency.** One-time emails (order confirmation, welcome) get an `idempotency_key`
   (e.g. `order_confirmation:order:123`) with a unique index. A redelivered event doesn't send twice.
-- **Auto-erase** with a daily cron job: delete log rows older than `emailLogRetentionDays`
-  (default 90).
+- **Auto-erase in two steps**, by one daily cron job:
+  - clear `body_html` of log rows older than `emailLogBodyRetentionDays` (default **30**); the
+    metadata (date, template, recipient, subject, status, tracking) stays;
+  - delete log rows older than `emailLogRetentionDays` (default **90**).
 - **Retry** failed sends with a cron job (every 15 min, max 3 attempts, only within 24 h), because
   subscribers have no retry.
-- **Single language** for now (shop language). Templates are stored per language so a later
-  per-customer language needs no schema change.
+- **Single language** for now (shop language). Code templates are per language, so a later
+  per-customer language needs no rework.
 
 ## Templates
 
-| Code | Trigger | To | Default |
+All templates are code files in `core/modules/email/templates/`. They are always on, except where a
+setting says otherwise.
+
+| Code | Trigger | To | On/off |
 |---|---|---|---|
-| `order_confirmation` | `order_placed` | `order.customer_email` | enabled |
-| `admin_new_order` | `order_placed` | `emailAdminRecipients` setting (fallback `storeEmail`) | disabled |
-| `order_canceled` | `order_status_updated` with `after = 'canceled'` | `order.customer_email` | enabled |
-| `customer_welcome` | `customer_registered` | `customer.email` | enabled, but skipped for imports (step 3.3) |
-| `reset_password` | `POST /customers/reset-password` | the customer | enabled, cannot be disabled |
-| `email_test` | "Send test email" button | typed address | internal, not editable |
+| `order_confirmation` | `order_placed` | `order.customer_email` | always |
+| `admin_new_order` | `order_placed` | `emailAdminRecipients` setting | only when that setting is filled |
+| `order_canceled` | `order_status_updated` with `after = 'canceled'` | `order.customer_email` | always |
+| `customer_welcome` | `customer_registered` | `customer.email` | setting `emailCustomerWelcomeEnabled`, default **on**; skipped for imports (step 17) |
+| `registration_confirmation` | `registration_created` (admin adds a registration, new event) | the parent: `participant.customer_id` → `customer.email` | always; skipped (logged) when the participant has no linked customer |
+| `reset_password` | `POST /customers/reset-password` | the customer | always |
+| `email_test` | "Send test email" button | typed address | internal |
 
-Variables per template are declared in code (shown in the editor as a help list), for example for
-`order_confirmation`: `store.name`, `store.email`, `customer.name`, `order.number`, `order.date`,
-`order.total` (formatted with currency), `order.paymentMethod`, `order.url` (account order page),
-`{{{ itemsTable }}}` (product, participant names, price). For `reset_password`: `customer.name`,
-`resetUrl`, `expiresInHours`.
+Template file shape:
 
-Plugins can add templates with `registerEmailTemplate()` (for example a fiscal attest email in
+```ts
+// core/modules/email/templates/orderConfirmation.ts
+export default defineEmailTemplate({
+  code: 'order_confirmation',
+  variables: ['store.name', 'customer.name', 'order.number', 'order.total', 'order.url', 'itemsTable'],
+  nl: { subject: 'Bevestiging van je bestelling {{ order.number }}', body: `<p>Dag {{ customer.name }},</p>…{{{ itemsTable }}}…` },
+  fr: { subject: '…', body: '…' },
+  en: { subject: '…', body: '…' }
+});
+```
+
+Variables, for example for `order_confirmation`: `store.name`, `store.email`, `customer.name`,
+`order.number`, `order.date`, `order.total` (formatted with currency), `order.paymentMethod`,
+`order.url` (account order page), `{{{ itemsTable }}}` (product, participant names, price). For
+`registration_confirmation`: `customer.name`, `participant.name`, `product.name`, `variant.options`,
+`period` (care period dates, when known). For `reset_password`: `customer.name`, `resetUrl`,
+`expiresInHours`.
+
+Plugins can add code templates with `registerEmailTemplate()` (for example a fiscal attest email in
 `belgian-administration` later).
 
 ## Data model (migration `core/modules/email/migration/Version-1.0.0.ts`)
-
-`email_template` (only overrides and on/off flags; defaults live in code)
-
-| Column | Type | Notes |
-|---|---|---|
-| `email_template_id` | INT identity PK | |
-| `uuid` | UUID | unique |
-| `code` | varchar NOT NULL | e.g. `order_confirmation` |
-| `language` | varchar NOT NULL DEFAULT 'en' | |
-| `enabled` | boolean NOT NULL DEFAULT true | |
-| `subject` | text NULL | NULL = use default |
-| `body_html` | text NULL | NULL = use default |
-| `created_at`, `updated_at` | timestamptz | |
-| | | UNIQUE (`code`, `language`) |
 
 `email_log`
 
@@ -201,7 +208,7 @@ Plugins can add templates with `registerEmailTemplate()` (for example a fiscal a
 | `template_code` | varchar NOT NULL | |
 | `recipient` | varchar NOT NULL | one row per recipient |
 | `subject` | text NOT NULL | rendered |
-| `body_html` | text NULL | rendered; needed for view/resend/retry |
+| `body_html` | text NULL | rendered; needed for view/resend/retry; cleared after `emailLogBodyRetentionDays` |
 | `status` | varchar NOT NULL | `queued`, `sent`, `failed`, `skipped`; tracking may set `delivered`, `bounced`, `spam`, `blocked` |
 | `transport` | varchar NULL | `smtp`, `brevo`, … |
 | `provider_message_id` | varchar NULL | indexed |
@@ -239,8 +246,10 @@ Stored in `setting` through the existing `saveSetting` API.
 | `emailFromName` | `storeName` | |
 | `emailFromAddress` | `storeEmail` | |
 | `emailReplyTo` | empty | |
-| `emailAdminRecipients` | empty | comma separated, for `admin_new_order` |
-| `emailLogRetentionDays` | 90 | 1–3650 |
+| `emailAdminRecipients` | empty | comma separated; empty = no `admin_new_order` email |
+| `emailCustomerWelcomeEnabled` | 1 | welcome email on/off |
+| `emailLogBodyRetentionDays` | 30 | after this, `body_html` is cleared |
+| `emailLogRetentionDays` | 90 | after this, the log row is deleted; must be ≥ body retention |
 | `smtpHost`, `smtpPort` | empty, 587 | |
 | `smtpSecurity` | `starttls` | `none`, `starttls`, `ssl` |
 | `smtpUsername` | empty | |
@@ -258,27 +267,29 @@ cache in the event/cron processes.
 
 ```
 core/modules/email/
-  bootstrap.ts                    register smtp transport, default templates, cron jobs, config schema
+  bootstrap.ts                    register smtp transport, code templates, cron jobs, config schema
   migration/Version-1.0.0.ts
   services/
     sendEmail.ts                  sendEmail({ template, to, data, language?, entity?, idempotencyKey? })
     renderTemplate.ts             placeholder rendering + layout + text part
-    templates.ts                  registerEmailTemplate / getEmailTemplates / resolveTemplate
+    templates.ts                  defineEmailTemplate / registerEmailTemplate / getEmailTemplate(code, language)
     transports.ts                 registerEmailTransport / getActiveTransport
     smtpTransport.ts              nodemailer implementation
     recordEmailEvent.ts           used by tracking transports (Brevo)
     emailSettings.ts              reads settings + config override
     orderEmailData.ts             loads order + items + registrations for templates
+    registrationEmailData.ts      loads registration + participant + parent + product/variant
     index.ts                      public exports for plugins
-  templates/defaults/<code>.ts    { variables, en: { subject, body }, nl: {...}, fr: {...} }
+  templates/<code>.ts             one file per template: { code, variables, nl, fr, en }
   templates/layout.ts
   subscribers/order_placed/sendOrderConfirmation.ts
   subscribers/order_placed/sendAdminNewOrder.ts
   subscribers/order_status_updated/sendOrderCanceled.ts
   subscribers/customer_registered/sendCustomerWelcome.ts
+  subscribers/registration_created/sendRegistrationConfirmation.ts
   jobs/purgeEmailLog.ts
   jobs/retryFailedEmails.ts
-  api/… graphql/… pages/admin/…   (see Admin UI)
+  api/… graphql/… pages/admin/…   (settings, test email, log; see Admin UI)
 ```
 
 Transport interface (in `services/transports.ts`):
@@ -300,7 +311,8 @@ export function registerEmailTransport(t: EmailTransport): void   // addProcesso
 
 `sendEmail` flow:
 
-1. `refreshSetting()`; load the resolved template. If the template is disabled → return.
+1. `refreshSetting()`; load the code template for the shop language (fallback `en`). If it is
+   switched off by its setting (welcome email) → return.
 2. If `idempotencyKey` is set and a row with that key and status `sent`/`queued` exists → return.
 3. Render subject/body/text. Insert `email_log` (`queued`).
 4. If `emailSendingEnabled` is off → set `skipped`, return.
@@ -316,32 +328,29 @@ status. Opens/clicks never change `status`, so the status stays a delivery statu
 
 ## Admin UI
 
+No template pages: texts are changed in code.
+
 1. **Settings > Email** (`/admin/setting/email`, menu card in `settingPageMenu`, sortOrder 30):
    - General card: master switch, transport select (from registered transports), from name/address,
-     reply-to, admin recipients, log retention days.
+     reply-to, admin recipients, welcome email on/off, body retention days, log retention days.
    - `<Area id="emailTransportSetting">` with the core SMTP card (host, port, security, username,
      password "leave blank to keep"). The Brevo plugin adds its card here. Same pattern as
      `PaymentSetting.tsx:31`.
    - "Send test email" (address input + button) → `POST /api/email/test`, shows the result and
      links to the log row.
-2. **Email templates** (`/admin/email-templates`, under Settings or Marketing menu): list with name,
-   code, trigger, enabled, "customized" badge.
-   Edit page (`/admin/email-templates/:code`): enabled toggle, subject, body (HTML textarea),
-   variables help list, live preview (sandboxed iframe, sample data from the template definition),
-   "Send test to me", "Reset to default". Save via `PATCH /api/email-templates/:code`.
-   **This API must run before `escapeHtml`** (`after: ['payloadValidate'], before: ['escapeHtml']`
-   in `routes.ts`) or the HTML gets escaped. Access `private`.
-3. **Email log** (`/admin/email-logs`): grid with date, template, recipient, subject, status,
+2. **Email log** (`/admin/email-logs`): grid with date, template, recipient, subject, status,
    transport, and Opened/Clicked columns when the active transport `supportsTracking`. Filters:
-   recipient, template, status, date. Detail view: metadata, rendered body (sandboxed iframe),
-   events timeline (`email_log_event`), "Resend" (new log row, same body).
-4. **Order page**: an "Emails" card in `leftSide` (order edit, after Activities at sortOrder 30,
+   recipient, template, status, date. Detail view: metadata, rendered body (sandboxed iframe, or
+   "body removed after N days"), events timeline (`email_log_event`), "Resend" (new log row, same
+   body; hidden when the body was cleared).
+3. **Order page**: an "Emails" card in `leftSide` (order edit, after Activities at sortOrder 30,
    `oms/pages/admin/orderEdit/Activities.tsx:116-117`) listing log rows for `entity_type = 'order'`,
-   with "Resend order confirmation".
+   with "Resend order confirmation" (re-renders from the code template with current order data, so
+   it also works after the body was cleared).
 
-GraphQL (admin only, `*.admin.graphql`): `emailTemplates`, `emailTemplate(code)`, `emailLogs(filters)`
-(collection like `core/modules/customer/services/CustomerCollection.ts`), `emailLog(uuid)`,
-`Order.emailLogs`, `Setting.email*` and `smtp*` (no password; `smtpPasswordSet: Boolean`),
+GraphQL (admin only, `*.admin.graphql`): `emailLogs(filters)` (collection like
+`core/modules/customer/services/CustomerCollection.ts`), `emailLog(uuid)`, `Order.emailLogs`,
+`Setting.email*` and `smtp*` (no password; `smtpPasswordSet: Boolean`),
 `emailTransports { code name supportsTracking configured }`.
 
 ## Implementation steps
@@ -362,7 +371,7 @@ GraphQL (admin only, `*.admin.graphql`): `emailTemplates`, `emailTemplate(code)`
 
 4. Add `nodemailer` and `@types/nodemailer` to `package.json`.
 5. Create `core/modules/email` and add it to `includes/bin/lib/loadModules.js` (before `oms`/`setting` is fine; order doesn't matter for migrations).
-6. Migration `Version-1.0.0.ts`: the three tables, indexes, backlog `DELETE` (see Data model).
+6. Migration `Version-1.0.0.ts`: `email_log`, `email_log_event`, indexes, backlog `DELETE` (see Data model).
 7. `services/emailSettings.ts`, `services/transports.ts`, `services/smtpTransport.ts` (create the
    nodemailer transport per send, or cache it keyed on the settings), `services/sendEmail.ts`,
    `services/recordEmailEvent.ts`, `services/index.ts`.
@@ -372,14 +381,15 @@ GraphQL (admin only, `*.admin.graphql`): `emailTemplates`, `emailTemplate(code)`
    `dataFilter` drops an empty `smtpPassword`.
 10. Test API `api/sendTestEmail/` (`POST /email/test`, private).
 
-### Phase 2 – templates
+### Phase 2 – code templates
 
 11. `services/renderTemplate.ts` (escape, `{{{ }}}` raw, unknown placeholder → empty + warning, layout, text part).
-12. `services/templates.ts` with `registerEmailTemplate` (registry value `emailTemplates`) and
-    `resolveTemplate(code, language)`.
-13. Default templates in `templates/defaults/*.ts` in `en`, `nl`, `fr` (Dutch first, it's the main market).
-14. Template GraphQL, list page `pages/admin/emailTemplateGrid/`, edit page `pages/admin/emailTemplateEdit/`,
-    APIs `api/updateEmailTemplate/` (before `escapeHtml`), `api/resetEmailTemplate/`, `api/previewEmailTemplate/`.
+12. `services/templates.ts` with `defineEmailTemplate`, `registerEmailTemplate` (registry value
+    `emailTemplates`) and `getEmailTemplate(code, language)` (shop language → `en`).
+13. Template files `templates/*.ts` in `nl`, `fr`, `en` (Dutch first, it's the main market), plus
+    `templates/layout.ts`. Register them in `bootstrap.ts`.
+14. A small dev script or unit test that renders every template with sample data, so texts can be
+    checked without an admin preview page.
 
 ### Phase 3 – triggers
 
@@ -397,6 +407,20 @@ GraphQL (admin only, `*.admin.graphql`): `emailTemplates`, `emailTemplate(code)`
     (entry in `customer/api/routes.ts` after `resetPassword`, before `apiResponse`) that calls
     `sendEmail({ template: 'reset_password', … resetUrl: buildAbsoluteUrl('updatePasswordPage') + '?token=…' })`.
     Respond the same way whether the email exists or not (already the case).
+18b. Registration confirmation for admin-added registrations:
+    - in `core/modules/camp/services/registration/createRegistration.ts`, after `commit` (`:116`),
+      call `emit('registration_created', { registration_id, source: context.source ?? 'admin' })`.
+      `emit` is already imported (`:10`) but unused. The only caller is the admin API
+      (`camp/api/createRegistration/createRegistration[finish].ts:6`); checkout inserts registrations
+      in `orderCreator` directly and does not emit this event, so parents don't get it on top of the
+      order confirmation;
+    - `services/registrationEmailData.ts` loads registration, participant, parent customer
+      (`participant.customer_id`), product name, variant options and care period;
+    - subscriber `registration_created/sendRegistrationConfirmation.ts` with key
+      `registration_confirmation:registration:<id>`. No linked customer or no email → log row
+      `skipped` with reason "no parent email".
+    - Admin UI: a note in the "Add registration" modal that the parent gets an email (optional
+      checkbox "Send confirmation", default on, passed as `send_email` → `context`).
 
 ### Phase 4 – log UI
 
@@ -406,7 +430,9 @@ GraphQL (admin only, `*.admin.graphql`): `emailTemplates`, `emailTemplate(code)`
 
 ### Phase 5 – jobs
 
-22. `jobs/purgeEmailLog.ts`: `DELETE FROM email_log WHERE created_at < now() - make_interval(days => $retention)`
+22. `jobs/purgeEmailLog.ts`, two statements:
+    `UPDATE email_log SET body_html = NULL WHERE body_html IS NOT NULL AND created_at < now() - make_interval(days => $bodyRetention)`
+    and `DELETE FROM email_log WHERE created_at < now() - make_interval(days => $retention)`
     (events cascade). Register in `bootstrap.ts` with `registerJob({ name: 'purgeEmailLog', schedule: '15 3 * * *', resolve: <absolute dist path>, enabled: true })`.
     Register only once: `registerJob` warns on duplicates, and bootstrap runs in every process, which is fine.
 23. `jobs/retryFailedEmails.ts` (`*/15 * * * *`): status `failed`, `attempts < 3`, `created_at > now() - 24h`;
@@ -418,31 +444,43 @@ GraphQL (admin only, `*.admin.graphql`): `emailTemplates`, `emailTemplate(code)`
 25. Update `analysis-user-test-flows.md` G1 when done; add a short "Emails" section to the README
     (SMTP config, Mailpit for local testing, `shop.homeUrl`).
 
-## Open questions
+## Decided after review
 
-1. Are placeholders + code-built blocks enough, or do admins need conditions/loops (then add
-   `handlebars`, which escapes by default)?
-2. HTML textarea + preview, or CKEditor for the body? CKEditor is friendlier but strips email markup.
-3. Retention default: 90 days? Should `body_html` be cleared earlier (e.g. 30 days) and the
-   metadata kept longer?
-4. Should the welcome email be on by default? Customers mostly register during checkout and also get
-   the order confirmation.
-5. Order confirmation for COD is sent at order creation; for Mollie only after payment. Do we also
-   want a "payment failed/expired" email (Mollie `failed`/`expired`, `webhook.ts:137-147`)? This
-   relates to the 0.0.3 analysis on failed payments keeping seats.
-6. Admin-created registrations have no order and get no email (`analysis-admin-registration-finances.md:47`).
-   Add a `registration_confirmation` template triggered from the camp module now or later?
-7. Attach anything (e.g. invoice PDF, fiscal attest)? The transport interface would need `attachments`.
+| Question | Decision |
+|---|---|
+| Templates editable in the admin? | No. Code only for now. |
+| Template engine (handlebars) for loops/conditions? | No. Placeholders + code-built blocks. |
+| Body editor (textarea/CKEditor) and preview? | Postponed. |
+| Log retention | 90 days for the row, `body_html` cleared after 30 days. |
+| Welcome email on by default? | Yes. |
+| "Payment failed/expired" email? | Postponed. |
+| Registration confirmation for admin-added registrations? | Yes, in this release (step 18b). |
+| Attachments (invoice, fiscal attest)? | No. |
+
+## Later (not in this release)
+
+- `email_template` table with per-(code, language) overrides of subject/body and an on/off flag,
+  plus an admin list/edit page with preview and "reset to default". `getEmailTemplate` then checks
+  the override first, so callers don't change. The save API must run before `escapeHtml`
+  (`setting/api/routes.ts:97`, `base/services/escapePayload.ts:3-13`) or the HTML gets escaped.
+- Handlebars if templates need loops/conditions.
+- "Payment failed/expired" email (Mollie `failed`/`expired`, `webhook.ts:137-147`), together with
+  the seat release from `analysis-order-cancellation-seats.md`.
+- Attachments.
 
 ## Testing
 
 Unit (jest, next to the services):
 
 - `renderTemplate`: escaping, raw blocks, unknown placeholders, language fallback (`nl` → `en`).
+- Every registered code template renders in `nl`, `fr`, `en` with its sample data without unknown placeholders.
 - `sendEmail` with a fake transport: disabled → `skipped`; not configured → `failed`; success →
   `sent` with provider id; throwing transport → `failed`, no exception; idempotency key blocks a second send.
 - `recordEmailEvent`: first open sets `opened_at`, second only increments; bounce sets status; unknown id ignored.
-- Purge: rows older than retention deleted, events cascade.
+- Purge: bodies older than body retention cleared (row kept); rows older than retention deleted, events cascade.
+
+Note: `jest.config.js` only matches tests under `**/src/**/tests/**/unit/`, so tests in
+`core/modules/email/...` won't run until `testMatch` is widened.
 
 Manual (local Mailpit, SMTP `localhost:1025`, security `none`):
 
@@ -455,8 +493,12 @@ Manual (local Mailpit, SMTP `localhost:1025`, security `none`):
 7. Register on the storefront: welcome email. Run a WooCommerce import: no welcome emails.
 8. Forgot password: the API response contains no token; the email link opens the update password
    form; the new password works; the link fails after 48 h.
-9. Edit a template, preview, save with HTML: stored unescaped; reset to default.
+9. Admin adds a registration for a participant linked to a customer: the parent gets the
+   registration confirmation. Participant without customer: log `skipped`. Checkout order: only
+   the order confirmation, no registration confirmation.
 10. Change SMTP settings and place an order without restarting: the new settings are used.
 11. Wrong SMTP password: log `failed` with error; fix it; the retry job sends it within 15 min.
-12. Set retention to 1 day, change a row's `created_at`, run the purge job: the row is gone.
+12. Set a row's `created_at` to 31 days ago and run the purge job: body cleared, row kept, "Resend"
+    hidden in the log, "Resend order confirmation" on the order still works. At 91 days: row gone.
 13. Turn the master switch off: orders still work, log shows `skipped`.
+14. Turn the welcome email off: registering sends nothing.
