@@ -45,7 +45,11 @@ export function CheckoutSteps({ children, value }: CheckoutStepsProps) {
   };
 
   const addStep = (step: Step) => {
-    setSteps((previous) => previous.concat([step]));
+    setSteps((previous) =>
+      previous.some((s) => s.id === step.id)
+        ? previous.map((s) => (s.id === step.id ? step : s))
+        : previous.concat([step])
+    );
   };
 
   const editStep = (stepId: string) => {

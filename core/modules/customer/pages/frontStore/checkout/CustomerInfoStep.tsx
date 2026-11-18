@@ -53,7 +53,10 @@ export default function ContactInformationStep({
       sortOrder: 5,
       editable: !currentCustomer
     });
-  }, [checkoutStepsDispatch, customerEmail, currentCustomer]);
+    // Register the step once on mount. The dispatch object is recreated on every
+    // steps change, so depending on it here would re-add the step in a loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (checkoutStepsDispatch) {
