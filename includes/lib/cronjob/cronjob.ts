@@ -15,7 +15,7 @@ async function start() {
   try {
     // Routes are needed by jobs that build urls (e.g. links in emails)
     for (const module of modules) {
-      loadModuleRoutes(module.path);
+      await loadModuleRoutes(module.path);
     }
     for (const module of modules) {
       await loadBootstrapScript(module, {

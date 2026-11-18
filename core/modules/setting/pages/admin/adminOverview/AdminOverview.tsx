@@ -4,6 +4,7 @@ import { Form } from '@components/form/Form';
 import { Field } from '@components/form/Field';
 import Button from '@components/form/Button';
 import Pagination from '@components/grid/Pagination';
+import { useModal } from '@components/modal/useModal';
 import React from 'react';
 import { toast } from 'react-toastify';
 import { GraphQLFilter } from '../../../../../types';
@@ -25,11 +26,80 @@ interface Props {
     total: number;
     currentFilters?: GraphQLFilter[];
   };
+  createAdminUserUrl: string;
+}
+
+function NewAdminUserForm({
+  action,
+  closeModal
+}: {
+  action: string;
+  closeModal: () => void;
+}) {
+  return (
+    <Card title="New admin user">
+      <Card.Session>
+        <Form
+          id="newAdminUserForm"
+          action={action}
+          method="POST"
+          btnText="Create user"
+          onSuccess={(response: any) => {
+            if (response?.error) {
+              toast.error(response.error.message || 'Failed to create admin user');
+              return;
+            }
+            toast.success('Admin user created');
+            closeModal();
+            window.location.reload();
+          }}
+          onError={() => {
+            toast.error('Something went wrong while creating the admin user');
+          }}
+        >
+          <Field
+            type="text"
+            name="full_name"
+            label="Full name"
+            placeholder="Full name"
+            validationRules={['notEmpty']}
+          />
+          <Field
+            type="text"
+            name="email"
+            label="Email"
+            placeholder="Email"
+            validationRules={['notEmpty', 'email']}
+          />
+          <Field
+            type="password"
+            name="password"
+            label="Password"
+            placeholder="At least 8 characters"
+            validationRules={['notEmpty']}
+          />
+        </Form>
+        <div className="mt-2">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              closeModal();
+            }}
+          >
+            Cancel
+          </a>
+        </div>
+      </Card.Session>
+    </Card>
+  );
 }
 
 export default function AdminOverview({
   users: { items: users, total, currentFilters = [] },
+  createAdminUserUrl
 }: Props) {
+  const modal = useModal();
   const page = currentFilters.find((filter) => filter.key === 'page')
     ? parseInt(currentFilters.find((filter) => filter.key === 'page')!.value, 10)
     : 1;
@@ -89,7 +159,28 @@ export default function AdminOverview({
         </div>
 
         <div className="col-span-4">
-          <Card>
+          {modal.state.showing && (
+            <div className={modal.className} onAnimationEnd={modal.onAnimationEnd}>
+              <div
+                className="modal-wrapper flex self-center justify-center items-center"
+                tabIndex={-1}
+                role="dialog"
+              >
+                <div className="modal">
+                  <NewAdminUserForm
+                    action={createAdminUserUrl}
+                    closeModal={() => modal.closeModal()}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <Card
+            title="Admin users"
+            actions={[
+              { name: 'Add admin user', onAction: () => modal.openModal() }
+            ]}
+          >
             <Card.Session title={
                 <Form submitBtn={false} id="adminUserSearch">
                   <Field
@@ -198,6 +289,7 @@ export const query = `
       value
     }
   }
+  createAdminUserUrl: url(routeId: "createAdminUser")
 }
 `;
 
