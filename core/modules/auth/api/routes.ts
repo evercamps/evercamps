@@ -72,6 +72,17 @@ export const routes: RouteDefinition[] = [
   },
 
   {
+    routeId: 'createAdminUser',
+    region: 'api',
+    path: '/admin/users',
+    methods: ['POST'],
+    middleware: [
+      { id: 'bodyParser', after: ['context'], before: ['auth'] },
+      { id: 'index', after: ['escapeHtml'], before: ['apiResponse'] },
+    ],
+  },
+
+  {
     routeId: 'setupTwoFa',
     region: 'api',
     path: '/admin/2fa/setup',

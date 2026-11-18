@@ -17,7 +17,7 @@ export const createApp = async (): Promise<Express> => {
   for (const module of modules) {
     try {
       await getModuleMiddlewares(module.path);
-      loadModuleRoutes(module.path);
+      await loadModuleRoutes(module.path);
     } catch (e) {
       error(e);
       process.exit(0);
@@ -28,7 +28,7 @@ export const createApp = async (): Promise<Express> => {
   for (const extension of extensions) {
     try {
       await getModuleMiddlewares(extension.path);
-      loadModuleRoutes(extension.path);
+      await loadModuleRoutes(extension.path);
     } catch (e) {
       error(e);
       process.exit(0);
