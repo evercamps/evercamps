@@ -1,4 +1,3 @@
-import { select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../lib/postgres/connection.js';
 import { getProductsBaseQuery } from '../../../modules/catalog/services/getProductsBaseQuery.js';
 import { getProductsByCategoryBaseQuery } from '../../../modules/catalog/services/getProductsByCategoryBaseQuery.js';
@@ -42,44 +41,33 @@ export const getFilterableAttributes = async (
     (row) => row.product_id
   );
 
-  // Filterable attributes
-  const query = select('attribute.attribute_name', 'attribute_name')
-    .select('attribute.type', 'type')
-    .select('attribute.is_filterable', 'is_filterable')
-    .select(
-      'product_attribute_value_index.attribute_id',
-      'attribute_id'
-    )
-    .select('attribute.attribute_code', 'attribute_code')
-    .select(
-      'product_attribute_value_index.option_id',
-      'option_id'
-    )
-    .select(
-      'product_attribute_value_index.option_text',
-      'option_text'
-    )
-    .from('attribute');
+  if (allIds.length === 0) {
+    return [];
+  }
 
-  query
-    .innerJoin('product_attribute_value_index')
-    .on(
-      'attribute.attribute_id',
-      '=',
-      'product_attribute_value_index.attribute_id'
-    );
-
-  query
-    .where(
-      'product_attribute_value_index.product_id',
-      'IN',
-      allIds
-    )
-    .and('type', 'IN', ['select', 'period'])
-    .and('is_filterable', '=', 1);
-
-  const attributeData =
-    (await query.execute(pool)) as AttributeData[];
+  // Filterable attributes. A product gets an option either directly
+  // (product_attribute_value_index) or through one of its variants
+  // (variant_attribute_value, e.g. kampweek). Each product counts once per option.
+  const { rows: attributeData } = await pool.query<AttributeData>(
+    `SELECT a.attribute_name, a.type, a.is_filterable, a.attribute_id,
+            a.attribute_code, v.option_id, ao.option_text
+       FROM (
+         SELECT product_id, attribute_id, option_id
+           FROM product_attribute_value_index
+          WHERE product_id = ANY($1::int[])
+         UNION
+         SELECT pv.product_id, vav.attribute_id, vav.option_id
+           FROM variant_attribute_value vav
+           JOIN product_variant pv ON pv.product_variant_id = vav.variant_id
+          WHERE pv.product_id = ANY($1::int[])
+       ) v
+       JOIN attribute a ON a.attribute_id = v.attribute_id
+       JOIN attribute_option ao ON ao.attribute_option_id = v.option_id
+      WHERE a.type IN ('select', 'period')
+        AND a.is_filterable = TRUE
+      ORDER BY a.attribute_id, ao.attribute_option_id`,
+    [allIds]
+  );
 
   const attributes: FilterableAttribute[] = [];
 

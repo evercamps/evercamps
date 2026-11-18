@@ -1,7 +1,4 @@
-import {
-  SelectQuery,
-  value
-} from '@evershop/postgres-query-builder';
+import { SelectQuery } from '@evershop/postgres-query-builder';
 import uniqid from 'uniqid';
 import { OPERATION_MAP } from '../../../lib/util/filterOperationMap.js';
 import { getValueSync } from '../../../lib/util/registry.js';
@@ -316,34 +313,34 @@ export default async function registerDefaultProductCollectionFilters(
         filterValue,
         currentFilters
       ) => {
-        const alias = `attribute_${uniqid()}`;
-
         // Split the value by comma and only get positive integers
         const values = filterValue
           .split(',')
           .map((v) => parseInt(v, 10))
-          .filter((v) => v > 0);
+          .filter((v) => Number.isInteger(v) && v > 0);
 
-        query
-          .innerJoin(
-            'product_attribute_value_index',
-            alias
-          )
-          .on(
-            `${alias}.product_id`,
-            '=',
-            'product.product_id'
-          )
-          .and(
-            `${alias}.attribute_id`,
-            '=',
-            value(attribute.attribute_id)
-          )
-          .and(
-            `${alias}.option_id`,
-            'IN',
-            value(values)
-          );
+        if (values.length === 0) {
+          return;
+        }
+
+        // Match the option on the product itself or on one of its variants
+        // (variant attributes such as kampweek live in variant_attribute_value).
+        // Only parsed positive integers are inlined, so this is injection safe.
+        const attributeId = Number(attribute.attribute_id);
+        const optionList = values.join(',');
+        query.getWhere().addRaw(
+          'AND',
+          `(EXISTS (SELECT 1 FROM product_attribute_value_index pavi
+                     WHERE pavi.product_id = product.product_id
+                       AND pavi.attribute_id = ${attributeId}
+                       AND pavi.option_id IN (${optionList}))
+            OR EXISTS (SELECT 1 FROM variant_attribute_value vav
+                        JOIN product_variant pv ON pv.product_variant_id = vav.variant_id
+                       WHERE pv.product_id = product.product_id
+                         AND vav.attribute_id = ${attributeId}
+                         AND vav.option_id IN (${optionList})))`,
+          {}
+        );
 
         currentFilters.push({
           key: attribute.attribute_code,
