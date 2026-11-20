@@ -16,7 +16,8 @@
     "start:debug": "node ./dist/bin/start/index.js --debug",
     "user:create": "node ./dist/bin/user/create.js",
     "user:changePassword": "node ./dist/bin/user/changePassword.js",
-    "test": "ALLOW_CONFIG_MUTATIONS=true NODE_OPTIONS=--experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node ./jest.run.mjs",
+    "test:db": "node ./jest.run.mjs --db",
     "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx ."
   },
   "author": "Janiek Colpaert - Adapted from The Nguyen (https://evershop.io)",
