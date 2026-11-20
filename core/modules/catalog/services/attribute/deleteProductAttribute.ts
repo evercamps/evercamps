@@ -30,18 +30,15 @@ async function deleteAttribute(uuid: string, context: Record<string, any>) {
       throw new Error('Invalid attribute id');
     }
 
-    // Make sure the attribute is not being used in any variant group
-    const variantGroup = await select()
-      .from('variant_group')
-      .where('attribute_one', '=', attribute.attribute_id)
-      .or('attribute_two', '=', attribute.attribute_id)
-      .or('attribute_three', '=', attribute.attribute_id)
-      .or('attribute_four', '=', attribute.attribute_id)
-      .or('attribute_five', '=', attribute.attribute_id)
+    // Deleting would cascade into variant_attribute_value and silently strip
+    // the option (e.g. the camp week) from existing variants.
+    const usedByVariant = await select('variant_attribute_value_id')
+      .from('variant_attribute_value')
+      .where('attribute_id', '=', attribute.attribute_id)
       .load(connection);
-    if (variantGroup) {
+    if (usedByVariant) {
       throw new Error(
-        `The attribute "${attribute.attribute_name}" is being used in a variant group`
+        `The attribute "${attribute.attribute_name}" is used by product variants`
       );
     }
     await hookable(deleteAttributeData, { ...context, connection, attribute })(

@@ -70,6 +70,11 @@ async function insertProductAttributes(attributes: ProductAttributeData[], produ
         return;
       }
 
+      // A variant attribute is never filled in on the product itself (ADR-0004).
+      if (attr.role === 'variant') {
+        continue;
+      }
+
       if (attr.type === 'textarea' || attr.type === 'text') {
         // Throw error if attribute value is not a string
         if (typeof attribute.value !== 'string') {

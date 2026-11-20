@@ -2,7 +2,8 @@ import { select } from '@evershop/postgres-query-builder';
 import type { Pool } from 'pg';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
-import { countVariantUsage } from '../../../services/product/productVariants.js';
+import { VARIANT_ATTRIBUTE_TYPES } from '../../../services/attribute/attributeRole.js';
+import { countVariantUsage, variantAttributesInUse } from '../../../services/product/productVariants.js';
 
 interface Context {
   pool: Pool;
@@ -60,8 +61,15 @@ export default {
       const row = await query.load(pool);
       return row ? { groupId: row.attribute_group_id, groupName: row.group_name } : null;
     },
-    // Select attributes of the product's attribute group, plus any attribute
-    // its variants already use (e.g. imported "kampweek" outside the group).
+    attributeGroupLocked: async (product: Product) =>
+      (await variantAttributesInUse(product.productId)).length > 0,
+    attributeGroupLockReason: async (product: Product) => {
+      const names = await variantAttributesInUse(product.productId);
+      return names.length > 0 ? `Variants use ${names.join(', ')}` : null;
+    },
+    // Variant attributes of the product's attribute group (ADR-0004), plus any
+    // attribute its variants already use (e.g. imported "kampweek" outside the
+    // group), so existing variants keep showing their options.
     variantAttributes: async (product: Product, _: unknown, { pool }: Context) => {
       const productRow = await select('group_id')
         .from('product')
@@ -81,15 +89,21 @@ export default {
       usedQuery.where('product_variant.product_id', '=', product.productId);
       const used = await usedQuery.execute(pool);
 
-      const ids = [...new Set([...inGroup, ...used].map((row) => row.attribute_id))];
+      const usedIds = new Set(used.map((row) => row.attribute_id));
+      const ids = [...new Set([...inGroup.map((row) => row.attribute_id), ...usedIds])];
       if (ids.length === 0) {
         return [];
       }
-      const attributes = await select()
-        .from('attribute')
-        .where('attribute_id', 'IN', ids)
-        .and('type', 'IN', ['select', 'period'])
-        .execute(pool);
+      const attributes = (
+        await select()
+          .from('attribute')
+          .where('attribute_id', 'IN', ids)
+          .and('type', 'IN', VARIANT_ATTRIBUTE_TYPES)
+          .execute(pool)
+      ).filter((attribute) => attribute.role === 'variant' || usedIds.has(attribute.attribute_id));
+      if (attributes.length === 0) {
+        return [];
+      }
       const options = await select()
         .from('attribute_option')
         .where('attribute_id', 'IN', attributes.map((a) => a.attribute_id))

@@ -35,6 +35,11 @@ type Attribute {
   displayOnFrontend: Int!
   sortOrder: Int!
   isFilterable: Int!
+  """
+  'product' (describes the whole product) or 'variant' (tells the variants of a
+  product apart, e.g. camp week). Only select and period attributes can be 'variant'.
+  """
+  role: String!
   options: [AttributeOption]
 }
 

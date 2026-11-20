@@ -80,14 +80,5 @@ export const productFields: ItemField[] = [
       }
     ],
     dependencies: ['product_id']
-  },
-  {
-    key: 'variant_group_id',
-    resolvers: [
-      async function(this: ItemContext) {
-        return (await this.getProduct()).variant_group_id ?? null;
-      }
-    ],
-    dependencies: ['product_id']
   }
 ];

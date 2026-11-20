@@ -10,8 +10,9 @@ type ProductVariantOption {
 }
 
 """
-A select attribute whose options a product's variants can use (attributes of
-the product's attribute group).
+A variant attribute whose options a product's variants can use: the variant
+attributes of the product's attribute group, plus any attribute its variants
+already use.
 """
 type ProductVariantAttribute {
   attributeId: Int!
@@ -43,4 +44,14 @@ extend type Product {
   createVariantApi: String!
   variantAttributes: [ProductVariantAttribute!]!
   variantAttributeGroup: ProductVariantAttributeGroup
+  """
+  True once a variant of the product has a value for a variant attribute: the
+  attribute group can't change any more (ADR-0003).
+  """
+  attributeGroupLocked: Boolean!
+  """
+  Why the attribute group is locked: the variant attributes in use, e.g.
+  "Variants use Kampweek". Null when not locked.
+  """
+  attributeGroupLockReason: String
 }

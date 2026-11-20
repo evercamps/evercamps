@@ -81,6 +81,38 @@ async function assertSkuFree(sku: string, connection: PoolClient, exceptVariantI
   }
 }
 
+// An option's attribute must be a variant attribute (ADR-0004) of the
+// product's attribute group. An attribute the product's variants already use
+// stays allowed, so existing variants can still be saved.
+async function assertVariantAttributeAllowed(productId: number, attributeId: number, connection: PoolClient) {
+  const attribute = await select('attribute_name', 'role')
+    .from('attribute')
+    .where('attribute_id', '=', attributeId)
+    .load(connection, false);
+  if (!attribute) {
+    throw new Error('Attribute not found');
+  }
+  const usedQuery = select('variant_attribute_value.attribute_id').from('variant_attribute_value');
+  usedQuery
+    .innerJoin('product_variant')
+    .on('product_variant.product_variant_id', '=', 'variant_attribute_value.variant_id');
+  usedQuery.where('product_variant.product_id', '=', productId).and('variant_attribute_value.attribute_id', '=', attributeId);
+  if (await usedQuery.load(connection, false)) {
+    return;
+  }
+  if (attribute.role !== 'variant') {
+    throw new Error(`"${attribute.attribute_name}" is not a variant attribute`);
+  }
+  const groupQuery = select('attribute_group_link.attribute_id').from('product');
+  groupQuery
+    .innerJoin('attribute_group_link')
+    .on('attribute_group_link.group_id', '=', 'product.group_id');
+  groupQuery.where('product.product_id', '=', productId).and('attribute_group_link.attribute_id', '=', attributeId);
+  if (!(await groupQuery.load(connection, false))) {
+    throw new Error(`"${attribute.attribute_name}" is not in the attribute group of this product`);
+  }
+}
+
 // Validates the options (each option belongs to its attribute, one option per
 // attribute) and writes them + the lookup hash. The hash is unique per
 // product, so two variants can't have the same option combination.
@@ -99,6 +131,7 @@ async function writeOptions(
       throw new Error('A variant can have only one option per attribute');
     }
     seenAttributes.add(attributeId);
+    await assertVariantAttributeAllowed(productId, attributeId, connection);
     const exists = await select('attribute_option_id')
       .from('attribute_option')
       .where('attribute_option_id', '=', optionId)
@@ -245,6 +278,22 @@ async function updateProductVariantFunc(variantUuid: string, data: ProductVarian
     }
     return select().from('product_variant').where('product_variant_id', '=', variant.product_variant_id).load(connection, false);
   });
+}
+
+/**
+ * Names of the variant attributes the product's variants have a value for.
+ * Non-empty means the product's attribute group is locked (ADR-0003); the
+ * database enforces the same rule on product.group_id.
+ */
+export async function variantAttributesInUse(productId: number): Promise<string[]> {
+  const query = select('attribute.attribute_name').from('variant_attribute_value');
+  query
+    .innerJoin('product_variant')
+    .on('product_variant.product_variant_id', '=', 'variant_attribute_value.variant_id');
+  query.innerJoin('attribute').on('attribute.attribute_id', '=', 'variant_attribute_value.attribute_id');
+  query.where('product_variant.product_id', '=', productId).and('variant_attribute_value.option_id', 'IS NOT NULL', null);
+  const rows = await query.execute(pool);
+  return [...new Set(rows.map((row) => String(row.attribute_name)))].sort();
 }
 
 /**

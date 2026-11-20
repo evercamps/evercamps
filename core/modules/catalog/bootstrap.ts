@@ -6,7 +6,6 @@ import { merge } from '../../lib/util/merge.js';
 import { addProcessor } from '../../lib/util/registry.js';
 import { registerWidget } from '../../lib/widget/widgetManager.js';
 import { registerCartItemProductUrlField } from './services/registerCartItemProductUrlField.js';
-import { registerCartItemVariantOptionsField } from './services/registerCartItemVariantOptionsField.js';
 import registerDefaultAttributeCollectionFilters from './services/registerDefaultAttributeCollectionFilters.js';
 import registerDefaultCategoryCollectionFilters from './services/registerDefaultCategoryCollectionFilters.js';
 import registerDefaultCollectionCollectionFilters from './services/registerDefaultCollectionCollectionFilters.js';
@@ -14,7 +13,6 @@ import registerDefaultProductCollectionFilters from './services/registerDefaultP
 
 export default (): void => {
   addProcessor('cartItemFields', registerCartItemProductUrlField, 0);
-  addProcessor('cartItemFields', registerCartItemVariantOptionsField, 0);
 
   addProcessor('configurationSchema', (schema: Record<string, any>) => {
     merge(schema, {

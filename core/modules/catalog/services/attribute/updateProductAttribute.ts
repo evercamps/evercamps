@@ -14,6 +14,7 @@ import { hookable } from '../../../../lib/util/hookable.js';
 import { getValueSync, getValue } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import attributeDataSchema from './attributeDataSchema.json' with { type: 'json' };
+import { assertRoleFitsType } from './attributeRole.js';
 import { normalizeOptionPeriod, type OptionPeriodInput } from './optionPeriod.js';
 import { normalizeOptionStatus, type OptionStatusInput } from './optionStatus.js';
 
@@ -169,6 +170,9 @@ async function updateAttributeData(uuid: string, data: AttributeData, connection
   if (!attribute) {
     throw new Error('Requested attribute not found');
   }
+  // The type can't change, so check the new role against the stored type. The
+  // database refuses a role change once the attribute has values (ADR-0004).
+  assertRoleFitsType(data.role, attribute.type);
   try {
     const attribute = await update('attribute')
       .given(data)
