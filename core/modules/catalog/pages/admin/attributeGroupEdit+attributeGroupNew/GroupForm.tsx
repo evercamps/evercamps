@@ -214,7 +214,7 @@ export const query = `
       uuid
       groupName
       updateApi
-      attributes(filters: [{ key: "limit", operation: "eq", value: 1000 }]) {
+      attributes(filters: [{ key: "limit", operation: eq, value: 1000 }]) {
         items {
           attributeId
         }
@@ -225,7 +225,7 @@ export const query = `
         variantValueCount
       }
     }
-    allAttributes: attributes(filters: [{ key: "limit", operation: "eq", value: 1000 }]) {
+    allAttributes: attributes(filters: [{ key: "limit", operation: eq, value: 1000 }]) {
       items {
         attributeId
         attributeName

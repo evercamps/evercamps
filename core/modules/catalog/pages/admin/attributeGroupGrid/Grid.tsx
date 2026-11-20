@@ -118,7 +118,7 @@ export const layout = {
 
 export const query = `
   query Query {
-    attributeGroups(filters: [{ key: "ob", operation: "eq", value: "name" }]) {
+    attributeGroups(filters: [{ key: "ob", operation: eq, value: "name" }]) {
       items {
         attributeGroupId
         uuid
@@ -126,7 +126,7 @@ export const query = `
         editUrl
         deleteApi
         productCount
-        attributes(filters: [{ key: "limit", operation: "eq", value: 1 }]) {
+        attributes(filters: [{ key: "limit", operation: eq, value: 1 }]) {
           total
         }
       }

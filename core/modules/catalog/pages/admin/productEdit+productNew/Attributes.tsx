@@ -245,7 +245,7 @@ export const query = `
       items {
         groupId: attributeGroupId
         groupName
-        attributes(filters: [{ key: "limit", operation: "eq", value: 1000 }]) {
+        attributes(filters: [{ key: "limit", operation: eq, value: 1000 }]) {
           items {
             attributeId
             attributeName
