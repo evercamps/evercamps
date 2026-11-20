@@ -19,6 +19,7 @@ import {
 } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import type { ProductAttributeData, ProductData, ProductInventoryData } from '../../../../../includes/types/product.js';
+import { isVariantAttribute } from '../attribute/attributeRole.js';
 import productDataSchema from './productDataSchema.json' with { type: 'json' };
 import { syncDefaultVariant } from './defaultVariant.js';
 
@@ -71,6 +72,11 @@ async function saveProductAttributes(productId: number, attributes: ProductAttri
 
       if (!attr) {
         return;
+      }
+
+      // A variant attribute is never filled in on the product itself (ADR-0004).
+      if (isVariantAttribute(attr)) {
+        continue;
       }
 
       if (attr.type === 'textarea' || attr.type === 'text') {
@@ -176,56 +182,9 @@ async function saveProductAttributes(productId: number, attributes: ProductAttri
 async function updateProductAttributes(
   attributes: ProductAttributeData[],
   productId: number,
-  variantGroupId: number | null | undefined,
   connection: PoolClient
 ) {
-  if (!variantGroupId) {
-    await saveProductAttributes(productId, attributes, connection);
-  } else {
-    const promises = [saveProductAttributes(productId, attributes, connection)];
-    const variantGroup = await select(
-      'attribute_one',
-      'attribute_two',
-      'attribute_three',
-      'attribute_four',
-      'attribute_five'
-    )
-      .from('variant_group')
-      .where('variant_group_id', '=', variantGroupId)
-      .load(connection);
-
-    // Get all the variant attributes
-    const variantAttributes = await select()
-      .from('attribute')
-      .where(
-        'attribute_id',
-        'IN',
-        Object.values(variantGroup).filter((v) => v !== null)
-      )
-      .execute(connection);
-
-    // Remove the attributes that are variant attributes
-    const filteredAttributes = attributes.filter((attr: ProductAttributeData) =>
-      variantAttributes.every((v) => v.attribute_code !== attr.attribute_code)
-    );
-
-    const variants = await select()
-      .from('product')
-      .where('variant_group_id', '=', variantGroupId)
-      .and('product_id', '!=', productId)
-      .execute(connection);
-
-    for (let i = 0; i < variants.length; i += 1) {
-      promises.push(
-        saveProductAttributes(
-          variants[i].product_id,
-          filteredAttributes,
-          connection
-        )
-      );
-    }
-    await Promise.all(promises);
-  }
+  await saveProductAttributes(productId, attributes, connection);
 }
 
 async function updateProductImages(images: Record<string, any>[] | string[] | undefined, productId: number, connection: PoolClient) {
@@ -319,26 +278,6 @@ async function updateProductData(uuid: string, data: ProductData, connection: Po
     }
   }
 
-  // Update product category and tax class to all products in same variant group
-  if (product.variant_group_id) {
-    const sharedData: {
-      tax_class?: string;
-      category_id?: string;
-    } = {};
-    if (newProduct.tax_class !== product.tax_class) {
-      sharedData.tax_class = newProduct.tax_class;
-    }
-    if (newProduct.category_id !== product.category_id) {
-      sharedData.category_id = newProduct.category_id;
-    }
-    if (Object.keys(sharedData).length > 0) {
-      await update('product')
-        .given(sharedData)
-        .where('variant_group_id', '=', product.variant_group_id)
-        .and('product_id', '<>', product.product_id)
-        .execute(connection);
-    }
-  }
   Object.assign(product, newProduct);
   return product;
 }
@@ -396,7 +335,6 @@ async function updateProduct(uuid: string, data: ProductData, context: Record<st
     })(
       productData.attributes || [],
       product.product_id,
-      product.variant_group_id,
       connection
     );
 

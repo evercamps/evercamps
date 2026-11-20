@@ -31,7 +31,6 @@ interface Collection {
 interface Product {
   product_id: number;
   uuid: string;
-  variant_group_id?: number | null;
 }
 
 export default async function addProductToCollection(
@@ -76,38 +75,12 @@ export default async function addProductToCollection(
       return;
     }
 
-    // If the product belongs to a variant group, assign all variants
-    if (product.variant_group_id) {
-      const variants = (await select()
-        .from('product')
-        .where('variant_group_id', '=', product.variant_group_id)
-        .execute(connection)) as Product[];
-
-      await Promise.all(
-        variants.map(async (variant) => {
-          await insertOnUpdate(
-            'product_collection',
-            ['collection_id', 'product_id']
-          )
-            .given({
-              collection_id: collection.collection_id,
-              product_id: variant.product_id
-            })
-            .execute(connection);
-        })
-      );
-    } else {
-      // Assign the product to the collection
-      await insertOnUpdate(
-        'product_collection',
-        ['collection_id', 'product_id']
-      )
-        .given({
-          collection_id: collection.collection_id,
-          product_id: product.product_id
-        })
-        .execute(connection);
-    }
+    await insertOnUpdate('product_collection', ['collection_id', 'product_id'])
+      .given({
+        collection_id: collection.collection_id,
+        product_id: product.product_id
+      })
+      .execute(connection);
 
     await commit(connection);
 

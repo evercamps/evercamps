@@ -39,10 +39,26 @@ export async function resolveAttributeAndOption(
 ): Promise<{ attribute_id: number; option_id: number }> {
   const code = slugifyAttributeCode(attributeName);
 
-  let attribute = await select('attribute_id')
+  let attribute = await select('attribute_id', 'role')
     .from('attribute')
     .where('attribute_code', '=', code)
     .load(pool);
+
+  // Attributes that tell imported variants apart are variant attributes
+  // (ADR-0004). The database refuses the switch once the attribute has
+  // product-level values.
+  if (attribute && attribute.role !== 'variant') {
+    try {
+      await update('attribute')
+        .given({ role: 'variant' })
+        .where('attribute_id', '=', attribute.attribute_id)
+        .execute(pool);
+    } catch (e) {
+      throw new Error(
+        `Attribute "${code}" is used as a product attribute and can't become a variant attribute: ${(e as Error).message}`
+      );
+    }
+  }
 
   if (!attribute) {
     const created = await insert('attribute')
@@ -52,6 +68,7 @@ export async function resolveAttributeAndOption(
         // Camp weeks are periods (options with start/end dates); see core
         // catalog migration Version-1.1.3 (type "period").
         type: isSeasonAttribute(attributeName) ? 'period' : 'select',
+        role: 'variant',
         is_required: false,
         display_on_frontend: true
       })

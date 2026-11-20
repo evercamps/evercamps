@@ -146,17 +146,6 @@ export const routes: RouteDefinition[] = [
   },
 
   {
-    routeId: 'addVariantItem',
-    region: 'api',
-    path: '/variantGroups/:id/items',
-    methods: ['POST'],
-    middleware: [
-      { id: 'bodyParser', after: ['context'], before: ['auth'] },
-      { id: 'addItem', after: ['bodyParser'], before: ['apiResponse'] },
-    ],
-  },
-
-  {
     routeId: 'createAttribute',
     region: 'api',
     path: '/attributes',
@@ -249,17 +238,6 @@ export const routes: RouteDefinition[] = [
   },
 
   {
-    routeId: 'createVariantGroup',
-    region: 'api',
-    path: '/variantGroups',
-    methods: ['POST'],
-    middleware: [
-      { id: 'bodyParser', after: ['context'], before: ['auth'] },
-      { id: 'saveGroup', after: ['bodyParser'], before: ['apiResponse'] },
-    ],
-  },
-
-  {
     routeId: 'deleteAttribute',
     region: 'api',
     path: '/attributes/:id',
@@ -332,17 +310,6 @@ export const routes: RouteDefinition[] = [
   },
 
   {
-    routeId: 'unlinkVariant',
-    region: 'api',
-    path: '/variants/:id',
-    methods: ['DELETE'],
-    middleware: [
-      { id: 'multerNone', after: ['context'], before: ['auth'] },
-      { id: 'unlinkVariants', after: ['escapeHtml'], before: ['apiResponse'] },
-    ],
-  },
-
-  {
     routeId: 'updateAttribute',
     region: 'api',
     path: '/attributes/:id',
@@ -398,16 +365,6 @@ export const routes: RouteDefinition[] = [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
       { id: 'updateProduct', after: ['escapeHtml'], before: ['finish'] },
       { id: 'finish', after: ['escapeHtml'], before: ['apiResponse'] },
-    ],
-  },
-
-  {
-    routeId: 'variantSearch',
-    region: 'api',
-    path: '/variants',
-    methods: ['GET'],
-    middleware: [
-      { id: 'loadVariants', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
   }
 ];

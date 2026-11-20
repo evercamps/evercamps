@@ -19,7 +19,6 @@ export interface CartItem {
   qty: number;
   productName: string;
   productSku: string;
-  variantOptions?: string;
   // Title of the chosen product variant (e.g. a camp week)
   variantTitle?: string | null;
   productCustomOptions?: string;

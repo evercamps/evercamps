@@ -1,4 +1,4 @@
-import { node, select, sql } from '@evershop/postgres-query-builder';
+import { node, select } from '@evershop/postgres-query-builder';
 import { pool } from '../../../lib/postgres/connection.js';
 import { camelCase } from '../../../lib/util/camelCase.js';
 import { getConfig } from '../../../lib/util/getConfig.js';
@@ -33,14 +33,6 @@ interface Attribute {
   attribute_name: string;
   type: string;
   is_filterable: number;
-}
-
-interface VariantGroup {
-  variant_group_id: number;
-}
-
-interface ProductIdRow {
-  product_id: number;
 }
 
 export class ProductCollection {
@@ -132,107 +124,7 @@ export class ProductCollection {
     });
 
     if (!isAdmin) {
-      // Visibility for variant groups
-      const copy = this.baseQuery.clone();
-
-      // Get all groups that have at least 1 visible item
-      const visibleGroups =
-        (await select('variant_group_id')
-          .from('variant_group')
-          .where('visibility', '=', 't')
-          .execute(pool)) as VariantGroup[];
-
-      const visibleGroupIds = visibleGroups.map(
-        (group) => group.variant_group_id
-      );
-
-      if (visibleGroupIds.length > 0) {
-        // Get all invisible variants from current query
-        copy
-          .select('bool_or(product.visibility)', 'sumv')
-          .select(
-            'max(product.product_id)',
-            'product_id'
-          )
-          .andWhere(
-            'product.variant_group_id',
-            'IN',
-            visibleGroupIds
-          );
-
-        copy.groupBy('product.variant_group_id');
-        copy.orderBy(
-          'product.variant_group_id',
-          'ASC'
-        );
-        copy.having(
-          'bool_or(product.visibility)',
-          '=',
-          'f'
-        );
-
-        const invisibleIds = (
-          (await copy.execute(pool)) as ProductIdRow[]
-        ).map((product) => product.product_id);
-
-        if (invisibleIds.length > 0) {
-          const n = node('AND');
-
-          n.addLeaf(
-            'AND',
-            'product.product_id',
-            'IN',
-            invisibleIds
-          ).addNode(
-            node('OR').addLeaf(
-              'OR',
-              'product.visibility',
-              '=',
-              't'
-            )
-          );
-
-          this.baseQuery.getWhere().addNode(n);
-        } else {
-          this.baseQuery.andWhere(
-            'product.visibility',
-            '=',
-            't'
-          );
-        }
-      } else {
-        this.baseQuery.andWhere(
-          'product.visibility',
-          '=',
-          't'
-        );
-      }
-    } else {
-      const onePerVariantGroupQuery =
-        this.baseQuery.clone();
-
-      onePerVariantGroupQuery.removeLimit();
-
-      onePerVariantGroupQuery.select(
-        sql(
-          'DISTINCT ON (COALESCE(product.variant_group_id, random())) product.product_id AS product_id'
-        )
-      );
-
-      onePerVariantGroupQuery.removeOrderBy();
-
-      const onePerGroup =
-        (await onePerVariantGroupQuery.execute(
-          pool
-        )) as ProductIdRow[];
-
-      this.baseQuery.andWhere(
-        'product.product_id',
-        'IN',
-        onePerGroup.map(
-          (product) => product.product_id
-        )
-      );
+      this.baseQuery.andWhere('product.visibility', '=', 't');
     }
 
     // Clone the main query for getting total right before

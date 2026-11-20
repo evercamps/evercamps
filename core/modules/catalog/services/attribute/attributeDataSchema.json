@@ -23,6 +23,10 @@
       "type": ["integer", "string"],
       "enum": [0, 1, "0", "1"]
     },
+    "role": {
+      "type": "string",
+      "enum": ["product", "variant"]
+    },
     "groups": {
       "type": "array",
       "items": [

@@ -1,4 +1,3 @@
-import { ItemVariantOptions } from '@components/frontStore/checkout/cart/items/ItemVariantOptions';
 import PropTypes from 'prop-types';
 import React from 'react';
 import './Items.scss';
@@ -32,9 +31,6 @@ function Items({ items, priceIncludingTax }) {
                   {item.variantTitle && (
                     <div className="text-textSubdued">{item.variantTitle}</div>
                   )}
-                  <ItemVariantOptions
-                    options={JSON.parse(item.variantOptions || '[]')}
-                  />
                 </div>
               </td>
               <td>
@@ -63,8 +59,7 @@ Items.propTypes = {
       }).isRequired,
       lineTotal: PropTypes.shape({
         text: PropTypes.string.isRequired
-      }).isRequired,
-      variantOptions: PropTypes.string
+      }).isRequired
     })
   ).isRequired,
   priceIncludingTax: PropTypes.bool.isRequired

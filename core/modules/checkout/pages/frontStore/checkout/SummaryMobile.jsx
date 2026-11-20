@@ -34,7 +34,6 @@ Summary.propTypes = {
       PropTypes.shape({
         thumbnail: PropTypes.string,
         productName: PropTypes.string,
-        variantOptions: PropTypes.string,
         qty: PropTypes.number,
         lineTotalInclTax: PropTypes.shape({
           text: PropTypes.string
@@ -111,7 +110,6 @@ export const query = `
         productName
         productSku
         qty
-        variantOptions
         lineTotalInclTax {
           value
           text

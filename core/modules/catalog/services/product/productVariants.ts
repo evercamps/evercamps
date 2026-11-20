@@ -11,6 +11,7 @@ import {
 import type { PoolClient } from '@evershop/postgres-query-builder';
 import { getConnection, pool } from '../../../../lib/postgres/connection.js';
 import { hookable } from '../../../../lib/util/hookable.js';
+import { isVariantAttribute } from '../attribute/attributeRole.js';
 import { buildVariantOptionHash, type VariantOptionPair } from '../variantLookup.js';
 
 // Manage a product's variants (product_variant + inventory_item +
@@ -81,6 +82,34 @@ async function assertSkuFree(sku: string, connection: PoolClient, exceptVariantI
   }
 }
 
+// An option's attribute must be a variant attribute (ADR-0004) of the
+// product's attribute group. An attribute the product's variants already use
+// stays allowed, so existing variants can still be saved.
+async function assertVariantAttributeAllowed(productId: number, attributeId: number, connection: PoolClient) {
+  const attribute = await select('attribute_name', 'role')
+    .from('attribute')
+    .where('attribute_id', '=', attributeId)
+    .load(connection, false);
+  if (!attribute) {
+    throw new Error('Attribute not found');
+  }
+  const used = await attributesUsedByVariants(productId, connection);
+  if (used.some((usedAttribute) => usedAttribute.attributeId === attributeId)) {
+    return;
+  }
+  if (!isVariantAttribute(attribute)) {
+    throw new Error(`"${attribute.attribute_name}" is not a variant attribute`);
+  }
+  const groupQuery = select('attribute_group_link.attribute_id').from('product');
+  groupQuery
+    .innerJoin('attribute_group_link')
+    .on('attribute_group_link.group_id', '=', 'product.group_id');
+  groupQuery.where('product.product_id', '=', productId).and('attribute_group_link.attribute_id', '=', attributeId);
+  if (!(await groupQuery.load(connection, false))) {
+    throw new Error(`"${attribute.attribute_name}" is not in the attribute group of this product`);
+  }
+}
+
 // Validates the options (each option belongs to its attribute, one option per
 // attribute) and writes them + the lookup hash. The hash is unique per
 // product, so two variants can't have the same option combination.
@@ -99,6 +128,7 @@ async function writeOptions(
       throw new Error('A variant can have only one option per attribute');
     }
     seenAttributes.add(attributeId);
+    await assertVariantAttributeAllowed(productId, attributeId, connection);
     const exists = await select('attribute_option_id')
       .from('attribute_option')
       .where('attribute_option_id', '=', optionId)
@@ -245,6 +275,34 @@ async function updateProductVariantFunc(variantUuid: string, data: ProductVarian
     }
     return select().from('product_variant').where('product_variant_id', '=', variant.product_variant_id).load(connection, false);
   });
+}
+
+export interface UsedAttribute {
+  attributeId: number;
+  attributeName: string;
+}
+
+/**
+ * The attributes the product's variants have a value (option) for, sorted by
+ * name. Non-empty means the product's attribute group is locked (ADR-0003);
+ * the database enforces the same rule on product.group_id.
+ */
+export async function attributesUsedByVariants(
+  productId: number,
+  connection: PoolClient | typeof pool = pool
+): Promise<UsedAttribute[]> {
+  const query = select('attribute.attribute_id', 'attribute.attribute_name').from('variant_attribute_value');
+  query
+    .innerJoin('product_variant')
+    .on('product_variant.product_variant_id', '=', 'variant_attribute_value.variant_id');
+  query.innerJoin('attribute').on('attribute.attribute_id', '=', 'variant_attribute_value.attribute_id');
+  query.where('product_variant.product_id', '=', productId).and('variant_attribute_value.option_id', 'IS NOT NULL', null);
+  const rows = await query.execute(connection, false);
+  const byId = new Map<number, UsedAttribute>();
+  for (const row of rows) {
+    byId.set(row.attribute_id, { attributeId: row.attribute_id, attributeName: String(row.attribute_name) });
+  }
+  return [...byId.values()].sort((a, b) => a.attributeName.localeCompare(b.attributeName));
 }
 
 /**

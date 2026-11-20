@@ -30,7 +30,10 @@ async function updateCampProduct(
   }
   debug('updating product');
   data.images = await resolveProductImages(wcProduct.id, wcProduct.images || []);
-  await updateProduct(uuid, data, { routeId: 'importProducts' });
+  // Keep the product's attribute group: an admin may have moved it, and the
+  // group is locked once its variants use a variant attribute (ADR-0003).
+  const { group_id: _groupId, ...withoutGroup } = data;
+  await updateProduct(uuid, withoutGroup as ProductImportData, { routeId: 'importProducts' });
 }
 
 async function recordProductYear(externalProductId: number, year: number | null): Promise<void> {

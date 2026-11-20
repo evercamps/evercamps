@@ -99,7 +99,6 @@ export const query = `
         qty
         productName
         productSku
-        variantOptions
         variantTitle
         productUrl
         productPrice {

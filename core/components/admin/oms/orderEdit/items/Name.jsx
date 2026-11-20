@@ -1,8 +1,7 @@
-import { ItemVariantOptions } from '@components/admin/oms/orderEdit/items/ItemVariantOptions';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-export function Name({ name, productSku, productUrl, variantTitle, variantOptions = [], registrations = [] }) {
+export function Name({ name, productSku, productUrl, variantTitle, registrations = [] }) {
   return (
     <td>
       <div className="product-column">
@@ -23,7 +22,6 @@ export function Name({ name, productSku, productUrl, variantTitle, variantOption
           </div>
         )}
 
-        <ItemVariantOptions options={variantOptions} />
         {registrations.length > 0 && (
           <div className="mt-3">
             {registrations.map((reg, idx) => (
@@ -57,16 +55,5 @@ Name.propTypes = {
   name: PropTypes.string.isRequired,
   productSku: PropTypes.string.isRequired,
   productUrl: PropTypes.string.isRequired,
-  variantTitle: PropTypes.string,
-  variantOptions: PropTypes.arrayOf(
-    PropTypes.shape({
-      option_name: PropTypes.string,
-      values: PropTypes.arrayOf(
-        PropTypes.shape({
-          value_text: PropTypes.string,
-          extra_price: PropTypes.number
-        })
-      )
-    })
-  )
+  variantTitle: PropTypes.string
 };

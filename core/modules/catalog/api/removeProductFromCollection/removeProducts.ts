@@ -22,7 +22,6 @@ interface Collection {
 interface Product {
   product_id: number;
   uuid: string;
-  variant_group_id?: number | null;
 }
 
 export default async function removeProductFromCollection(
@@ -66,30 +65,10 @@ export default async function removeProductFromCollection(
       return;
     }
 
-    if (product.variant_group_id) {
-      const variants = (await select()
-        .from('product')
-        .where('variant_group_id', '=', product.variant_group_id)
-        .execute(connection)) as Product[];
-
-      await Promise.all(
-        variants.map(async (variant) => {
-          await del('product_collection')
-            .where(
-              'collection_id',
-              '=',
-              collection.collection_id
-            )
-            .and('product_id', '=', variant.product_id)
-            .execute(connection);
-        })
-      );
-    } else {
-      await del('product_collection')
-        .where('collection_id', '=', collection.collection_id)
-        .and('product_id', '=', product.product_id)
-        .execute(connection);
-    }
+    await del('product_collection')
+      .where('collection_id', '=', collection.collection_id)
+      .and('product_id', '=', product.product_id)
+      .execute(connection);
 
     await commit(connection);
 

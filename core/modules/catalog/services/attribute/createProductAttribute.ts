@@ -15,6 +15,7 @@ import {
 } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import attributeDataSchema from './attributeDataSchema.json' with { type: 'json' };
+import { assertRoleFitsType, type AttributeRole } from './attributeRole.js';
 import { normalizeOptionPeriod, type OptionPeriodInput } from './optionPeriod.js';
 import { normalizeOptionStatus, type OptionStatusInput } from './optionStatus.js';
 
@@ -24,6 +25,7 @@ export type AttributeData = {
   type: string;
   is_required: boolean;
   display_on_frontend?: boolean;
+  role?: AttributeRole;
   groups: number[];
   [key: string]: any;
 };
@@ -127,6 +129,7 @@ async function createAttribute(data: AttributeData, context: Record<string, any>
     const attributeData = await getValue('attributeDataBeforeCreate', data);
     // Validate attribute data
     validateAttributeDataBeforeInsert(attributeData);
+    assertRoleFitsType(attributeData.role, attributeData.type);
 
     // Insert attribute data
     const attribute = await hookable(insertAttributeData, {
