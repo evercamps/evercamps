@@ -4,34 +4,6 @@ import React from 'react';
 import './Items.scss';
 import ProductNoThumbnail from '@components/ProductNoThumbnail';
 
-function ItemVariantOptions({ options = [] }) {
-  if (!Array.isArray(options) || !options || options.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="cart-item-variant-options mt-2">
-      <ul>
-        {options.map((o, i) => (
-          <li key={i}>
-            <span className="attribute-name">{o.attribute_name}: </span>
-            <span>{o.option_text}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-ItemVariantOptions.propTypes = {
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      attribute_name: PropTypes.string,
-      option_text: PropTypes.string
-    })
-  )
-};
-
 function Items({ items = [], priceIncludingTax = false }) {
   return (
     <div id="summary-items">
@@ -60,9 +32,6 @@ function Items({ items = [], priceIncludingTax = false }) {
                   {item.variantTitle && (
                     <div className="text-textSubdued">{item.variantTitle}</div>
                   )}
-                  <ItemVariantOptions
-                    options={JSON.parse(item.variantOptions || '[]')}
-                  />
                 </div>
               </td>
               <td>
@@ -85,7 +54,6 @@ Items.propTypes = {
     PropTypes.shape({
       thumbnail: PropTypes.string,
       productName: PropTypes.string,
-      variantOptions: PropTypes.string,
       qty: PropTypes.number,
       lineTotalInclTax: PropTypes.shape({
         text: PropTypes.string

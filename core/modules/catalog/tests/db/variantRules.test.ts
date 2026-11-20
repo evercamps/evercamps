@@ -118,11 +118,13 @@ describeDb('variant database rules', () => {
   }
 
   describe('legacy variant_group is gone (ADR-0002)', () => {
-    it('drops the variant_group table and the variant_group_id columns', async () => {
+    it('drops the variant_group table and the columns that came with it', async () => {
       expect(await one(`SELECT to_regclass('variant_group') AS t`)).toEqual({ t: null });
       expect(await hasColumn('product', 'variant_group_id')).toBe(false);
-      expect(await hasColumn('cart_item', 'variant_group_id')).toBe(false);
-      expect(await hasColumn('order_item', 'variant_group_id')).toBe(false);
+      for (const table of ['cart_item', 'order_item']) {
+        expect(await hasColumn(table, 'variant_group_id')).toBe(false);
+        expect(await hasColumn(table, 'variant_options')).toBe(false);
+      }
     });
   });
 

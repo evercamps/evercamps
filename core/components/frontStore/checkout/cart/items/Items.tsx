@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { _ } from '../../../../../lib/locale/translate/_.js';
 import { ItemOptions } from './ItemOptions';
-import { ItemVariantOptions } from './ItemVariantOptions';
 import './Items.scss';
 import Quantity from './Quantity';
 import EditParticipantForm from './EditParticipantForm';
@@ -120,7 +119,6 @@ export default function Items({ items, setting: { priceIncludingTax, participant
                       <div className="text-critical" key={i}>{e}</div>
                     ))}
                     <ItemOptions options={JSON.parse(item.productCustomOptions || '[]')} />
-                    <ItemVariantOptions options={JSON.parse(item.variantOptions || '[]')} />
                     <div className="mt-2">
                       {item.manageRegistrations !== 1 && (
                         <a

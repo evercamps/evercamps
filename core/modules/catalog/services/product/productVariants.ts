@@ -11,6 +11,7 @@ import {
 import type { PoolClient } from '@evershop/postgres-query-builder';
 import { getConnection, pool } from '../../../../lib/postgres/connection.js';
 import { hookable } from '../../../../lib/util/hookable.js';
+import { isVariantAttribute } from '../attribute/attributeRole.js';
 import { buildVariantOptionHash, type VariantOptionPair } from '../variantLookup.js';
 
 // Manage a product's variants (product_variant + inventory_item +
@@ -92,15 +93,11 @@ async function assertVariantAttributeAllowed(productId: number, attributeId: num
   if (!attribute) {
     throw new Error('Attribute not found');
   }
-  const usedQuery = select('variant_attribute_value.attribute_id').from('variant_attribute_value');
-  usedQuery
-    .innerJoin('product_variant')
-    .on('product_variant.product_variant_id', '=', 'variant_attribute_value.variant_id');
-  usedQuery.where('product_variant.product_id', '=', productId).and('variant_attribute_value.attribute_id', '=', attributeId);
-  if (await usedQuery.load(connection, false)) {
+  const used = await attributesUsedByVariants(productId, connection);
+  if (used.some((usedAttribute) => usedAttribute.attributeId === attributeId)) {
     return;
   }
-  if (attribute.role !== 'variant') {
+  if (!isVariantAttribute(attribute)) {
     throw new Error(`"${attribute.attribute_name}" is not a variant attribute`);
   }
   const groupQuery = select('attribute_group_link.attribute_id').from('product');
@@ -280,20 +277,32 @@ async function updateProductVariantFunc(variantUuid: string, data: ProductVarian
   });
 }
 
+export interface UsedAttribute {
+  attributeId: number;
+  attributeName: string;
+}
+
 /**
- * Names of the variant attributes the product's variants have a value for.
- * Non-empty means the product's attribute group is locked (ADR-0003); the
- * database enforces the same rule on product.group_id.
+ * The attributes the product's variants have a value (option) for, sorted by
+ * name. Non-empty means the product's attribute group is locked (ADR-0003);
+ * the database enforces the same rule on product.group_id.
  */
-export async function variantAttributesInUse(productId: number): Promise<string[]> {
-  const query = select('attribute.attribute_name').from('variant_attribute_value');
+export async function attributesUsedByVariants(
+  productId: number,
+  connection: PoolClient | typeof pool = pool
+): Promise<UsedAttribute[]> {
+  const query = select('attribute.attribute_id', 'attribute.attribute_name').from('variant_attribute_value');
   query
     .innerJoin('product_variant')
     .on('product_variant.product_variant_id', '=', 'variant_attribute_value.variant_id');
   query.innerJoin('attribute').on('attribute.attribute_id', '=', 'variant_attribute_value.attribute_id');
   query.where('product_variant.product_id', '=', productId).and('variant_attribute_value.option_id', 'IS NOT NULL', null);
-  const rows = await query.execute(pool);
-  return [...new Set(rows.map((row) => String(row.attribute_name)))].sort();
+  const rows = await query.execute(connection, false);
+  const byId = new Map<number, UsedAttribute>();
+  for (const row of rows) {
+    byId.set(row.attribute_id, { attributeId: row.attribute_id, attributeName: String(row.attribute_name) });
+  }
+  return [...byId.values()].sort((a, b) => a.attributeName.localeCompare(b.attributeName));
 }
 
 /**

@@ -27,7 +27,6 @@ interface OrderItem {
   productSku: string;
   productUrl?: string;
   thumbnail?: string;
-  variantOptions?: string;
   registrations?: Registration[];
   productPrice?: PriceValue;
   finalPrice?: PriceValue;
@@ -102,9 +101,6 @@ export default function Items({
                         productSku: i.productSku,
                         productUrl: i.productUrl,
                         variantTitle: i.variantTitle,
-                        variantOptions: JSON.parse(
-                          i.variantOptions || '[]'
-                        ),
                         registrations: i.registrations
                       },
                       sortOrder: 20,
@@ -181,7 +177,6 @@ export const query = `
         productUrl
         thumbnail
         variantTitle
-        variantOptions
         productPrice {
           value
           text

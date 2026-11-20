@@ -4,7 +4,11 @@
 
 export type AttributeRole = 'product' | 'variant';
 
-export const VARIANT_ATTRIBUTE_TYPES = ['select', 'period'];
+export const VARIANT_ATTRIBUTE_TYPES: readonly string[] = ['select', 'period'];
+
+export function isVariantAttribute(attribute: { role?: unknown }): boolean {
+  return attribute.role === 'variant';
+}
 
 export function assertRoleFitsType(role: unknown, type: string): void {
   if (role === undefined || role === null || role === 'product') {

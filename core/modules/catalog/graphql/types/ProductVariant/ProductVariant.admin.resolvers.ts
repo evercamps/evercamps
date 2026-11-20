@@ -2,8 +2,8 @@ import { select } from '@evershop/postgres-query-builder';
 import type { Pool } from 'pg';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
-import { VARIANT_ATTRIBUTE_TYPES } from '../../../services/attribute/attributeRole.js';
-import { countVariantUsage, variantAttributesInUse } from '../../../services/product/productVariants.js';
+import { isVariantAttribute, VARIANT_ATTRIBUTE_TYPES } from '../../../services/attribute/attributeRole.js';
+import { attributesUsedByVariants, countVariantUsage } from '../../../services/product/productVariants.js';
 
 interface Context {
   pool: Pool;
@@ -61,10 +61,10 @@ export default {
       const row = await query.load(pool);
       return row ? { groupId: row.attribute_group_id, groupName: row.group_name } : null;
     },
-    attributeGroupLock: async (product: Product) => {
-      const names = await variantAttributesInUse(product.productId);
-      return names.length > 0
-        ? { locked: true, reason: `Variants use ${names.join(', ')}` }
+    attributeGroupLock: async (product: Product, _: unknown, { pool }: Context) => {
+      const used = await attributesUsedByVariants(product.productId, pool);
+      return used.length > 0
+        ? { locked: true, reason: `Variants use ${used.map((a) => a.attributeName).join(', ')}` }
         : { locked: false, reason: null };
     },
     // Variant attributes of the product's attribute group (ADR-0004), plus any
@@ -82,14 +82,9 @@ export default {
             .where('group_id', '=', productRow.group_id)
             .execute(pool)
         : [];
-      const usedQuery = select('variant_attribute_value.attribute_id').from('variant_attribute_value');
-      usedQuery
-        .innerJoin('product_variant')
-        .on('product_variant.product_variant_id', '=', 'variant_attribute_value.variant_id');
-      usedQuery.where('product_variant.product_id', '=', product.productId);
-      const used = await usedQuery.execute(pool);
+      const used = await attributesUsedByVariants(product.productId, pool);
 
-      const usedIds = new Set(used.map((row) => row.attribute_id));
+      const usedIds = new Set(used.map((a) => a.attributeId));
       const ids = [...new Set([...inGroup.map((row) => row.attribute_id), ...usedIds])];
       if (ids.length === 0) {
         return [];
@@ -100,7 +95,7 @@ export default {
           .where('attribute_id', 'IN', ids)
           .and('type', 'IN', VARIANT_ATTRIBUTE_TYPES)
           .execute(pool)
-      ).filter((attribute) => attribute.role === 'variant' || usedIds.has(attribute.attribute_id));
+      ).filter((attribute) => isVariantAttribute(attribute) || usedIds.has(attribute.attribute_id));
       if (attributes.length === 0) {
         return [];
       }

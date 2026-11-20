@@ -19,6 +19,7 @@ import {
 } from '../../../../lib/util/registry.js';
 import { getAjv } from '../../../base/services/getAjv.js';
 import type { ProductAttributeData, ProductData, ProductInventoryData } from '../../../../../includes/types/product.js';
+import { isVariantAttribute } from '../attribute/attributeRole.js';
 import productDataSchema from './productDataSchema.json' with { type: 'json' };
 import { syncDefaultVariant } from './defaultVariant.js';
 
@@ -74,7 +75,7 @@ async function saveProductAttributes(productId: number, attributes: ProductAttri
       }
 
       // A variant attribute is never filled in on the product itself (ADR-0004).
-      if (attr.role === 'variant') {
+      if (isVariantAttribute(attr)) {
         continue;
       }
 
