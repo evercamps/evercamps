@@ -86,8 +86,7 @@ describeDb('variant database rules', () => {
       [weekId, levelId, groupId]
     );
     productId = (await one(
-      `INSERT INTO product (sku, price, qty, manage_stock, stock_availability, group_id)
-       VALUES ('test-variant-rules', 100, 0, false, true, $1) RETURNING product_id`,
+      `INSERT INTO product (sku, price, group_id) VALUES ('test-variant-rules', 100, $1) RETURNING product_id`,
       [groupId]
     )).product_id;
     variantId = (await one(

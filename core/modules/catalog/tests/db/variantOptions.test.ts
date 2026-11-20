@@ -77,8 +77,7 @@ describeDb('variant options', () => {
     level = await createAttributeWithOption('level', 'product', true);
     otherGroupWeek = await createAttributeWithOption('age', 'variant', false);
     productUuid = (await one(
-      `INSERT INTO product (sku, price, qty, manage_stock, stock_availability, group_id)
-       VALUES ($1, 100, 0, false, true, $2) RETURNING uuid`,
+      `INSERT INTO product (sku, price, group_id) VALUES ($1, 100, $2) RETURNING uuid`,
       [suffix, groupId]
     )).uuid;
   });
