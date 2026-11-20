@@ -19,3 +19,7 @@ types of todo's:
     - Cancelling an order can delete the same child's registration for another week. [analysis]
 
 ## tasks
+- variants cleanup: remove the old `variant_group` code, give attributes a fixed role (product or variant), lock the attribute group once variants use it, and add an attribute groups admin page. ADRs 0001-0004 in `docs/adr/`. [planning]
+    - plan: [plan-variants-cleanup.md](plan-variants-cleanup.md)
+    - stage 1: branch `feature/variants-cleanup-backend`
+    - stage 2: branch `feature/attribute-groups-admin`
