@@ -12,6 +12,9 @@ interface Attribute {
   attributeName: string;
   attributeCode: string;
   type: string;
+  // ADR-0004: variant attributes (e.g. camp week) are set per variant in the
+  // Variants card, never on the product.
+  role: 'product' | 'variant';
   isRequired: number;
   options: AttributeOption[];
 }
@@ -37,6 +40,11 @@ interface AttributeIndex {
 interface Product {
   attributeIndex?: AttributeIndex[];
   groupId?: string;
+  // ADR-0003: locked once a variant has a value for a variant attribute.
+  attributeGroupLock?: {
+    locked: boolean;
+    reason: string | null;
+  };
 }
 
 interface AttributesProps {
@@ -73,27 +81,51 @@ export default function Attributes({
     return null;
   }
 
+  const lock = product.attributeGroupLock;
+  // Only an existing product has values that a group change can remove.
+  const groupChanged =
+    groupId !== undefined && groupId !== null && parseInt(String(groupId), 10) !== parseInt(currentGroup.groupId, 10);
+  const productAttributes = currentGroup.attributes.items.filter((attribute) => attribute.role !== 'variant');
+
   return (
     <Card>
       <Card.Session title="Attribute group">
-        <div>
-          <Field
-            name="group_id"
-            value={currentGroup.groupId}
-            onChange={handleGroupChange}
-            options={items.map((g) => ({
-              value: parseInt(g.groupId, 10),
-              text: g.groupName
-            }))}
-            type="select"
-          />
-        </div>
+        {lock?.locked ? (
+          // Not posted: the group can't change (the database refuses it too).
+          <div>
+            <div className="font-semibold">{currentGroup.groupName}</div>
+            <div className="text-textSubdued text-sm">
+              Locked: {lock.reason}. The attribute group can&apos;t change any more.
+            </div>
+          </div>
+        ) : (
+          <div>
+            <Field
+              name="group_id"
+              value={currentGroup.groupId}
+              onChange={handleGroupChange}
+              options={items.map((g) => ({
+                value: parseInt(g.groupId, 10),
+                text: g.groupName
+              }))}
+              type="select"
+            />
+            {groupChanged && (
+              <div className="text-critical text-sm mt-2">
+                Saving removes this product&apos;s attribute values that aren&apos;t in {currentGroup.groupName}.
+              </div>
+            )}
+          </div>
+        )}
       </Card.Session>
 
       <Card.Session title="Attributes">
+        {productAttributes.length === 0 && (
+          <div className="text-textSubdued">This attribute group has no product attributes.</div>
+        )}
         <table className="table table-auto">
           <tbody>
-            {currentGroup.attributes.items.map((attribute, index) => {
+            {productAttributes.map((attribute, index) => {
               const valueIndex = attributeIndex.find(
                 (idx) => idx.attributeId === attribute.attributeId
               );
@@ -198,6 +230,10 @@ export const query = `
   query Query ($filters: [FilterInput!]) {
     product(id: getContextValue("productId", null)) {
       groupId
+      attributeGroupLock {
+        locked
+        reason
+      }
       attributeIndex {
         attributeId
         optionId
@@ -208,12 +244,13 @@ export const query = `
       items {
         groupId: attributeGroupId
         groupName
-        attributes {
+        attributes(filters: [{ key: "limit", operation: "eq", value: 1000 }]) {
           items {
             attributeId
             attributeName
             attributeCode
             type
+            role
             isRequired
             options {
               optionId: attributeOptionId

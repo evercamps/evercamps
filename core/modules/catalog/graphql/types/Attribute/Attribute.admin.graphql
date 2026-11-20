@@ -6,7 +6,23 @@ type AttributeGroup {
   uuid: String!
   groupName: String!
   updateApi: String!
-  attributes: AttributeCollection
+  deleteApi: String!
+  editUrl: String!
+  attributes(filters: [FilterInput]): AttributeCollection
+  "Number of products in this attribute group."
+  productCount: Int!
+  """
+  Per attribute of the group: how many product values and variant values of
+  the group's products use it. Removing a product attribute deletes its product
+  values; a variant attribute with variant values can't be removed (ADR-0003).
+  """
+  attributeUsage: [AttributeGroupAttributeUsage!]!
+}
+
+type AttributeGroupAttributeUsage {
+  attributeId: Int!
+  productValueCount: Int!
+  variantValueCount: Int!
 }
 
 extend type Attribute {
@@ -15,6 +31,11 @@ extend type Attribute {
   product apart, e.g. camp week). Only select and period attributes can be 'variant'.
   """
   role: String!
+  """
+  True once products or variants have a value for this attribute: the role
+  can't change any more (ADR-0004).
+  """
+  roleLocked: Boolean!
   groups: AttributeGroupCollection
   editUrl: String!
   updateApi: String!
@@ -44,4 +65,5 @@ type AttributeGroupCollection {
 extend type Query {
   attributes(filters: [FilterInput]): AttributeCollection
   attributeGroups(filters: [FilterInput]): AttributeGroupCollection
+  attributeGroup(id: Int): AttributeGroup
 }

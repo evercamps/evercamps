@@ -26,6 +26,30 @@ export const routes: RouteDefinition[] = [
   },
 
   {
+    routeId: 'attributeGroupEdit',
+    region: 'admin',
+    middleware: [
+      { id: 'index', after: ['auth'], before: ['buildQuery'] },
+    ],
+  },
+
+  {
+    routeId: 'attributeGroupGrid',
+    region: 'admin',
+    middleware: [
+      { id: 'index', after: ['auth'], before: ['buildQuery'] },
+    ],
+  },
+
+  {
+    routeId: 'attributeGroupNew',
+    region: 'admin',
+    middleware: [
+      { id: 'index', after: ['auth'], before: ['buildQuery'] },
+    ],
+  },
+
+  {
     routeId: 'categoryEdit',
     region: 'admin',
     middleware: [
@@ -164,7 +188,7 @@ export const routes: RouteDefinition[] = [
     methods: ['POST'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
-      { id: 'saveGroup', after: ['bodyParser'], before: ['apiResponse'] },
+      { id: 'saveGroup', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
   },
 
@@ -328,7 +352,7 @@ export const routes: RouteDefinition[] = [
     methods: ['PATCH'],
     middleware: [
       { id: 'bodyParser', after: ['context'], before: ['auth'] },
-      { id: 'saveGroup', after: ['bodyParser'], before: ['apiResponse'] },
+      { id: 'saveGroup', after: ['escapeHtml'], before: ['apiResponse'] },
     ],
   },
 

@@ -137,6 +137,23 @@ export default async function registerDefaultAttributeCollectionFilters(): Promi
       }
     },
     {
+      // ADR-0004: 'product' or 'variant'
+      key: 'role',
+      operation: ['eq'],
+      callback: (query, operation, value, currentFilters) => {
+        if (!['product', 'variant'].includes(value)) {
+          return;
+        }
+        query.andWhere('attribute.role', OPERATION_MAP[operation], value);
+
+        currentFilters.push({
+          key: 'role',
+          operation,
+          value
+        });
+      }
+    },
+    {
       key: 'is_required',
       operation: ['eq'],
       callback: (query, operation, value, currentFilters) => {
@@ -182,6 +199,9 @@ export default async function registerDefaultAttributeCollectionFilters(): Promi
 
           type: (query) =>
             query.orderBy('attribute.type'),
+
+          role: (query) =>
+            query.orderBy('attribute.role'),
 
           is_required: (query) =>
             query.orderBy('attribute.is_required'),

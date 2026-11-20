@@ -1,58 +1,27 @@
-import {
-  startTransaction,
-  insert,
-  commit,
-  rollback,
-  select
-} from '@evershop/postgres-query-builder';
-import { getConnection, pool } from '../../../../lib/postgres/connection.js';
-import {
-  OK,
-  INTERNAL_SERVER_ERROR
-} from '../../../../lib/util/httpStatus.js';
+import { buildUrl } from '../../../../lib/router/buildUrl.js';
+import { INVALID_PAYLOAD, OK } from '../../../../lib/util/httpStatus.js';
 import type { EvercampsRequest } from '../../../../types/request.js';
 import type { EvercampsResponse } from '../../../../types/response.js';
+import { createAttributeGroup } from '../../services/attributeGroup/attributeGroupService.js';
 
-interface AttributeGroup {
-  attribute_group_id: number;
-  [key: string]: unknown;
-}
-
-export default async function createAttributeGroup(
+export default async function saveGroup(
   request: EvercampsRequest,
-  response: EvercampsResponse,
-  _next: () => void
+  response: EvercampsResponse
 ): Promise<void> {
-  const connection = await getConnection();
-  const data = request.body;
-
   try {
-    await startTransaction(connection);
-
-    const result = await insert('attribute_group')
-      .given(data)
-      .execute(connection);
-
-    await commit(connection);
-
-    const group = (await select()
-      .from('attribute_group')
-      .where('attribute_group_id', '=', result.insertId)
-      .load(pool)) as AttributeGroup | null;
-
+    const group = await createAttributeGroup(request.body, { routeId: 'createAttributeGroup' });
     response.status(OK);
     response.json({
       data: {
-        ...group
+        ...group,
+        editUrl: buildUrl('attributeGroupEdit', { id: group.uuid })
       }
     });
   } catch (e) {
-    await rollback(connection);
-
-    response.status(INTERNAL_SERVER_ERROR);
+    response.status(INVALID_PAYLOAD);
     response.json({
       error: {
-        status: INTERNAL_SERVER_ERROR,
+        status: INVALID_PAYLOAD,
         message: e instanceof Error ? e.message : String(e)
       }
     });
