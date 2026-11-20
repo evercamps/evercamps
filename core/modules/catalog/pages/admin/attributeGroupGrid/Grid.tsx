@@ -3,11 +3,10 @@ import { useAlertContext } from '@components/modal/Alert';
 import axios from 'axios';
 import React from 'react';
 import { toast } from 'react-toastify';
+import { DEFAULT_ATTRIBUTE_GROUP_ID } from '../../../services/attributeGroup/defaultGroup.js';
 
 // Attribute groups are kinds of product (ADR-0003). The default group and
 // groups that still have products can't be deleted.
-
-const DEFAULT_GROUP_ID = 1;
 
 interface AttributeGroup {
   attributeGroupId: string;
@@ -28,7 +27,7 @@ interface AttributeGroupGridProps {
 }
 
 function deleteBlockedReason(group: AttributeGroup): string | null {
-  if (parseInt(group.attributeGroupId, 10) === DEFAULT_GROUP_ID) {
+  if (parseInt(group.attributeGroupId, 10) === DEFAULT_ATTRIBUTE_GROUP_ID) {
     return 'The default attribute group can not be deleted';
   }
   if (group.productCount > 0) {

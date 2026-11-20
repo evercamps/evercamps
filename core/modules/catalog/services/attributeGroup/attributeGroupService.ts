@@ -1,21 +1,26 @@
-import {
-  commit,
-  del,
-  insert,
-  insertOnUpdate,
-  rollback,
-  select,
-  startTransaction,
-  update
-} from '@evershop/postgres-query-builder';
+import { del, insert, insertOnUpdate, select, update } from '@evershop/postgres-query-builder';
 import type { PoolClient } from '@evershop/postgres-query-builder';
-import { getConnection } from '../../../../lib/postgres/connection.js';
+import type { Pool } from 'pg';
+import { inTransaction } from '../../../../lib/postgres/inTransaction.js';
 import { hookable } from '../../../../lib/util/hookable.js';
+import { DEFAULT_ATTRIBUTE_GROUP_ID } from './defaultGroup.js';
 
 // Attribute groups are kinds of product (ADR-0003). A group decides which
 // product attributes and variant attributes its products can have.
 
-export const DEFAULT_ATTRIBUTE_GROUP_ID = 1;
+export { DEFAULT_ATTRIBUTE_GROUP_ID };
+
+/** A request the attribute group rules refuse; the API answers it with 400. */
+export class AttributeGroupError extends Error {}
+
+export async function countProductsInGroup(groupId: number, connection: PoolClient | Pool): Promise<number> {
+  const row = await select()
+    .from('product')
+    .select('COUNT(product_id)', 'total')
+    .where('group_id', '=', groupId)
+    .load(connection);
+  return parseInt(String(row?.total ?? 0), 10);
+}
 
 export interface AttributeGroupInput {
   group_name?: string;
@@ -23,36 +28,16 @@ export interface AttributeGroupInput {
   attributes?: (number | string)[];
 }
 
-function toIds(values: (number | string)[]): number[] {
-  return [...new Set(values.map((value) => {
-    const id = Number(value);
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error(`Invalid attribute id "${String(value)}"`);
-    }
-    return id;
-  }))];
-}
+// The payload schema already allows only positive whole numbers.
+const toIds = (values: (number | string)[]): number[] => [...new Set(values.map(Number))];
 
 function groupName(data: AttributeGroupInput): string | undefined {
   if (data.group_name === undefined) return undefined;
   const name = String(data.group_name).trim();
   if (!name) {
-    throw new Error('Group name is required');
+    throw new AttributeGroupError('Group name is required');
   }
   return name;
-}
-
-async function inTransaction<T>(work: (connection: PoolClient) => Promise<T>): Promise<T> {
-  const connection = await getConnection();
-  await startTransaction(connection);
-  try {
-    const result = await work(connection);
-    await commit(connection);
-    return result;
-  } catch (e) {
-    await rollback(connection);
-    throw e;
-  }
 }
 
 // Makes the group's attributes exactly `attributeIds`. Removing a product
@@ -87,7 +72,7 @@ async function setGroupAttributes(groupId: number, attributeIds: number[], conne
         .execute(connection);
     } catch (e) {
       if (e instanceof Error && e.message.includes('VARIANT_ATTRIBUTE_IN_USE')) {
-        throw new Error(
+        throw new AttributeGroupError(
           `"${names.get(attributeId) ?? attributeId}" is used by variants of products in this group and can't be removed`
         );
       }
@@ -101,7 +86,7 @@ async function setGroupAttributes(groupId: number, attributeIds: number[], conne
       .where('attribute_id', 'IN', toAdd)
       .execute(connection);
     if (found.length !== toAdd.length) {
-      throw new Error('One of the attributes does not exist');
+      throw new AttributeGroupError('One of the attributes does not exist');
     }
     for (const attributeId of toAdd) {
       await insertOnUpdate('attribute_group_link', ['attribute_id', 'group_id'])
@@ -114,7 +99,7 @@ async function setGroupAttributes(groupId: number, attributeIds: number[], conne
 async function loadGroup(uuid: string, connection: PoolClient) {
   const group = await select().from('attribute_group').where('uuid', '=', uuid).load(connection);
   if (!group) {
-    throw new Error('Attribute group not found');
+    throw new AttributeGroupError('Attribute group not found');
   }
   return group;
 }
@@ -122,7 +107,7 @@ async function loadGroup(uuid: string, connection: PoolClient) {
 async function createAttributeGroupFunc(data: AttributeGroupInput) {
   const name = groupName(data);
   if (!name) {
-    throw new Error('Group name is required');
+    throw new AttributeGroupError('Group name is required');
   }
   return inTransaction(async (connection) => {
     const result = await insert('attribute_group').given({ group_name: name }).execute(connection);
@@ -156,16 +141,11 @@ async function deleteAttributeGroupFunc(uuid: string) {
   return inTransaction(async (connection) => {
     const group = await loadGroup(uuid, connection);
     if (Number(group.attribute_group_id) === DEFAULT_ATTRIBUTE_GROUP_ID) {
-      throw new Error('The default attribute group can not be deleted');
+      throw new AttributeGroupError('The default attribute group can not be deleted');
     }
-    const count = await select()
-      .from('product')
-      .select('COUNT(product_id)', 'total')
-      .where('group_id', '=', group.attribute_group_id)
-      .load(connection);
-    const products = parseInt(count?.total ?? 0, 10);
+    const products = await countProductsInGroup(group.attribute_group_id, connection);
     if (products > 0) {
-      throw new Error(
+      throw new AttributeGroupError(
         `This attribute group still has ${products} product${products === 1 ? '' : 's'}. Move them to another group first.`
       );
     }

@@ -3,6 +3,7 @@ import type { Pool } from 'pg';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { AttributeCollection } from '../../../../../modules/catalog/services/AttributeCollection.js';
+import { countProductsInGroup } from '../../../../../modules/catalog/services/attributeGroup/attributeGroupService.js';
 import { AttributeGroupCollection } from '../../../../../modules/catalog/services/AttributeGroupCollection.js';
 import { getAttributeGroupsBaseQuery } from '../../../../../modules/catalog/services/getAttributeGroupsBaseQuery.js';
 import { getAttributesBaseQuery } from '../../../../../modules/catalog/services/getAttributesBaseQuery.js';
@@ -22,7 +23,7 @@ interface Context {
   pool: Pool;
 }
 
-const count = (row: { total?: string | number } | null | undefined) => parseInt(String(row?.total ?? 0), 10);
+const count = (row: { total: string | number }) => parseInt(String(row.total), 10);
 
 interface Attribute {
   attributeId: number;
@@ -100,14 +101,8 @@ export default {
     editUrl: (group: AttributeGroup) =>
       buildUrl('attributeGroupEdit', { id: group.uuid }),
 
-    productCount: async (group: AttributeGroup, _: unknown, { pool }: Context) =>
-      count(
-        await select()
-          .from('product')
-          .select('COUNT(product_id)', 'total')
-          .where('group_id', '=', group.attributeGroupId)
-          .load(pool)
-      ),
+    productCount: (group: AttributeGroup, _: unknown, { pool }: Context) =>
+      countProductsInGroup(group.attributeGroupId, pool),
 
     attributeUsage: async (group: AttributeGroup, _: unknown, { pool }: Context) => {
       const links = await select('attribute_id')

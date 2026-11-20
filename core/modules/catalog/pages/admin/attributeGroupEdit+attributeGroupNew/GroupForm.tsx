@@ -6,6 +6,7 @@ import axios from 'axios';
 import React from 'react';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
+import type { AttributeRole } from '../../../services/attribute/attributeRole.js';
 
 // An attribute group is a kind of product (ADR-0003). It decides which product
 // attributes and variant attributes (ADR-0004) its products can have.
@@ -18,7 +19,7 @@ interface AttributeRow {
   attributeId: string;
   attributeName: string;
   attributeCode: string;
-  role: 'product' | 'variant';
+  role: AttributeRole;
 }
 
 interface Usage {

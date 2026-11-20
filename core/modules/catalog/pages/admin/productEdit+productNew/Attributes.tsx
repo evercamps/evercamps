@@ -1,6 +1,7 @@
 import { Card } from '@components/admin/cms/Card';
 import { Field } from '@components/form/Field';
 import React from 'react';
+import type { AttributeRole } from '../../../services/attribute/attributeRole.js';
 
 interface AttributeOption {
   optionId: number;
@@ -14,7 +15,7 @@ interface Attribute {
   type: string;
   // ADR-0004: variant attributes (e.g. camp week) are set per variant in the
   // Variants card, never on the product.
-  role: 'product' | 'variant';
+  role: AttributeRole;
   isRequired: number;
   options: AttributeOption[];
 }

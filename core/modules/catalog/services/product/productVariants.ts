@@ -1,15 +1,13 @@
 import {
-  commit,
   del,
   insert,
   insertOnUpdate,
-  rollback,
   select,
-  startTransaction,
   update
 } from '@evershop/postgres-query-builder';
 import type { PoolClient } from '@evershop/postgres-query-builder';
-import { getConnection, pool } from '../../../../lib/postgres/connection.js';
+import { pool } from '../../../../lib/postgres/connection.js';
+import { inTransaction } from '../../../../lib/postgres/inTransaction.js';
 import { hookable } from '../../../../lib/util/hookable.js';
 import { isVariantAttribute } from '../attribute/attributeRole.js';
 import { buildVariantOptionHash, type VariantOptionPair } from '../variantLookup.js';
@@ -173,19 +171,6 @@ async function setOnlyDefault(productId: number, variantId: number, connection: 
     .given({ is_default: true })
     .where('product_variant_id', '=', variantId)
     .execute(connection, false);
-}
-
-async function inTransaction<T>(work: (connection: PoolClient) => Promise<T>): Promise<T> {
-  const connection = await getConnection();
-  await startTransaction(connection);
-  try {
-    const result = await work(connection);
-    await commit(connection);
-    return result;
-  } catch (e) {
-    await rollback(connection);
-    throw e;
-  }
 }
 
 async function createProductVariantFunc(productUuid: string, data: ProductVariantInput) {

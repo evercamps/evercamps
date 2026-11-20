@@ -7,10 +7,8 @@ import React from 'react';
 import Select from 'react-select';
 import { useQuery } from 'urql';
 import { get } from '../../../../../lib/util/get.js';
-
-const DEFAULT_GROUP_ID = 1;
-
-type AttributeRole = 'product' | 'variant';
+import { type AttributeRole, VARIANT_ATTRIBUTE_TYPES } from '../../../services/attribute/attributeRole.js';
+import { DEFAULT_ATTRIBUTE_GROUP_ID } from '../../../services/attributeGroup/defaultGroup.js';
 
 const ROLE_LABELS: Record<AttributeRole, string> = {
   product: 'Product attribute (the same for all variants)',
@@ -93,7 +91,7 @@ function Groups({ groups }: GroupsProps) {
   const initial =
     groups.length > 0
       ? groups
-      : options.filter((group) => Number(group.value) === DEFAULT_GROUP_ID);
+      : options.filter((group) => Number(group.value) === DEFAULT_ATTRIBUTE_GROUP_ID);
 
   return (
     <div>
@@ -351,7 +349,7 @@ export default function General({ attribute: attributeProp }: GeneralProps) {
         <Area id="attributeEditGeneral" coreComponents={fields} />
       </Card.Session>
 
-      {['select', 'period'].includes(type ?? '') && (
+      {VARIANT_ATTRIBUTE_TYPES.includes(type ?? '') && (
         <Card.Session title="Role">
           <Role role={attribute.role ?? 'product'} locked={!!attribute.roleLocked} />
         </Card.Session>

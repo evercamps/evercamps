@@ -14,6 +14,7 @@ import { useAlertContext } from '@components/modal/Alert';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import type { AttributeRole } from '../../../services/attribute/attributeRole.js';
 
 interface Filter {
   key: string;
@@ -33,7 +34,7 @@ interface Attribute {
   attributeName: string;
   attributeCode: string;
   type: string;
-  role: 'product' | 'variant';
+  role: AttributeRole;
   isRequired: number;
   isFilterable: number;
   editUrl: string;

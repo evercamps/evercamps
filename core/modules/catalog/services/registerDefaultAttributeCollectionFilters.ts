@@ -1,5 +1,6 @@
 import { OPERATION_MAP } from '../../../lib/util/filterOperationMap.js';
 import { getValueSync } from '../../../lib/util/registry.js';
+import { ATTRIBUTE_ROLES } from './attribute/attributeRole.js';
 
 interface QueryBuilder {
   andWhere(
@@ -141,7 +142,7 @@ export default async function registerDefaultAttributeCollectionFilters(): Promi
       key: 'role',
       operation: ['eq'],
       callback: (query, operation, value, currentFilters) => {
-        if (!['product', 'variant'].includes(value)) {
+        if (!(ATTRIBUTE_ROLES as readonly string[]).includes(value)) {
           return;
         }
         query.andWhere('attribute.role', OPERATION_MAP[operation], value);
