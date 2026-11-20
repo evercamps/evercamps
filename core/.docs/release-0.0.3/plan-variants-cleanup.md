@@ -105,7 +105,7 @@ Afterwards, `grep -ri "variant_group\|variantGroup"` outside `migration/` must r
   `role = 'variant'` or isn't in the product's group.
 - Product save (`services/product/updateProduct.ts` / `createProduct.ts`): ignore or reject values for
   `variant` attributes in `attributes[]`.
-- Add `Product.attributeGroupLocked: Boolean` and `Product.attributeGroupLockReason: String` (the
+- Add `Product.attributeGroupLock { locked: Boolean!, reason: String }` (reason lists the
   variant attributes in use) for the UI.
 
 ### 1.4 WooCommerce importer
@@ -162,7 +162,7 @@ Branch: `feature/attribute-groups-admin`
 
 - `pages/admin/productEdit+productNew/Attributes.tsx`:
   - Show only attributes with `role = 'product'`. This removes the variant dropdown from the product.
-  - The group dropdown is read-only when `attributeGroupLocked`, and shows the reason
+  - The group dropdown is read-only when `attributeGroupLock.locked`, and shows `attributeGroupLock.reason`
     ("Locked because variants use week, age").
   - When the group changes while unlocked, warn that product attribute values outside the new group
     will be removed when you save.

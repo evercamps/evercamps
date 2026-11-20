@@ -61,11 +61,11 @@ export default {
       const row = await query.load(pool);
       return row ? { groupId: row.attribute_group_id, groupName: row.group_name } : null;
     },
-    attributeGroupLocked: async (product: Product) =>
-      (await variantAttributesInUse(product.productId)).length > 0,
-    attributeGroupLockReason: async (product: Product) => {
+    attributeGroupLock: async (product: Product) => {
       const names = await variantAttributesInUse(product.productId);
-      return names.length > 0 ? `Variants use ${names.join(', ')}` : null;
+      return names.length > 0
+        ? { locked: true, reason: `Variants use ${names.join(', ')}` }
+        : { locked: false, reason: null };
     },
     // Variant attributes of the product's attribute group (ADR-0004), plus any
     // attribute its variants already use (e.g. imported "kampweek" outside the

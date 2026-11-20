@@ -45,13 +45,19 @@ extend type Product {
   variantAttributes: [ProductVariantAttribute!]!
   variantAttributeGroup: ProductVariantAttributeGroup
   """
-  True once a variant of the product has a value for a variant attribute: the
-  attribute group can't change any more (ADR-0003).
+  Whether the attribute group can still change (ADR-0003).
   """
-  attributeGroupLocked: Boolean!
+  attributeGroupLock: AttributeGroupLock!
+}
+
+"""
+A product's attribute group is locked once a variant has a value for a variant
+attribute.
+"""
+type AttributeGroupLock {
+  locked: Boolean!
   """
-  Why the attribute group is locked: the variant attributes in use, e.g.
-  "Variants use Kampweek". Null when not locked.
+  The variant attributes in use, e.g. "Variants use Kampweek". Null when not locked.
   """
-  attributeGroupLockReason: String
+  reason: String
 }

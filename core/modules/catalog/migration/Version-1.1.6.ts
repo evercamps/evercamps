@@ -106,13 +106,13 @@ export default async (connection: any) => {
         used_attributes text;
       BEGIN
         IF OLD.group_id IS DISTINCT FROM NEW.group_id THEN
-          SELECT string_agg(DISTINCT a.attribute_code, ', ' ORDER BY a.attribute_code) INTO used_attributes
+          SELECT string_agg(DISTINCT a.attribute_name, ', ' ORDER BY a.attribute_name) INTO used_attributes
           FROM variant_attribute_value vav
           JOIN product_variant pv ON pv.product_variant_id = vav.variant_id
           JOIN attribute a ON a.attribute_id = vav.attribute_id
           WHERE pv.product_id = NEW.product_id AND vav.option_id IS NOT NULL;
           IF used_attributes IS NOT NULL THEN
-            RAISE EXCEPTION 'ATTRIBUTE_GROUP_LOCKED: variants of this product use %', used_attributes;
+            RAISE EXCEPTION 'ATTRIBUTE_GROUP_LOCKED: Variants use %', used_attributes;
           END IF;
         END IF;
         RETURN NEW;
@@ -177,7 +177,7 @@ export default async (connection: any) => {
       $$
       BEGIN
         IF OLD.role IS DISTINCT FROM NEW.role AND (
-          EXISTS (SELECT 1 FROM variant_attribute_value WHERE attribute_id = OLD.attribute_id)
+          EXISTS (SELECT 1 FROM variant_attribute_value WHERE attribute_id = OLD.attribute_id AND option_id IS NOT NULL)
           OR EXISTS (SELECT 1 FROM product_attribute_value_index WHERE attribute_id = OLD.attribute_id)
         ) THEN
           RAISE EXCEPTION 'ATTRIBUTE_ROLE_LOCKED: attribute % already has values', OLD.attribute_code;
