@@ -136,6 +136,24 @@ export default (): void => {
   });
 
   registerWidget({
+    type: 'image_slider',
+    settingComponent: path.resolve(
+      CONSTANTS.ROOTPATH,
+      'dist/components/admin/widgets/ImageSliderSetting.js'
+    ),
+    component: path.resolve(
+      CONSTANTS.ROOTPATH,
+      'dist/components/frontStore/widgets/ImageSlider.js'
+    ),
+    name: 'Image slider',
+    description: 'A full-width slider of images, each with an optional link',
+    defaultSettings: {
+      interval: 5
+    },
+    enabled: true
+  });
+
+  registerWidget({
     type: 'basic_menu',
     settingComponent: path.resolve(
       CONSTANTS.ROOTPATH,

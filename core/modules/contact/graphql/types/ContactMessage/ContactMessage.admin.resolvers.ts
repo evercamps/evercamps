@@ -1,12 +1,16 @@
 import type { Setting } from '../../../../setting/services/setting.js';
 import { DEFAULT_RETENTION_DAYS } from '../../../services/contactSettings.js';
+import type {
+  ContactMessage,
+  ContactMessageCollection,
+  ContactMessageFilters,
+  ContactMessageRow
+} from '../../../types/index.js';
 
 type Context = { pool: any };
 
-type Filters = {
-  page?: number | null;
-  limit?: number | null;
-  search?: string | null;
+type ContactMessagesArgs = {
+  filters?: { [K in keyof ContactMessageFilters]?: ContactMessageFilters[K] | null } | null;
 };
 
 function value(setting: Setting[], name: string): string | null {
@@ -22,13 +26,24 @@ function iso(date: unknown): string | null {
   return Number.isNaN(parsed.getTime()) ? String(date) : parsed.toISOString();
 }
 
+function toContactMessage(row: ContactMessageRow): ContactMessage {
+  return {
+    uuid: row.uuid,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    message: row.message,
+    createdAt: iso(row.created_at)
+  };
+}
+
 export default {
   Query: {
     contactMessages: async (
       _: unknown,
-      { filters }: { filters?: Filters },
+      { filters }: ContactMessagesArgs,
       { pool }: Context
-    ) => {
+    ): Promise<ContactMessageCollection> => {
       const page = Math.max(1, Number(filters?.page) || 1);
       const limit = Math.min(200, Math.max(1, Number(filters?.limit) || 30));
       const search = filters?.search?.trim() || null;
@@ -43,21 +58,13 @@ export default {
         values
       );
       const rows = await pool.query(
-        `SELECT "uuid", "name", "email", "phone", "message", "created_at"
-         FROM "contact_message" ${whereSql}
+        `SELECT * FROM "contact_message" ${whereSql}
          ORDER BY "contact_message_id" DESC
          LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
         values
       );
       return {
-        items: rows.rows.map((row: Record<string, any>) => ({
-          uuid: row.uuid,
-          name: row.name,
-          email: row.email,
-          phone: row.phone,
-          message: row.message,
-          createdAt: iso(row.created_at)
-        })),
+        items: (rows.rows as ContactMessageRow[]).map(toContactMessage),
         total: total.rows[0]?.total || 0,
         page,
         limit,
@@ -67,7 +74,7 @@ export default {
   },
   Setting: {
     contactFormRecipient: (s: Setting[]) => value(s, 'contactFormRecipient'),
-    contactMessageRetentionDays: (s: Setting[]) => {
+    contactMessageRetentionDays: (s: Setting[]): number => {
       const parsed = parseInt(value(s, 'contactMessageRetentionDays') ?? '', 10);
       return Number.isNaN(parsed) ? DEFAULT_RETENTION_DAYS : parsed;
     }

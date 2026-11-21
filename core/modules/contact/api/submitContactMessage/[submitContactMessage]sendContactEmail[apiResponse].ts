@@ -4,14 +4,7 @@ import type { EvercampsRequest } from '../../../../types/request.js';
 import type { EvercampsResponse } from '../../../../types/response.js';
 import { logSkippedEmail, sendEmail } from '../../../email/services/sendEmail.js';
 import { getContactRecipient } from '../../services/contactSettings.js';
-
-type ContactMessageRow = {
-  contact_message_id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  message: string;
-};
+import type { ContactMessageRow } from '../../types/index.js';
 
 /**
  * Emails a stored contact message to the organiser, with the visitor as

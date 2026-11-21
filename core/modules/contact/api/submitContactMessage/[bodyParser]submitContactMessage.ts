@@ -12,6 +12,7 @@ import {
   RATE_LIMIT_WINDOW_MINUTES,
   hashIp
 } from '../../services/contactSettings.js';
+import type { ContactMessageInput, ContactMessageRow } from '../../types/index.js';
 
 const TOO_MANY_REQUESTS = 429;
 
@@ -29,7 +30,7 @@ export default async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const body = request.body || {};
+    const body: Partial<ContactMessageInput> = request.body || {};
     if (clean(body[HONEYPOT_FIELD]) !== '') {
       response.status(OK);
       response.$body = { data: {} };
@@ -71,7 +72,7 @@ export default async (
       return;
     }
 
-    const saved = await insert('contact_message')
+    const saved = (await insert('contact_message')
       .given({
         name,
         email,
@@ -79,7 +80,7 @@ export default async (
         message,
         ip_hash: ipHash
       })
-      .execute(pool);
+      .execute(pool)) as ContactMessageRow;
 
     response.locals.contactMessage = saved;
     response.status(OK);
