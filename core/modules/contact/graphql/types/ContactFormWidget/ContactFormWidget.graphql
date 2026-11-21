@@ -1,0 +1,12 @@
+"""
+Settings of a contact form widget
+"""
+type ContactFormWidget {
+  title: String
+  intro: String
+  className: String
+}
+
+extend type Query {
+  contactFormWidget(title: String, intro: String, className: String): ContactFormWidget
+}

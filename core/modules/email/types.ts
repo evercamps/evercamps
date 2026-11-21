@@ -46,6 +46,8 @@ export type SendEmailInput = {
   language?: string;
   entity?: EmailEntity;
   idempotencyKey?: string;
+  /** Reply-to for this email only; defaults to the global reply-to setting */
+  replyTo?: string;
 };
 
 export type EmailLogStatus =

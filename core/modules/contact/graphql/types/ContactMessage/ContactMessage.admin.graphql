@@ -1,0 +1,34 @@
+"""
+A message sent through the contact form
+"""
+type ContactMessage {
+  uuid: String!
+  name: String!
+  email: String!
+  phone: String
+  message: String!
+  createdAt: String
+}
+
+type ContactMessageCollection {
+  items: [ContactMessage]
+  total: Int
+  page: Int
+  limit: Int
+  search: String
+}
+
+input ContactMessageFilterInput {
+  page: Int
+  limit: Int
+  search: String
+}
+
+extend type Query {
+  contactMessages(filters: ContactMessageFilterInput): ContactMessageCollection
+}
+
+extend type Setting {
+  contactFormRecipient: String
+  contactMessageRetentionDays: Int
+}

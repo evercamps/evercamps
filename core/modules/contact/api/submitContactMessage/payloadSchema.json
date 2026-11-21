@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "maxLength": 320
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "website": {
+      "type": "string"
+    }
+  },
+  "required": ["name", "email", "message"],
+  "additionalProperties": false
+}
