@@ -19,6 +19,8 @@ dist
 npm-debug.log
 /package-log.json
 /content/media
+/content/themes/*
+!/content/themes/.gitkeep
 /public
 .DS_Store
 .log
