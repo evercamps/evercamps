@@ -1,8 +1,11 @@
 import Area from '@components/Area';
 import LoadingBar from '@components/LoadingBar';
 import React from 'react';
+import './tokens.scss';
 import './Layout.scss';
 import './tailwind.scss';
+// Last, so the active theme's tokens override the defaults in tokens.scss
+import '@theme-styles';
 
 export default function Layout() {
   return (

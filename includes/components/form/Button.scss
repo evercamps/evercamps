@@ -14,12 +14,14 @@
     background-color: rgba(201, 204, 207, 0.05);
   }
   &.primary {
-    background-color: var(--primary);
+    // The --button-* tokens are storefront only; admin uses the fallbacks
+    background-color: var(--button-bg, var(--primary));
     border: 0;
-    color: white;
+    color: var(--button-text, white);
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
     &:hover {
-      background-color: #006e52;
+      background-color: var(--button-bg-hover, #006e52);
+      color: var(--button-text-hover, white);
     }
   }
   &.critical {

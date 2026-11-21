@@ -2,6 +2,7 @@ import fs from 'fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { getEnabledTheme } from '../../../../dist/lib/util/getEnabledTheme.js';
+import { mergeTailwindConfig } from './mergeTailwindConfig.js';
 
 export async function getTailwindConfig(route) {
   const defaultTailwindConfig = route.isAdmin
@@ -25,11 +26,9 @@ export async function getTailwindConfig(route) {
       );
     }
   }
-  // Merge defaultTailwindConfig with tailwindConfigJs
-  const mergedTailwindConfig = Object.assign(
+  // The theme's config extends the default one instead of replacing its keys
+  return mergeTailwindConfig(
     defaultTailwindConfig.default,
     tailwindConfig.default
   );
-
-  return mergedTailwindConfig;
 }

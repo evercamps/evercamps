@@ -165,6 +165,26 @@ A theme changes the look of the storefront for one deployment. Admin pages can't
 - **Compiling:** you never compile a theme by hand. `npm run dev` compiles the active theme's `src/` into `dist/` and recompiles on change, and `npm run build` compiles it before the webpack build. `npm run start` uses the `dist/` that the build produced. Don't commit `dist/`: add it to the theme repository's `.gitignore`.
 - **Deploying:** clone the theme into `content/themes/<name>` and set `system.theme` *before* `npm run build`, including when building the Docker image.
 
+#### Styling a theme with design tokens
+
+Start with tokens, and override components only when tokens aren't enough. The storefront's colours, fonts, corner radius and button style are CSS variables, defined in [`core/modules/cms/pages/frontStore/all/tokens.scss`](./core/modules/cms/pages/frontStore/all/tokens.scss). Core components and the storefront Tailwind colours (`text-interactive`, `border-divider`, `bg-primary`, …) use these variables.
+
+- **`src/theme.scss`** is the theme's global stylesheet. It loads after the core styles, so any variable you redefine there wins. Use it for `@font-face` rules and any global CSS:
+  ```scss
+  @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
+
+  :root {
+    --primary: #222222;
+    --interactive: #02b9df;
+    --font-heading: 'Kalam', cursive;
+    --button-bg-hover: var(--interactive);
+    --button-text-transform: uppercase;
+  }
+  ```
+  Font files in the theme's `public/` folder are served from the site root, for example `url('/fonts/raleway.woff2')`.
+- **`src/tailwind.config.js`** (optional) is deep-merged into the storefront Tailwind config. It extends the defaults and only replaces the keys you set. Use it to add your own utilities, for example `theme.extend.colors.brand`.
+- If a theme overrides `pages/all/Layout`, its own Layout has to import the core tokens (`@default-theme/cms/frontStore/all/tokens.scss`) first and `@theme-styles` last.
+
 For contribution workflow (branching, PRs, code of conduct), see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 **Join Us!**

@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { SwcMinifyWebpackPlugin } from 'swc-minify-webpack-plugin';
@@ -138,6 +139,16 @@ export function createBaseConfig(isServer) {
 
   // Resolve alias for core components
   alias['@components-origin'] = path.resolve(__dirname, '../../components');
+
+  // The theme's global stylesheet (design tokens, fonts), imported by the
+  // storefront Layout after the core styles so its variables win.
+  const themeStyles = theme
+    ? path.resolve(theme.path, 'dist', 'theme.scss')
+    : null;
+  alias['@theme-styles'] =
+    themeStyles && existsSync(themeStyles)
+      ? themeStyles
+      : path.resolve(__dirname, 'emptyThemeStyles.scss');
 
   // Avoid multiple react instances
   alias['react'] = path.resolve(CONSTANTS.ROOTPATH, 'node_modules/react');
