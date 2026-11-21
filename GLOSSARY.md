@@ -24,3 +24,35 @@ _Avoid_: Variant group attribute, variant option
 
 **Product attribute**:
 An attribute that describes the whole product and is the same for all of its variants. It is never used to tell variants apart.
+
+### Registration
+
+**Customer**:
+The person with an account who books and pays, usually a parent. A customer manages one or more participants.
+_Avoid_: Parent, user, member
+
+**Participant**:
+The person who attends a camp, usually a child. A participant belongs to one customer.
+_Avoid_: Child, attendee, kid, surfer
+
+**Registration**:
+A participant's place on one variant, such as a specific camp week.
+_Avoid_: Booking, enrolment, inscription
+
+### Running a camp
+
+**Camp day**:
+One day between a variant's start date and end date on which the camp takes place.
+_Avoid_: Session, date, occurrence
+
+**Monitor**:
+A staff member who runs a camp on site and takes attendance. A monitor is not an organiser and cannot manage the catalog or orders.
+_Avoid_: Instructor, leader, teacher, coach
+
+**Attendance**:
+Whether a participant with a registration was present or absent on one camp day, recorded by a monitor.
+_Avoid_: Presence, check-in, RSVP, tinker
+
+**Absence notice**:
+A customer telling the organiser in advance that a participant will not be there on a camp day.
+_Avoid_: Sick note, cancellation, RSVP
