@@ -19,8 +19,8 @@ export function getEnabledTheme(): Theme | null {
   }
   if (!existsSync(resolve(CONSTANTS.THEMEPATH, themeConfig))) {
     error(
-      `Theme '${themeConfig}' does not exist in ${CONSTANTS.THEMEPATH}. 
-      Please check your theme configuration in the system settings.`
+      `Theme '${themeConfig}' does not exist in ${CONSTANTS.THEMEPATH}. ` +
+        `Clone the theme into that folder, or check 'system.theme' in your config.`
     );
     process.exit(1);
   } else if (
