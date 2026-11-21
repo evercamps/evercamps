@@ -13,8 +13,12 @@ import { getEnabledExtensions, initExtensions } from '../extension/index.js';
 import { loadBootstrapScript } from '../lib/bootstrap/bootstrap.js';
 import { buildEntry } from '../lib/buildEntry.js';
 import { getCoreModules } from '../lib/loadModules.js';
+import { compileTheme } from './compileTheme.js';
 import { compile } from './complie.js';
 import './initEnvBuild.js';
+
+/* Compile the active theme first: the steps below read its dist folder */
+await compileTheme();
 
 /* Loading modules and initilize routes, components */
 await initExtensions();

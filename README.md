@@ -161,7 +161,8 @@ A theme changes the look of the storefront for one deployment. Admin pages can't
   { "system": { "theme": "<name>" } }
   ```
   Leave it unset to use the core storefront components. Switching themes means changing this value and rebuilding.
-- **Folder layout:** `src/` holds the theme's components, which are used by `npm run dev`. `dist/` holds the compiled components, which are used by `npm run build` and `start`. `public/` holds static files (images, fonts) served from the site root. Page components go in `pages/<routeId | all>/`, and overrides of shared components go in `components/`.
+- **Folder layout:** the theme repository contains `src/` (`.js`, `.jsx`, `.ts`, `.tsx`, plus `.scss` and other files, which are copied as is) and `public/` (static files such as images and fonts, served from the site root). Inside `src/`, page components go in `pages/<routeId | all>/` and overrides of shared components go in `components/`.
+- **Compiling:** you never compile a theme by hand. `npm run dev` compiles the active theme's `src/` into `dist/` and recompiles on change, and `npm run build` compiles it before the webpack build. `npm run start` uses the `dist/` that the build produced. Don't commit `dist/`: add it to the theme repository's `.gitignore`.
 - **Deploying:** clone the theme into `content/themes/<name>` and set `system.theme` *before* `npm run build`, including when building the Docker image.
 
 For contribution workflow (branching, PRs, code of conduct), see [CONTRIBUTING.md](./CONTRIBUTING.md).

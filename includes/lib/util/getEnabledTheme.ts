@@ -44,7 +44,7 @@ export function getEnabledTheme(): Theme | null {
         CONSTANTS.THEMEPATH,
         themeConfig,
         'dist'
-      )}. This is required for production mode. Please run the compile command to generate the dist directory.`
+      )}. This is required for production mode. Add the theme's 'src' and run 'npm run build', which compiles it into 'dist'.`
     );
     process.exit(1);
   } else {
