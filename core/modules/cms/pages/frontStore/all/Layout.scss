@@ -1,23 +1,4 @@
-:root {
-  --primary: #3a3a3a;
-  --secondary: #111213;
-  --surface: #111213;
-  --onSurface: #111213;
-  --interactive: #2c6ecb;
-  --critical: #d72c0d;
-  --warning: #ffc453;
-  --highlight: #5bcdda;
-  --success: #008060;
-  --decorative: #ffc96b;
-  --border: #8c9196;
-  --background: #f6f6f7fc;
-  --icon: #5c5f62;
-  --textSubdued: #6d7175;
-  --divider: #e1e3e5;
-  --text: #202223;
-  --formFieldBorder: #c9cccf;
-  --formFieldBorderShadow: #aeb4b9;
-}
+// Design tokens (CSS variables) live in tokens.scss.
 
 $font-size-sm: 1.4rem;
 $font-size-md: 1.4rem;
@@ -49,12 +30,14 @@ html {
 
   .button {
     padding: 1rem 2rem;
-    font-weight: 400;
-    border-radius: 2px;
+    font-weight: var(--button-font-weight);
+    border-radius: var(--button-radius);
+    text-transform: var(--button-text-transform);
   }
 }
 body {
-  color: #3a3a3a;
+  color: var(--text);
+  font-family: var(--font-body);
 }
 p {
   margin-bottom: 1rem;
@@ -174,14 +157,30 @@ h3,
 h4,
 h5,
 h6 {
-  font-weight: 600;
+  font-weight: var(--heading-weight);
+}
+h1,
+h2,
+h3,
+.h1,
+.h2,
+.h3 {
+  font-family: var(--font-heading);
+}
+h4,
+h5,
+h6,
+.h4,
+.h5,
+.h6 {
+  font-family: var(--font-subheading);
 }
 .wrapper .content {
   min-height: calc(100vh - 50px);
 }
 .header {
   padding: 2.5rem;
-  border-bottom: 1px solid #ebebeb;
+  border-bottom: 1px solid var(--divider);
   margin-bottom: 3rem;
   @media only screen and (min-width: 1200px) {
     padding-left: 50px;
@@ -202,11 +201,11 @@ h6 {
 }
 
 .footer {
-  background-color: #f6f6f6;
+  background-color: var(--background);
   margin-top: 9rem;
   padding-top: 1rem;
   padding-block-end: 1rem;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--divider);
   .card-icons {
     svg {
       height: 4rem;

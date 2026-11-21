@@ -1,0 +1,46 @@
+// Storefront design tokens.
+//
+// Core storefront components and the storefront Tailwind config use these
+// variables instead of hard-coded colours and fonts. A theme restyles the
+// storefront by redefining them in its `src/theme.scss`, which is loaded
+// after this file. Copy this block as a starting point.
+:root {
+  // Colours
+  --primary: #3a3a3a; // main brand colour: primary buttons, selected options
+  --secondary: #111213;
+  --interactive: #2c6ecb; // accent: links, interactive elements
+  --highlight: #5bcdda;
+  --critical: #fa4545; // errors
+  --warning: #ffc453;
+  --success: #008060;
+  --decorative: #ffc96b;
+  --text: #3a3a3a; // body text
+  --textSubdued: #737373; // muted text
+  --background: #f6f6f6; // muted surfaces such as the footer and image placeholders
+  --surface: #111213;
+  --onSurface: #111213;
+  --border: #8c9196;
+  --divider: #e1e3e5;
+  --icon: #5c5f62;
+  --formFieldBorder: #c9cccf;
+  --formFieldBorderShadow: #aeb4b9;
+
+  // Fonts
+  --font-body: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-heading: var(--font-body); // h1-h3
+  --font-subheading: var(--font-heading); // h4-h6
+  --heading-weight: 600;
+
+  // Shape
+  --radius: 0.25rem;
+
+  // Buttons
+  --button-bg: var(--primary);
+  --button-text: #fff;
+  --button-bg-hover: #606060;
+  --button-text-hover: var(--button-text);
+  --button-radius: 2px;
+  --button-font-weight: 400;
+  --button-text-transform: none;
+}

@@ -58,7 +58,7 @@ input[type='range']::-webkit-slider-thumb {
 input[type='range']::-webkit-slider-runnable-track {
   width: 200px;
   height: 1px;
-  background: #003d7c;
+  background: var(--interactive);
 }
 input[type='range']:nth-child(2)::-webkit-slider-runnable-track {
   background: none;
@@ -69,7 +69,7 @@ input[type='range']::-webkit-slider-thumb {
   width: 15px;
   margin-top: -7px;
   background: #fff;
-  border: 1px solid #003d7c;
+  border: 1px solid var(--interactive);
   border-radius: 25px;
   z-index: 1;
 }

@@ -2,9 +2,10 @@
   display: inline-block;
   position: relative;
   border: 1px solid rgba(186, 191, 195, 1);
-  border-radius: 3px;
+  border-radius: var(--button-radius);
   padding: 0.5rem 1.5rem;
-  font-weight: 600;
+  font-weight: var(--button-font-weight);
+  text-transform: var(--button-text-transform);
   color: inherit;
   background-color: white;
   border-top-color: rgba(201, 204, 207, 1);
@@ -14,12 +15,13 @@
     background-color: rgba(201, 204, 207, 0.05);
   }
   &.primary {
-    background-color: var(--primary);
+    background-color: var(--button-bg);
     border: 0;
-    color: white;
+    color: var(--button-text);
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
     &:hover {
-      background-color: #606060;
+      background-color: var(--button-bg-hover);
+      color: var(--button-text-hover);
     }
   }
   &.critical {
