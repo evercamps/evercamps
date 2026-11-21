@@ -90,6 +90,10 @@ const VariantsQuery = `
         groupId
         groupName
       }
+      attributeGroupLock {
+        locked
+        reason
+      }
       variantAttributes {
         attributeId
         attributeCode
@@ -567,8 +571,9 @@ export default function Variants({ product }: VariantsProps) {
             )}
           </div>
           <div className="text-textSubdued text-sm">
-            The attribute group decides which attributes the variants can use. Change it in the
-            Attributes card and save the product.
+            {data.attributeGroupLock?.locked
+              ? `Locked: ${data.attributeGroupLock.reason}. The attribute group can't change any more.`
+              : 'The attribute group decides which variant attributes the variants can use. It locks once a variant uses one.'}
           </div>
         </Card.Session>
       )}

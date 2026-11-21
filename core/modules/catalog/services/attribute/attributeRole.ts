@@ -2,7 +2,9 @@
 // variants of a product apart (e.g. camp week), so it needs exactly one value
 // from a fixed list: only select and period attributes can have that role.
 
-export type AttributeRole = 'product' | 'variant';
+export const ATTRIBUTE_ROLES = ['product', 'variant'] as const;
+
+export type AttributeRole = (typeof ATTRIBUTE_ROLES)[number];
 
 export const VARIANT_ATTRIBUTE_TYPES: readonly string[] = ['select', 'period'];
 

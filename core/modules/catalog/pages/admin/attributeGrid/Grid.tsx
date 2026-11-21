@@ -14,6 +14,7 @@ import { useAlertContext } from '@components/modal/Alert';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import type { AttributeRole } from '../../../services/attribute/attributeRole.js';
 
 interface Filter {
   key: string;
@@ -33,6 +34,7 @@ interface Attribute {
   attributeName: string;
   attributeCode: string;
   type: string;
+  role: AttributeRole;
   isRequired: number;
   isFilterable: number;
   editUrl: string;
@@ -47,6 +49,32 @@ interface AttributeResponse {
   items: Attribute[];
   total: number;
   currentFilters?: Filter[];
+}
+
+// ADR-0004: filter the grid on the attribute role (role[operation]=eq).
+function RoleFilter({ value }: { value?: string }) {
+  return (
+    <select
+      className="form-field"
+      aria-label="Role"
+      value={value ?? ''}
+      onChange={(e) => {
+        const url = new URL(document.location.href);
+        if (e.target.value) {
+          url.searchParams.set('role[operation]', 'eq');
+          url.searchParams.set('role[value]', e.target.value);
+        } else {
+          url.searchParams.delete('role[operation]');
+          url.searchParams.delete('role[value]');
+        }
+        window.location.href = url.href;
+      }}
+    >
+      <option value="">All roles</option>
+      <option value="product">Product attributes</option>
+      <option value="variant">Variant attributes</option>
+    </select>
+  );
 }
 
 interface ActionsProps {
@@ -159,6 +187,7 @@ export default function AttributeGrid({ attributes: attributesProp }: AttributeG
     <Card>
       <Card.Session
         title={
+          <div className="flex gap-4 items-start">
           <Form submitBtn={false} id="attributeGridFilter">
             <Field
               type="text"
@@ -183,6 +212,8 @@ export default function AttributeGrid({ attributes: attributesProp }: AttributeG
               }}
             />
           </Form>
+          <RoleFilter value={currentFilters.find((f) => f.key === 'role')?.value} />
+          </div>
         }
         actions={[
           {
@@ -245,6 +276,18 @@ export default function AttributeGrid({ attributes: attributesProp }: AttributeG
                     )
                   },
                   sortOrder: 20
+                },
+                {
+                  component: {
+                    default: () => (
+                      <SortableHeader
+                        name="role"
+                        title="Role"
+                        currentFilters={currentFilters}
+                      />
+                    )
+                  },
+                  sortOrder: 22
                 },
                 {
                   component: {
@@ -323,6 +366,14 @@ export default function AttributeGrid({ attributes: attributesProp }: AttributeG
                   },
                   {
                     component: {
+                      default: () => (
+                        <td>{a.role === 'variant' ? 'Variant' : 'Product'}</td>
+                      )
+                    },
+                    sortOrder: 22
+                  },
+                  {
+                    component: {
                       default: () => <YesNoRow value={a.isRequired} />
                     },
                     sortOrder: 25
@@ -363,6 +414,7 @@ export const query = `
         attributeName
         attributeCode
         type
+        role
         isRequired
         isFilterable
         editUrl

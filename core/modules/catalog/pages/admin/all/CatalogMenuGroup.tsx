@@ -1,5 +1,6 @@
 import { NavigationItemGroup } from '@components/admin/cms/NavigationItemGroup';
 import ProductIcon from '@heroicons/react/solid/esm/ArchiveIcon';
+import AttributeGroupIcon from '@heroicons/react/solid/esm/CollectionIcon';
 import AttributeIcon from '@heroicons/react/solid/esm/HashtagIcon';
 import CategoryIcon from '@heroicons/react/solid/esm/LinkIcon';
 import CollectionIcon from '@heroicons/react/solid/esm/TagIcon';
@@ -9,6 +10,7 @@ interface CatalogMenuGroupProps {
   productGrid: string;
   categoryGrid: string;
   attributeGrid: string;
+  attributeGroupGrid: string;
   collectionGrid: string;
 }
 
@@ -16,6 +18,7 @@ export default function CatalogMenuGroup({
   productGrid,
   categoryGrid,
   attributeGrid,
+  attributeGroupGrid,
   collectionGrid
 }: CatalogMenuGroupProps) {
   return (
@@ -42,6 +45,11 @@ export default function CatalogMenuGroup({
           Icon: AttributeIcon,
           url: attributeGrid,
           title: 'Attributes'
+        },
+        {
+          Icon: AttributeGroupIcon,
+          url: attributeGroupGrid,
+          title: 'Attribute groups'
         }
       ]}
     />
@@ -58,6 +66,7 @@ export const query = `
     productGrid: url(routeId:"productGrid")
     categoryGrid: url(routeId:"categoryGrid")
     attributeGrid: url(routeId:"attributeGrid")
+    attributeGroupGrid: url(routeId:"attributeGroupGrid")
     collectionGrid: url(routeId:"collectionGrid")
   }
 `;

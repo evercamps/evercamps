@@ -2,12 +2,18 @@ import { OptionPeriodInput } from '@components/admin/catalog/OptionPeriodInput';
 import { Card } from '@components/admin/cms/Card';
 import Area from '@components/Area';
 import { Field } from '@components/form/Field';
-import { Input } from '@components/form/fields/Input';
 import { Toggle } from '@components/form/fields/Toggle';
 import React from 'react';
 import Select from 'react-select';
 import { useQuery } from 'urql';
 import { get } from '../../../../../lib/util/get.js';
+import { type AttributeRole, VARIANT_ATTRIBUTE_TYPES } from '../../../services/attribute/attributeRole.js';
+import { DEFAULT_ATTRIBUTE_GROUP_ID } from '../../../services/attributeGroup/defaultGroup.js';
+
+const ROLE_LABELS: Record<AttributeRole, string> = {
+  product: 'Product attribute (the same for all variants)',
+  variant: 'Variant attribute (tells variants apart, e.g. camp week)'
+};
 
 interface GroupOption {
   value?: string | number;
@@ -33,6 +39,8 @@ interface Attribute {
   attributeId?: string | number;
   attributeName?: string;
   attributeCode?: string;
+  role?: AttributeRole;
+  roleLocked?: boolean;
   options?: AttributeOption[];
   groups?: {
     items?: GroupOption[];
@@ -41,7 +49,6 @@ interface Attribute {
 
 interface GroupsProps {
   groups: GroupOption[];
-  createGroupApi: string;
 }
 
 interface OptionsProps {
@@ -52,7 +59,6 @@ interface OptionsProps {
 
 interface GeneralProps {
   attribute?: Attribute | null;
-  createGroupApi: string;
 }
 
 const GroupsQuery = `
@@ -66,45 +72,14 @@ const GroupsQuery = `
   }
 `;
 
-function Groups({ groups, createGroupApi }: GroupsProps) {
-  const [result, reexecuteQuery] = useQuery({
+// Attribute groups are managed on their own page (Catalog > Attribute groups).
+// A new attribute starts in the default group.
+function Groups({ groups }: GroupsProps) {
+  const [result] = useQuery({
     query: GroupsQuery
   });
 
-  const newGroup = React.useRef<HTMLInputElement | null>(null);
-  const [createGroupError, setCreateGroupError] = React.useState<
-    string | undefined
-  >(undefined);
-
   const { data, fetching, error } = result;
-
-  const createGroup = () => {
-    if (!newGroup.current?.value) {
-      setCreateGroupError('Group name is required');
-      return;
-    }
-
-    fetch(createGroupApi, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        group_name: newGroup.current.value
-      })
-    })
-      .then((response) => response.json())
-      .then((jsonData) => {
-        if (!jsonData.error) {
-          if (newGroup.current) {
-            newGroup.current.value = '';
-          }
-          reexecuteQuery({ requestPolicy: 'network-only' });
-        } else {
-          setCreateGroupError(jsonData.error.message);
-        }
-      });
-  };
 
   if (fetching) return <p>Loading...</p>;
 
@@ -112,42 +87,52 @@ function Groups({ groups, createGroupApi }: GroupsProps) {
     return <p>Oh no...{error.message}</p>;
   }
 
+  const options: GroupOption[] = data.attributeGroups.items;
+  const initial =
+    groups.length > 0
+      ? groups
+      : options.filter((group) => Number(group.value) === DEFAULT_ATTRIBUTE_GROUP_ID);
+
   return (
     <div>
-      <div className="mb-4">Select groups the attribute belongs to</div>
+      <div className="mb-4">Select the attribute groups the attribute belongs to</div>
+      <Select
+        name="groups[]"
+        options={options}
+        hideSelectedOptions
+        isMulti
+        defaultValue={initial}
+      />
+    </div>
+  );
+}
 
-      <div className="grid gap-8 grid-cols-2">
-        <div>
-          <Select
-            name="groups[]"
-            options={data.attributeGroups.items}
-            hideSelectedOptions
-            isMulti
-            defaultValue={groups}
-          />
-        </div>
-
-        <div className="grid gap-8 grid-cols-1">
-          <Input
-            placeholder="Create a new group"
-            ref={newGroup}
-            error={createGroupError}
-            suffix={
-              <a
-                className="text-interactive"
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  createGroup();
-                }}
-              >
-                +
-              </a>
-            }
-          />
+// ADR-0004: a product attribute describes the whole product, a variant
+// attribute tells its variants apart (e.g. camp week). Only select and period
+// attributes can be variant attributes, and the role can't change once
+// products or variants have values for the attribute.
+function Role({ role, locked }: { role: AttributeRole; locked: boolean }) {
+  if (locked) {
+    return (
+      <div>
+        <div className="font-semibold">{ROLE_LABELS[role]}</div>
+        <div className="text-textSubdued text-sm">
+          The role can&apos;t change any more: products or variants already have a value for this attribute.
         </div>
       </div>
-    </div>
+    );
+  }
+  return (
+    <Field
+      id="role"
+      type="radio"
+      name="role"
+      options={[
+        { value: 'product', text: ROLE_LABELS.product },
+        { value: 'variant', text: ROLE_LABELS.variant }
+      ]}
+      value={role}
+    />
   );
 }
 
@@ -290,10 +275,7 @@ function Options({ originOptions = [], isPeriod = false }: OptionsProps) {
   );
 }
 
-export default function General({
-  attribute: attributeProp,
-  createGroupApi
-}: GeneralProps) {
+export default function General({ attribute: attributeProp }: GeneralProps) {
   // `attribute` is null on the "New Attribute" page (attribute(id: null)).
   const attribute: Attribute = attributeProp ?? { type: 'text' };
   const [type, setType] = React.useState(attribute.type);
@@ -367,6 +349,12 @@ export default function General({
         <Area id="attributeEditGeneral" coreComponents={fields} />
       </Card.Session>
 
+      {VARIANT_ATTRIBUTE_TYPES.includes(type ?? '') && (
+        <Card.Session title="Role">
+          <Role role={attribute.role ?? 'product'} locked={!!attribute.roleLocked} />
+        </Card.Session>
+      )}
+
       {['select', 'multiselect', 'period'].includes(type ?? '') && (
         <Card.Session title={type === 'period' ? 'Periods' : 'Attribute options'}>
           <Options
@@ -377,10 +365,7 @@ export default function General({
       )}
 
       <Card.Session title="Attribute Group">
-        <Groups
-          groups={get(attribute, 'groups.items', [])}
-          createGroupApi={createGroupApi}
-        />
+        <Groups groups={get(attribute, 'groups.items', [])} />
       </Card.Session>
     </Card>
   );
@@ -398,6 +383,8 @@ export const query = `
       attributeName
       attributeCode
       type
+      role
+      roleLocked
       options {
         optionId: attributeOptionId
         uuid
@@ -414,6 +401,5 @@ export const query = `
         }
       }
     }
-    createGroupApi: url(routeId: "createAttributeGroup")
   }
 `;
