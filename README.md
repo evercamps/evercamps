@@ -82,7 +82,7 @@ evercamps/
 │   └── types/                 # Shared TypeScript types
 ├── content/                # Site-specific, non-framework content (the "wp-content" equivalent)
 │   ├── plugins/               # Installable plugins — see content/plugins/README.md
-│   ├── themes/                 # Storefront theme overrides
+│   ├── themes/                 # Storefront themes, one folder each (cloned in, gitignored) — see "Themes" below
 │   ├── translations/            # Locale files
 │   └── media/                   # Uploaded media (generated, gitignored)
 ├── config/                 # default.json / local.json — shop settings + registered plugins (generated, gitignored)
@@ -150,6 +150,19 @@ Emails (order confirmation, order canceled, welcome, reset password, registratio
 - Set `shop.homeUrl` in the config of each environment; links in emails are built from it (otherwise they point to `http://localhost:<port>`).
 - For local testing, run [Mailpit](https://mailpit.axllent.org/) (`docker run -p 8025:8025 -p 1025:1025 axllent/mailpit`) and use SMTP host `localhost`, port `1025`, security `None`. The mails show up at `http://localhost:8025`.
 - The email log body is removed after 30 days and log rows after 90 days (configurable). Failed sends are retried every 15 minutes, up to 3 attempts within 24 hours.
+
+### Themes
+
+A theme changes the look of the storefront for one deployment. Admin pages can't be themed. See [ADR-0005](./docs/adr/0005-themes-are-per-deployment-and-token-first.md) for why themes work this way.
+
+- **Location:** each theme is a folder in `content/themes/<name>`. Client themes live in their own (usually private) repository and are cloned into that folder. Everything in `content/themes/` except `.gitkeep` is gitignored, so the theme's repo and this repo don't see each other. Don't add a theme as a git submodule, because that would publish its URL.
+- **Selecting a theme:** set `system.theme` in the config of the deployment, not in `config/default.json`:
+  ```json
+  { "system": { "theme": "<name>" } }
+  ```
+  Leave it unset to use the core storefront components. Switching themes means changing this value and rebuilding.
+- **Folder layout:** `src/` holds the theme's components, which are used by `npm run dev`. `dist/` holds the compiled components, which are used by `npm run build` and `start`. `public/` holds static files (images, fonts) served from the site root. Page components go in `pages/<routeId | all>/`, and overrides of shared components go in `components/`.
+- **Deploying:** clone the theme into `content/themes/<name>` and set `system.theme` *before* `npm run build`, including when building the Docker image.
 
 For contribution workflow (branching, PRs, code of conduct), see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
