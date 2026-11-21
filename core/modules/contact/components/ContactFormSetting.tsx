@@ -1,12 +1,9 @@
 import { Field } from '@components/form/Field';
 import React from 'react';
+import type { ContactFormWidget } from '../types/index.js';
 
 interface Props {
-  contactFormWidget?: {
-    title?: string;
-    intro?: string;
-    className?: string;
-  };
+  contactFormWidget?: Partial<ContactFormWidget> | null;
 }
 
 export default function ContactFormSetting({ contactFormWidget }: Props) {

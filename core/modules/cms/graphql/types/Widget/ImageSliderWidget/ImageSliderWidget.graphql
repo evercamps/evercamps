@@ -1,0 +1,21 @@
+"""
+One image of an image slider widget
+"""
+type ImageSlide {
+  url: String!
+  alt: String
+  link: String
+}
+
+"""
+Return an image slider Widget
+"""
+type ImageSliderWidget {
+  slides: [ImageSlide]
+  interval: Int
+  className: String
+}
+
+extend type Query {
+  imageSliderWidget(settings: JSON): ImageSliderWidget
+}

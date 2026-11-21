@@ -1,25 +1,14 @@
 import { Card } from '@components/admin/cms/Card';
 import Pagination from '@components/grid/Pagination';
 import React from 'react';
-
-interface ContactMessageItem {
-  uuid: string;
-  name: string;
-  email: string;
-  phone?: string | null;
-  message: string;
-  createdAt?: string | null;
-}
+import type {
+  ContactFormSettings,
+  ContactMessageCollection
+} from '../../../types/index.js';
 
 interface Props {
-  contactMessages: {
-    items: ContactMessageItem[];
-    total: number;
-    page: number;
-    limit: number;
-    search?: string | null;
-  };
-  setting: { contactMessageRetentionDays: number };
+  contactMessages: ContactMessageCollection;
+  setting: Pick<ContactFormSettings, 'contactMessageRetentionDays'>;
 }
 
 function formatDateTime(value?: string | null): string {

@@ -3,18 +3,14 @@ import { Field } from '@components/form/Field';
 import { Form } from '@components/form/Form';
 import React from 'react';
 import { _ } from '../../../lib/locale/translate/_.js';
+import type {
+  ContactFormWidget,
+  SubmitContactMessageResponse
+} from '../types/index.js';
 
 interface Props {
-  contactFormWidget?: {
-    title?: string;
-    intro?: string;
-    className?: string;
-  };
+  contactFormWidget?: Partial<ContactFormWidget> | null;
   action: string;
-}
-
-interface SubmitResponse {
-  error?: { message: string };
 }
 
 const FORM_ID = 'contactForm';
@@ -48,7 +44,7 @@ export default function ContactForm({ contactFormWidget, action }: Props) {
               setLoading(true);
             }}
             onSuccess={(response) => {
-              const data = response as SubmitResponse;
+              const data = response as SubmitContactMessageResponse;
               if (data.error) {
                 setError(data.error.message);
               } else {

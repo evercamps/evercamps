@@ -1,11 +1,9 @@
 import { Field } from '@components/form/Field';
 import React from 'react';
+import type { ContactFormSettings } from '../../../types/index.js';
 
 interface Props {
-  setting: {
-    contactFormRecipient?: string | null;
-    contactMessageRetentionDays?: number | null;
-  };
+  setting?: Partial<ContactFormSettings> | null;
 }
 
 // Added to the "Contact Information" card of the store settings page

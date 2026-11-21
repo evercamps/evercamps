@@ -28,6 +28,7 @@ export default {
     "**/src/**/tests/**/unit/**/*.test.[jt]s",
     "**/core/modules/email/tests/unit/**/*.test.[jt]s",
     "**/core/modules/contact/tests/unit/**/*.test.[jt]s",
+    "**/core/modules/cms/tests/unit/**/*.test.[jt]s",
     "**/includes/lib/webpack/tests/unit/**/*.test.[jt]s",
     // Need a Postgres from .env; skipped unless RUN_DB_TESTS=1.
     "**/core/modules/*/tests/db/**/*.test.[jt]s"
