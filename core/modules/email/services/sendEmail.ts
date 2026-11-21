@@ -20,6 +20,7 @@ export type EmailLogRow = {
   entity_type: string | null;
   entity_id: number | null;
   idempotency_key: string | null;
+  reply_to: string | null;
 };
 
 function errorMessage(e: unknown): string {
@@ -81,7 +82,7 @@ export async function deliverLogRow(
         logUuid: row.uuid,
         templateCode: row.template_code,
         from: { name: emailSettings.fromName, email: emailSettings.fromAddress },
-        replyTo: emailSettings.replyTo || undefined,
+        replyTo: row.reply_to || emailSettings.replyTo || undefined,
         to: row.recipient,
         subject: row.subject,
         html,
@@ -194,7 +195,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       status: 'queued',
       entity_type: entity?.type ?? null,
       entity_id: entity?.id ?? null,
-      idempotency_key: input.idempotencyKey ?? null
+      idempotency_key: input.idempotencyKey ?? null,
+      reply_to: input.replyTo || null
     });
     if (duplicate) {
       return { status: 'duplicate', logUuid: row.uuid };
@@ -251,7 +253,8 @@ export async function resendLoggedEmail(uuid: string): Promise<SendEmailResult |
       body_html: original.body_html,
       status: 'queued',
       entity_type: original.entity_type,
-      entity_id: original.entity_id
+      entity_id: original.entity_id,
+      reply_to: original.reply_to
     })
     .execute(pool)) as EmailLogRow;
   return deliverLogRow(row);
