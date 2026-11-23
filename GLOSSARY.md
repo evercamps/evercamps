@@ -25,10 +25,14 @@ _Avoid_: Variant group attribute, variant option
 **Product attribute**:
 An attribute that describes the whole product and is the same for all of its variants. It is never used to tell variants apart.
 
+**Member price**:
+The price of a variant for a registration with a membership. A variant without a member price costs the same for everyone.
+_Avoid_: Member discount, club price
+
 ### Registration
 
 **Customer**:
-The person with an account who books and pays, usually a parent. A customer manages one or more participants.
+The person who books and pays, usually a parent, with or without an account. A customer manages one or more participants.
 _Avoid_: Parent, user, member
 
 **Participant**:
@@ -38,6 +42,10 @@ _Avoid_: Child, attendee, kid, surfer
 **Registration**:
 A participant's place on one variant, such as a specific camp week.
 _Avoid_: Booking, enrolment, inscription
+
+**Membership**:
+A participant's membership of the organiser's club for one calendar year, shown by the membership number the customer enters when registering the participant. The organiser checks it.
+_Avoid_: Member, lid, subscription
 
 ### Running a camp
 
