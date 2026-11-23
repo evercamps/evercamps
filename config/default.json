@@ -1,7 +1,8 @@
 {
   "shop": {
     "currency": "EUR",
-    "language": "en"
+    "language": "nl",
+    "timezone": "Europe/Brussels"
   },
   "system": {
     "extensions": [
