@@ -1,5 +1,6 @@
 import { getValue, getValueSync } from '../../../lib/util/registry.js';
 import { getSetting } from '../../setting/services/setting.js';
+import { MEMBERSHIP_NUMBER_FIELD } from './membership.js';
 
 // Extra participant fields asked when a participant is added to the cart
 // (e.g. date of birth). Two levels:
@@ -95,6 +96,12 @@ export async function collectParticipantExtraData(
       continue;
     }
     collected[field.code] = text;
+  }
+  // The membership number isn't a Camp settings field (ADR-0006): the form
+  // shows it for variants with a member price, and it's always optional.
+  const membershipNumber = values[MEMBERSHIP_NUMBER_FIELD];
+  if (membershipNumber !== undefined && membershipNumber !== null && String(membershipNumber).trim() !== '') {
+    collected[MEMBERSHIP_NUMBER_FIELD] = String(membershipNumber).trim();
   }
 
   const result = await getValue<Record<string, string>>(

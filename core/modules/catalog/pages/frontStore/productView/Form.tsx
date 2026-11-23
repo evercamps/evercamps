@@ -127,6 +127,7 @@ interface BookableVariant {
   productVariantId: number;
   label: string;
   price: { value: number; text: string };
+  memberPrice?: { value: number; text: string } | null;
   startDate?: string | null;
   endDate?: string | null;
   availableSeats?: number | null;
@@ -191,6 +192,11 @@ function VariantPicker({
               </span>
               <span className="text-right whitespace-nowrap">
                 <span className="block">{variant.price?.text}</span>
+                {variant.memberPrice && (
+                  <span className="block text-sm text-textSubdued">
+                    {_('Members ${price}', { price: variant.memberPrice.text })}
+                  </span>
+                )}
                 {variant.soldOut ? (
                   <span className="block text-sm text-critical">{_('Sold out')}</span>
                 ) : (
@@ -254,6 +260,26 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
   const showPicker = bookableVariants.length > 1;
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
     bookableVariants.length === 1 ? bookableVariants[0].productVariantId : null
+  );
+  const selectedVariant =
+    bookableVariants.find((variant) => variant.productVariantId === selectedVariantId) ?? null;
+  // The membership number isn't a Camp settings field (ADR-0006): it's asked,
+  // always optional, when the chosen variant has a member price.
+  const participantFields = React.useMemo<ParticipantCheckoutField[]>(
+    () =>
+      selectedVariant?.memberPrice
+        ? [
+            ...extraFields,
+            {
+              code: 'membership_number',
+              label: _('Membership number (members only)'),
+              type: 'text',
+              required: false,
+              useForUniqueness: false
+            }
+          ]
+        : extraFields,
+    [extraFields, selectedVariant?.memberPrice]
   );
   const isInStock =
     bookableVariants.length > 0
@@ -337,6 +363,11 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
           }}
         />
       )}
+      {!showPicker && selectedVariant?.memberPrice && (
+        <div className="mt-4 text-textSubdued">
+          {_('Members ${price}', { price: selectedVariant.memberPrice.text })}
+        </div>
+      )}
       <Area
         id="productSinglePageForm"
         coreComponents={[
@@ -376,7 +407,7 @@ export default function ProductForm({ product, action, currentCustomer, loginUrl
                 customer={currentCustomer}
                 loginUrl={loginUrl}
                 registerUrl={registerUrl}
-                extraFields={extraFields}
+                extraFields={participantFields}
               />
             </div>
           </div>
@@ -408,6 +439,10 @@ export const query = `
         productVariantId
         label
         price {
+          value
+          text
+        }
+        memberPrice {
           value
           text
         }

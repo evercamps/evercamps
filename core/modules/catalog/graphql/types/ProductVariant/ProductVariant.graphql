@@ -7,6 +7,10 @@ type ProductVariant {
   uuid: String!
   sku: String!
   price: Price!
+  """
+  Price for a registration with a membership number; null = no member price
+  """
+  memberPrice: Price
   title: String
   isDefault: Boolean!
   """
@@ -27,6 +31,10 @@ type BookableVariant {
   """
   label: String!
   price: Price!
+  """
+  Price for a registration with a membership number; null = no member price
+  """
+  memberPrice: Price
   isDefault: Boolean!
   """
   Care period of the variant's dated option (YYYY-MM-DD), when set.

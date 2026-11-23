@@ -21,6 +21,8 @@ export interface CartItem {
   productSku: string;
   // Title of the chosen product variant (e.g. a camp week)
   variantTitle?: string | null;
+  // The variant has a member price: ask for a membership number (ADR-0006)
+  hasMemberPrice?: boolean;
   productCustomOptions?: string;
   productUrl: string;
   productPrice: Price;

@@ -13,7 +13,8 @@ export const getRegistrationsBaseQuery = (): SelectQuery => {
     'product_description.name',
     'product_image.thumb_image',
     'participant.first_name',
-    'participant.last_name'
+    'participant.last_name',
+    'participant.membership_number'
   ).from('registration');
 
   query

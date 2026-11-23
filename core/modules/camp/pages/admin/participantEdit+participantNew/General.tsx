@@ -65,6 +65,19 @@ export default function General({ participant, setting }: Props) {
       sortOrder: 20,
       id: 'lastName'
     },
+    // Not a Camp settings field: always shown, never required (ADR-0006)
+    {
+      component: { default: Field },
+      props: {
+        id: 'membershipNumber',
+        name: 'membership_number',
+        label: 'Membership number',
+        validationRules: [],
+        type: 'text'
+      },
+      sortOrder: 25,
+      id: 'membershipNumber'
+    },
     ...extraCheckoutFields.map((field, index) => ({
       component: { default: Field },
       props: {
@@ -106,6 +119,7 @@ export const query = `
       firstName
       lastName
       birthDate
+      membershipNumber
     }
     setting {
       participantCheckoutFields

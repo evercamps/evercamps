@@ -24,6 +24,7 @@ export const query = `
       participant {
         firstName
         lastName
+        membershipNumber
       }
       deleteApi
     }
@@ -62,6 +63,7 @@ interface Registration {
   participant: {
     firstName: string;
     lastName: string;
+    membershipNumber?: string | null;
   };
   deleteApi: string;
 }
@@ -326,6 +328,7 @@ export default function RegistrationGrid({
               name="variantTitle"
               currentFilters={currentFilters}
             />
+            <th>Membership number</th>
           </tr>
         </thead>
         <tbody>
@@ -350,6 +353,7 @@ export default function RegistrationGrid({
               <td>{r.participant.lastName}</td>
               <td>{r.name}</td>
               <td>{r.variantTitle || '—'}</td>
+              <td>{r.participant.membershipNumber || '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -376,7 +380,8 @@ function exportToExcel(registrations: Registration[]) {
       "First Name": r.participant.firstName,
       "Last Name": r.participant.lastName,
       "Product": r.name,
-      Variant: r.variantTitle || ''
+      Variant: r.variantTitle || '',
+      "Membership number": r.participant.membershipNumber || ''
     }))
   );
 

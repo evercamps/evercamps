@@ -64,6 +64,16 @@ export default {
         .load(pool);
       return variant?.title ?? null;
     },
+    hasMemberPrice: async (cartItem, _, { pool }) => {
+      if (!cartItem.productVariantId) {
+        return false;
+      }
+      const variant = await select('member_price')
+        .from('product_variant')
+        .where('product_variant_id', '=', cartItem.productVariantId)
+        .load(pool);
+      return variant?.member_price !== null && variant?.member_price !== undefined;
+    },
     registrations: async (cartItem, _, { pool }) => {
       const registrations = cartItem.registrations || [];
       const { uuid: cartUuid } = await select('uuid')

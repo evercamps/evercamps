@@ -1,14 +1,17 @@
 import { getConfig } from '../../../../../../lib/util/getConfig.js';
 import { calculateTaxAmount } from '../../../../../../modules/tax/services/calculateTaxAmount.js';
+import { linePrice } from '../../../../../camp/services/membership.js';
 import { toPrice } from '../../../toPrice.js';
 import type { ItemContext, ItemField } from '../types.js';
 
 // Catalog price of the item: the variant's price when the item has a variant
 // (the default variant mirrors the product price), otherwise the product's.
+// A line whose registration has a membership number pays the variant's
+// member price, when it has one (ADR-0006).
 async function catalogPrice(item: ItemContext): Promise<number> {
   const variant = await item.getVariant();
   if (variant) {
-    return parseFloat(variant.price);
+    return linePrice(variant.price, variant.member_price, item.getData('registrations'));
   }
   return parseFloat((await item.getProduct()).price);
 }
@@ -32,7 +35,7 @@ export const pricingFields: ItemField[] = [
         return toPrice(price);
       }
     ],
-    dependencies: ['product_id', 'product_variant_id', 'tax_percent']
+    dependencies: ['product_id', 'product_variant_id', 'tax_percent', 'registrations']
   },
   {
     key: 'product_price_incl_tax',
@@ -50,7 +53,7 @@ export const pricingFields: ItemField[] = [
         return toPrice(this.getData('product_price') + taxAmount);
       }
     ],
-    dependencies: ['product_variant_id', 'product_price', 'tax_percent']
+    dependencies: ['product_variant_id', 'product_price', 'tax_percent', 'registrations']
   },
   {
     key: 'final_price',

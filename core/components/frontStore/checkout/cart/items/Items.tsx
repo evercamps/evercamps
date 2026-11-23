@@ -20,6 +20,8 @@ export default function Items({ items, setting: { priceIncludingTax, participant
   const AppContextDispatch = useAppDispatch();
   const modal = useModal();
   const [editingRegistration, setEditingRegistration] = useState<CartItemRegistration | null>(null);
+  // The membership number field is shown for items whose variant has a member price
+  const [editingHasMemberPrice, setEditingHasMemberPrice] = useState(false);
   const [loading, setLoading] = React.useState(false);
 
   const extraFields = React.useMemo<ParticipantCheckoutField[]>(() => {
@@ -154,6 +156,7 @@ export default function Items({ items, setting: { priceIncludingTax, participant
                                   onClick={(e) => {
                                     e.preventDefault();
                                     setEditingRegistration(reg);
+                                    setEditingHasMemberPrice(item.hasMemberPrice === true);
                                     modal.openModal();
                                   }}
                                   className="text-textSubdued underline"
@@ -236,7 +239,20 @@ export default function Items({ items, setting: { priceIncludingTax, participant
                     modal.closeModal();
                     setEditingRegistration(null);
                   }}
-                  extraFields={extraFields}
+                  extraFields={
+                    editingHasMemberPrice
+                      ? [
+                          ...extraFields,
+                          {
+                            code: 'membership_number',
+                            label: _('Membership number (members only)'),
+                            type: 'text',
+                            required: false,
+                            useForUniqueness: false
+                          }
+                        ]
+                      : extraFields
+                  }
                 />
               </Form>
             </div>
