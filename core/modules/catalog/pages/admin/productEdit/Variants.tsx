@@ -55,6 +55,7 @@ interface Variant {
   sku: string;
   title: string | null;
   price: { value: number; text: string };
+  memberPrice: { value: number; text: string } | null;
   isDefault: boolean;
   status: boolean;
   totalSeats: number | null;
@@ -68,6 +69,8 @@ interface Draft {
   sku: string;
   title: string;
   price: string;
+  // '' = no member price
+  memberPrice: string;
   totalSeats: string;
   isDefault: boolean;
   status: boolean;
@@ -115,6 +118,10 @@ const VariantsQuery = `
           value
           text
         }
+        memberPrice {
+          value
+          text
+        }
         isDefault
         status
         totalSeats
@@ -133,7 +140,16 @@ const VariantsQuery = `
 `;
 
 function emptyDraft(): Draft {
-  return { sku: '', title: '', price: '', totalSeats: '0', isDefault: false, status: true, options: {} };
+  return {
+    sku: '',
+    title: '',
+    price: '',
+    memberPrice: '',
+    totalSeats: '0',
+    isDefault: false,
+    status: true,
+    options: {}
+  };
 }
 
 function draftFromVariant(variant: Variant): Draft {
@@ -141,6 +157,10 @@ function draftFromVariant(variant: Variant): Draft {
     sku: variant.sku,
     title: variant.title ?? '',
     price: String(variant.price?.value ?? ''),
+    memberPrice:
+      variant.memberPrice?.value === undefined || variant.memberPrice?.value === null
+        ? ''
+        : String(variant.memberPrice.value),
     totalSeats: String(variant.totalSeats ?? 0),
     isDefault: variant.isDefault,
     status: variant.status !== false,
@@ -153,6 +173,7 @@ function payloadFromDraft(draft: Draft) {
     sku: draft.sku,
     title: draft.title || null,
     price: draft.price === '' ? 0 : draft.price,
+    member_price: draft.memberPrice.trim() === '' ? null : draft.memberPrice,
     total_seats: draft.totalSeats === '' ? 0 : draft.totalSeats,
     is_default: draft.isDefault,
     status: draft.status,
@@ -367,6 +388,16 @@ function VariantForm({
                   label="Price"
                   value={draft.price}
                   onChange={(e) => update({ ...draft, price: e.target.value })}
+                />
+              )}
+              {cell(
+                'memberPrice',
+                <Input
+                  label="Member price"
+                  value={draft.memberPrice}
+                  placeholder="Same as price"
+                  instruction="For a participant with a membership number. Leave empty for no member price."
+                  onChange={(e) => update({ ...draft, memberPrice: e.target.value })}
                 />
               )}
               {cell(
@@ -622,6 +653,7 @@ export default function Variants({ product }: VariantsProps) {
                 <th>Variant</th>
                 <th>SKU</th>
                 <th>Price</th>
+                <th>Member price</th>
                 <th>Seats</th>
                 <th>Used</th>
                 <th>Enabled</th>
@@ -660,6 +692,7 @@ export default function Variants({ product }: VariantsProps) {
                   </td>
                   <td>{variant.sku}</td>
                   <td>{variant.price?.text}</td>
+                  <td>{variant.memberPrice?.text ?? '—'}</td>
                   <td>{variant.totalSeats ?? 0}</td>
                   <td>{variant.usageCount}</td>
                   <td>

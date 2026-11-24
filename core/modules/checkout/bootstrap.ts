@@ -56,6 +56,7 @@ export default (): void => {
         'product_variant.product_id',
         'product_variant.sku',
         'product_variant.price',
+        'product_variant.member_price',
         'product_variant.title',
         'product_variant.is_default',
         'product_variant.status',

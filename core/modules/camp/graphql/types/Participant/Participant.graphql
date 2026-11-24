@@ -4,6 +4,10 @@ type Participant {
   firstName: String!
   lastName: String!
   birthDate: String
+  """
+  Membership of the organiser's club, as declared when registering (ADR-0006)
+  """
+  membershipNumber: String
   createdAt: Date!
   editUrl: String
   updateApi: String!

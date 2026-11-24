@@ -123,6 +123,11 @@ type CartItem implements ShoppingCartItem {
   total: Price! # Deprecated, this field is equivalent to lineTotalInclTax
   productVariantId: Int
   variantTitle: String
+  """
+  Whether the item's variant has a member price: the registration form then
+  asks for a membership number (ADR-0006)
+  """
+  hasMemberPrice: Boolean!
   productCustomOptions: String
   productUrl: String!
   registrations: [CartItemRegistration!]

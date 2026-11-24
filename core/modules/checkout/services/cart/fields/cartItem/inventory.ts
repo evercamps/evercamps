@@ -19,9 +19,20 @@ export const inventoryFields: ItemField[] = [
           const available = variant
             ? parseInt(variant.total_seats ?? 0, 10) - parseInt(variant.reserved_seats ?? 0, 10)
             : product.qty;
+          // Registrations of the same variant are separate lines (ADR-0006):
+          // they share the variant's seats.
+          const otherLinesQty = variant
+            ? (this.getCart().getItems() || [])
+                .filter(
+                  (other) =>
+                    other !== this &&
+                    other.getData('product_variant_id') === variant.product_variant_id
+                )
+                .reduce((sum, other) => sum + (parseInt(other.getData('qty'), 10) || 0), 0)
+            : 0;
           if (available < 1) {
             this.setError('qty', 'This item is out of stock');
-          } else if (available < qty) {
+          } else if (available < parseInt(qty, 10) + otherLinesQty) {
             this.setError('qty', 'We do not have enough stock');
           }
         }

@@ -19,6 +19,9 @@ export interface ProductVariantInput {
   sku?: string;
   title?: string | null;
   price?: number | string;
+  // Price for a registration with a membership number (ADR-0006); empty or
+  // null = no member price
+  member_price?: number | string | null;
   total_seats?: number | string;
   is_default?: boolean | string | number;
   // false = disabled: kept (with its registrations) but not bookable in the shop
@@ -44,6 +47,17 @@ function toPrice(value: unknown): number {
   const number = Number(value);
   if (Number.isNaN(number) || number < 0) {
     throw new Error('Price must be a number of at least 0');
+  }
+  return number;
+}
+
+function toMemberPrice(value: unknown): number | null {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return null;
+  }
+  const number = Number(value);
+  if (Number.isNaN(number) || number < 0) {
+    throw new Error('Member price must be empty or a number of at least 0');
   }
   return number;
 }
@@ -187,6 +201,7 @@ async function createProductVariantFunc(productUuid: string, data: ProductVarian
         product_id: product.product_id,
         sku,
         price: toPrice(data.price ?? 0),
+        member_price: toMemberPrice(data.member_price),
         title: data.title ? String(data.title).trim() : null,
         is_default: false,
         status: data.status === undefined ? true : toBool(data.status)
@@ -229,6 +244,9 @@ async function updateProductVariantFunc(variantUuid: string, data: ProductVarian
     }
     if (data.price !== undefined) {
       given.price = toPrice(data.price);
+    }
+    if (data.member_price !== undefined) {
+      given.member_price = toMemberPrice(data.member_price);
     }
     if (data.status !== undefined) {
       given.status = toBool(data.status);

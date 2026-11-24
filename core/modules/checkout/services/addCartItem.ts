@@ -37,24 +37,16 @@ async function addCartItem(
   } else {
     let items = cart.getItems();
     let duplicateItem;
-    for (let i = 0; i < items.length; i += 1) {
+    // A registration is always its own line (ADR-0006), so each participant
+    // pays their own price (e.g. a member price). Only items without
+    // registrations (e.g. merchandise) merge into an existing line.
+    const addsRegistration = Boolean(context.first_name && context.last_name);
+    for (let i = 0; i < items.length && !addsRegistration; i += 1) {
       if (items[i].getData('product_sku') === item.getData('product_sku')) {
         await items[i].setData(
           'qty',
           item.getData('qty') + items[i].getData('qty')
         );
-
-        if (context.first_name && context.last_name) {
-          const existingRegs = items[i].getData('registrations') || [];
-          await items[i].setData('registrations', [
-            ...existingRegs,
-            {
-              firstName: context.first_name,
-              lastName: context.last_name,
-              ...(context.extraData !== undefined && { extraData: toJsonString(context.extraData) })
-            }
-          ]);
-        }
 
         if (items[i].hasError()) {
           throw new Error(Object.values(items[i].getErrors())[0] as string);
