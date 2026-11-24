@@ -2,6 +2,7 @@ import { select } from '@evershop/postgres-query-builder';
 import { buildUrl } from '../../../../../lib/router/buildUrl.js';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
 import { getCartByUUID } from '../../../../../modules/checkout/services/getCartByUUID.js';
+import { memberPricesEnabled } from '../../../../../modules/camp/services/memberPricesSetting.js';
 
 export default {
   Query: {
@@ -65,7 +66,8 @@ export default {
       return variant?.title ?? null;
     },
     hasMemberPrice: async (cartItem, _, { pool }) => {
-      if (!cartItem.productVariantId) {
+      // Member prices switched off in Camp settings (#210): never ask
+      if (!cartItem.productVariantId || !(await memberPricesEnabled())) {
         return false;
       }
       const variant = await select('member_price')

@@ -1,5 +1,6 @@
 import { Card } from '@components/admin/cms/Card';
 import SettingMenu from '@components/admin/setting/SettingMenu';
+import { Toggle } from '@components/form/fields/Toggle';
 import { Form } from '@components/form/Form';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -175,13 +176,14 @@ interface Props {
   saveSettingApi: string;
   setting: {
     participantCheckoutFields?: string;
+    memberPricesEnabled?: boolean;
   };
   availableParticipantCheckoutFields?: AvailableParticipantField[];
 }
 
 export default function CampSetting({
   saveSettingApi,
-  setting: { participantCheckoutFields },
+  setting: { participantCheckoutFields, memberPricesEnabled = false },
   availableParticipantCheckoutFields = []
 }: Props) {
   return (
@@ -210,6 +212,17 @@ export default function CampSetting({
                 availableFields={availableParticipantCheckoutFields}
               />
             </Card>
+            {/* Off by default (#210). Turning it off keeps the stored member
+                prices and membership numbers; they're just ignored. */}
+            <Card>
+              <Card.Session title="Member prices">
+                <Toggle
+                  name="memberPricesEnabled"
+                  value={memberPricesEnabled}
+                  instruction="When on, variants can have a member price and registering asks for an optional membership number. When off, everyone pays the normal price and member prices are hidden, but kept."
+                />
+              </Card.Session>
+            </Card>
           </Form>
         </div>
       </div>
@@ -227,6 +240,7 @@ export const query = `
     saveSettingApi: url(routeId: "saveSetting")
     setting {
       participantCheckoutFields
+      memberPricesEnabled
     }
     availableParticipantCheckoutFields {
       code

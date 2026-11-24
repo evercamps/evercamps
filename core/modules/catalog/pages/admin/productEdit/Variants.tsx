@@ -80,6 +80,9 @@ interface Draft {
 
 const VariantsQuery = `
   query Query($id: ID) {
+    setting {
+      memberPricesEnabled
+    }
     product(id: $id) {
       type
       sku
@@ -257,6 +260,7 @@ function VariantForm({
   onSave,
   onCancel,
   saving,
+  showMemberPrice,
   autofill = null
 }: {
   heading: string;
@@ -266,6 +270,8 @@ function VariantForm({
   onSave: () => void;
   onCancel: () => void;
   saving: boolean;
+  // Member prices switched on in Camp settings (#210)
+  showMemberPrice: boolean;
   // Set when adding a variant: the title is filled in from the chosen options
   // until the user types in it (clearing the field turns it back on), and the
   // SKU is always product SKU + slug of the title. The SKU is never editable
@@ -393,16 +399,17 @@ function VariantForm({
                   onChange={(e) => update({ ...draft, price: e.target.value })}
                 />
               )}
-              {cell(
-                'memberPrice',
-                <Input
-                  label="Member price"
-                  value={draft.memberPrice}
-                  placeholder="Same as price"
-                  instruction="For a participant with a membership number. Leave empty for no member price."
-                  onChange={(e) => update({ ...draft, memberPrice: e.target.value })}
-                />
-              )}
+              {showMemberPrice &&
+                cell(
+                  'memberPrice',
+                  <Input
+                    label="Member price"
+                    value={draft.memberPrice}
+                    placeholder="Same as price"
+                    instruction="For a participant with a membership number. Leave empty for no member price."
+                    onChange={(e) => update({ ...draft, memberPrice: e.target.value })}
+                  />
+                )}
               {cell(
                 'seats',
                 <Input
@@ -497,6 +504,9 @@ export default function Variants({ product }: VariantsProps) {
   }
 
   const data = result.data?.product;
+  // Hidden while member prices are switched off (#210); the values stay and
+  // are still sent when a variant is saved.
+  const showMemberPrices = result.data?.setting?.memberPricesEnabled === true;
   // Alphabetical by the label shown in the list; numeric-aware, so
   // "Week 2 zomer 2027" comes before "Week 10 zomer 2027".
   const variants: Variant[] = [...(data?.variants ?? [])].sort((a: Variant, b: Variant) =>
@@ -633,6 +643,7 @@ export default function Variants({ product }: VariantsProps) {
                 onSave={save}
                 onCancel={closeForm}
                 saving={saving}
+                showMemberPrice={showMemberPrices}
                 autofill={editing === 'new' ? { productSku: data?.sku ?? '' } : null}
               />
             </div>
@@ -660,7 +671,7 @@ export default function Variants({ product }: VariantsProps) {
                 <th>Variant</th>
                 <th>SKU</th>
                 <th>Price</th>
-                <th>Member price</th>
+                {showMemberPrices && <th>Member price</th>}
                 <th>Seats</th>
                 <th>Used</th>
                 <th>Enabled</th>
@@ -699,7 +710,7 @@ export default function Variants({ product }: VariantsProps) {
                   </td>
                   <td>{variant.sku}</td>
                   <td>{variant.price?.text}</td>
-                  <td>{variant.memberPrice?.text ?? '—'}</td>
+                  {showMemberPrices && <td>{variant.memberPrice?.text ?? '—'}</td>}
                   <td>{variant.totalSeats ?? 0}</td>
                   <td>{variant.usageCount}</td>
                   <td>

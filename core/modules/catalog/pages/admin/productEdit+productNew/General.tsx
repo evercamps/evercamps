@@ -19,6 +19,8 @@ interface Weight {
 interface Setting {
   storeCurrency: string;
   weightUnit: string;
+  // Member prices switched on in Camp settings (#210)
+  memberPricesEnabled?: boolean;
 }
 
 interface CategoryPathItem {
@@ -78,10 +80,12 @@ function SKUPriceWeight({
   isNew = false
 }: SKUPriceWeightProps) {
   const [skuValue, onSkuEdited] = useAutofillFromName(isNew, sku);
+  // Hidden while member prices are switched off in Camp settings (#210)
+  const showMemberPrice = setting.memberPricesEnabled === true;
 
   return (
     <div className="mt-6">
-      <div className="grid grid-cols-4 gap-4">
+      <div className={`grid ${showMemberPrice ? 'grid-cols-4' : 'grid-cols-3'} gap-4`}>
         <div>
           <Field
             id="sku"
@@ -108,17 +112,20 @@ function SKUPriceWeight({
           />
         </div>
 
-        <div>
-          <Field
-            id="member_price"
-            name="member_price"
-            value={memberPrice?.value ?? ''}
-            placeholder="None"
-            label="Member price"
-            type="text"
-            suffix={setting.storeCurrency}
-          />
-        </div>
+        {/* Not posted while hidden, so the stored member price is kept */}
+        {showMemberPrice && (
+          <div>
+            <Field
+              id="member_price"
+              name="member_price"
+              value={memberPrice?.value ?? ''}
+              placeholder="None"
+              label="Member price"
+              type="text"
+              suffix={setting.storeCurrency}
+            />
+          </div>
+        )}
 
         <div>
           <Field
@@ -135,8 +142,9 @@ function SKUPriceWeight({
       </div>
       {configurable && (
         <div className="text-textSubdued text-sm mt-1">
-          SKU, price and member price are the product&apos;s base/listing values: a new variant
-          starts with them. Each variant has its own SKU, price and member price (Variants card).
+          {showMemberPrice
+            ? "SKU, price and member price are the product's base/listing values: a new variant starts with them. Each variant has its own SKU, price and member price (Variants card)."
+            : "SKU and price are the product's base/listing values: a new variant starts with them. Each variant has its own SKU and price (Variants card)."}
         </div>
       )}
     </div>
@@ -454,6 +462,7 @@ export const query = `
     setting {
       weightUnit
       storeCurrency
+      memberPricesEnabled
     }
 
     browserApi: url(

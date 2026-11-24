@@ -1,4 +1,5 @@
 import type { SettingRow } from '../../../../../modules/setting/types/index.js';
+import { MEMBER_PRICES_SETTING, isSwitchOn } from '../../../services/memberPricesSetting.js';
 import { getAvailableParticipantCheckoutFields } from '../../../services/participantCheckoutFields.js';
 
 export default {
@@ -7,6 +8,8 @@ export default {
   },
   Setting: {
     participantCheckoutFields: (setting: SettingRow[]) =>
-      setting.find((s) => s.name === 'participant_checkout_fields')?.value ?? null
+      setting.find((s) => s.name === 'participant_checkout_fields')?.value ?? null,
+    memberPricesEnabled: (setting: SettingRow[]) =>
+      isSwitchOn(setting.find((s) => s.name === MEMBER_PRICES_SETTING)?.value)
   }
 };

@@ -1,13 +1,24 @@
 process.env.ALLOW_CONFIG_MUTATIONS = 'true';
 import config from 'config';
-import '../basicSetup.js';
-import { Cart } from '../../services/cart/Cart.js';
 import { products } from '../products.js';
 import { addProcessor } from '../../../../lib/util/registry.js';
-import { describe, it, expect } from '@jest/globals';
+import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 
 // Member price (ADR-0006): a registration with a membership number pays the
 // variant's member price, and every registration is its own cart line.
+// Only while member prices are switched on in Camp settings (#210).
+
+const settings = {};
+jest.unstable_mockModule('../../../setting/services/setting.js', () => ({
+  getSetting: async (name, defaultValue) => (name in settings ? settings[name] : defaultValue),
+  refreshSetting: async () => {}
+}));
+await import('../basicSetup.js');
+const { Cart } = await import('../../services/cart/Cart.js');
+
+beforeEach(() => {
+  settings.memberPricesEnabled = '1';
+});
 
 config.util.setModuleDefaults('pricing', {
   tax: {
@@ -119,5 +130,24 @@ describe('member price', () => {
       'We do not have enough stock'
     );
     expect(cart.getItems().length).toEqual(2);
+  });
+});
+
+describe('member prices switched off (#210)', () => {
+  beforeEach(() => {
+    settings.memberPricesEnabled = '0';
+  });
+
+  it('charges the normal price, even with a membership number', async () => {
+    const cart = new Cart({ status: 1 });
+    const item = await cart.addItem(CAMP, 1, register('Lou', 'WWSV-12'));
+    expect(item.getData('final_price')).toEqual(230);
+  });
+
+  it('is off when the setting was never saved', async () => {
+    delete settings.memberPricesEnabled;
+    const cart = new Cart({ status: 1 });
+    const item = await cart.addItem(CAMP, 1, register('Lou', 'WWSV-12'));
+    expect(item.getData('final_price')).toEqual(230);
   });
 });

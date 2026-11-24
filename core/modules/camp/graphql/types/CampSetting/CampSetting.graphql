@@ -1,5 +1,10 @@
 extend type Setting {
   participantCheckoutFields: String
+  """
+  Member prices switched on in Camp settings (ADR-0006, #210). Off by default:
+  member prices and membership numbers are then ignored and hidden.
+  """
+  memberPricesEnabled: Boolean!
 }
 
 """

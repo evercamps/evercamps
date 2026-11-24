@@ -1,6 +1,7 @@
 import { select } from '@evershop/postgres-query-builder';
 import type { Pool } from 'pg';
 import { camelCase } from '../../../../../lib/util/camelCase.js';
+import { memberPricesEnabled } from '../../../../camp/services/memberPricesSetting.js';
 import { formatOptionDate } from '../../../services/attribute/optionPeriod.js';
 
 interface Product {
@@ -99,6 +100,8 @@ export default {
       const reserved = await reservedQuery.execute(pool);
       const reservedByItem = new Map(reserved.map((r) => [r.inventory_item_id, parseInt(r.reserved, 10)]));
 
+      // The shop shows no member price while they're switched off (#210)
+      const showMemberPrices = await memberPricesEnabled();
       const today = todayString();
       const currentYear = new Date().getFullYear();
 
@@ -130,7 +133,7 @@ export default {
             sku: variant.sku,
             label,
             price: variant.price,
-            memberPrice: variant.member_price,
+            memberPrice: showMemberPrices ? variant.member_price : null,
             isDefault: variant.is_default,
             startDate,
             endDate,
