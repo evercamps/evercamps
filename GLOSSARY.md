@@ -7,11 +7,11 @@ A platform where parents find camps, register their children and pay for them, a
 ### Catalog
 
 **Product**:
-Something that can be booked, usually a camp. It holds what all its variants have in common, and the default values for its variants.
+Something that can be booked, usually a camp. It holds what all its variants have in common, and the values a new variant starts with.
 _Avoid_: Configurable product, parent product
 
 **Variant**:
-One bookable option of a product, such as a camp week or an age group, with its own price and seats. Every product has at least one. A variant only sets what differs from its product; set product values as defaults.
+One bookable option of a product, such as a camp week or an age group, with its own price and seats. Every product has at least one. A new variant starts with its product's values; after that it keeps its own.
 _Avoid_: Variant group, child product, sibling product, configurable product
 
 **Attribute group**:
@@ -26,7 +26,7 @@ _Avoid_: Variant group attribute, variant option
 An attribute that describes the whole product and is the same for all of its variants. It is never used to tell variants apart.
 
 **Member price**:
-The price for a registration with a membership. It is set on the product, and a variant can set its own instead. When neither has one, the variant costs the same for everyone.
+The price of a variant for a registration with a membership. A new variant starts with its product's member price. A variant without one costs the same for everyone.
 _Avoid_: Member discount, club price
 
 ### Registration
