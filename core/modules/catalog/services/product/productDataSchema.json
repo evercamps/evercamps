@@ -45,6 +45,15 @@
         "pattern": "Price should be a number with maximum 2 decimal places"
       }
     },
+    "member_price": {
+      "type": ["string", "number", "null"],
+      "pattern": "^(\\d+(\\.\\d{1,2})?)?$",
+      "minimum": 0,
+      "errorMessage": {
+        "pattern": "Member price should be empty or a number with maximum 2 decimal places",
+        "minimum": "Member price should be empty or a number of at least 0"
+      }
+    },
     "weight": {
       "type": ["string", "number"],
       "pattern": "^[0-9]+(\\.[0-9]{1,2})?$",

@@ -8,13 +8,15 @@ import type { PoolClient } from '@evershop/postgres-query-builder';
 
 // Every product has at least one product_variant. A product without real
 // variants has exactly one, flagged is_default, mirroring the product's own
-// sku/price/qty (see core/.docs/variation-plan.md, Phase 1). Products with
+// sku/price/member price/qty (see core/.docs/variation-plan.md, Phase 1). Products with
 // several real variants (e.g. imported WooCommerce variations) have no default
 // and are never touched here.
 
 type DefaultVariantSource = {
   sku?: string;
   price?: number | string;
+  // null = no member price (#209)
+  member_price?: number | string | null;
   qty?: number | string;
 };
 
@@ -64,6 +66,7 @@ export async function ensureDefaultVariant(
       product_id: productId,
       sku: await resolveVariantSku(String(source.sku), productId, connection),
       price: source.price ?? 0,
+      member_price: source.member_price ?? null,
       title: null,
       is_default: true
     })
@@ -88,7 +91,12 @@ export async function ensureDefaultVariant(
  */
 export async function syncDefaultVariant(
   changes: DefaultVariantSource,
-  product: { product_id: number; sku: string; price: number | string },
+  product: {
+    product_id: number;
+    sku: string;
+    price: number | string;
+    member_price?: number | string | null;
+  },
   connection: PoolClient
 ): Promise<void> {
   // Only simple products mirror the product fields into their default
@@ -109,7 +117,12 @@ export async function syncDefaultVariant(
 
   if (variants.length === 0) {
     await ensureDefaultVariant(
-      { sku: product.sku, price: product.price, qty: changes.qty },
+      {
+        sku: product.sku,
+        price: product.price,
+        member_price: product.member_price ?? null,
+        qty: changes.qty
+      },
       product.product_id,
       connection
     );
@@ -132,6 +145,10 @@ export async function syncDefaultVariant(
   }
   if (changes.price !== undefined) {
     given.price = changes.price;
+  }
+  // Like the price: the product's member price, or none (#209)
+  if (changes.member_price !== undefined) {
+    given.member_price = changes.member_price;
   }
   if (Object.keys(given).length > 0) {
     given.updated_at = new Date();

@@ -22,6 +22,7 @@ import type { ProductAttributeData, ProductData, ProductInventoryData } from '..
 import { isVariantAttribute } from '../attribute/attributeRole.js';
 import productDataSchema from './productDataSchema.json' with { type: 'json' };
 import { syncDefaultVariant } from './defaultVariant.js';
+import { normalizeProductMemberPrice } from './memberPrice.js';
 
 function validateProductDataBeforeUpdate(data: ProductData) {
   const ajv = getAjv();
@@ -301,10 +302,10 @@ async function updateProduct(uuid: string, data: ProductData, context: Record<st
       throw new Error('Requested product does not exist');
     }
 
-    const productData = await getValue('productDataBeforeUpdate', data);
-
-    // Validate product data
-    validateProductDataBeforeUpdate(productData);
+    // Validate product data; an empty member price means none (NULL)
+    const productData = normalizeProductMemberPrice(
+      validateProductDataBeforeUpdate(await getValue('productDataBeforeUpdate', data))
+    );
 
     // Insert product data
     const product = await hookable(updateProductData, {
@@ -319,7 +320,7 @@ async function updateProduct(uuid: string, data: ProductData, context: Record<st
       connection
     );
 
-    // Keep the default variant's sku/price/seats in line with the product
+    // Keep the default variant's sku/price/member price/seats in line with the product
     // (only for products whose single variant is the default one).
     await hookable(syncDefaultVariant, { ...context, connection, product })(
       productData,

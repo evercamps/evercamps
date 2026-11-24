@@ -29,6 +29,7 @@ export default {
     "**/core/modules/email/tests/unit/**/*.test.[jt]s",
     "**/core/modules/contact/tests/unit/**/*.test.[jt]s",
     "**/core/modules/cms/tests/unit/**/*.test.[jt]s",
+    "**/core/modules/catalog/tests/unit/**/*.test.[jt]s",
     "**/core/modules/camp/tests/unit/**/*.test.[jt]s",
     "**/core/modules/checkout/tests/unit/**/*.test.[jt]s",
     "**/includes/lib/webpack/tests/unit/**/*.test.[jt]s",
