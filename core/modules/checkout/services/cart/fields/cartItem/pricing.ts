@@ -1,17 +1,20 @@
 import { getConfig } from '../../../../../../lib/util/getConfig.js';
 import { calculateTaxAmount } from '../../../../../../modules/tax/services/calculateTaxAmount.js';
 import { linePrice } from '../../../../../camp/services/membership.js';
+import { memberPricesEnabled } from '../../../../../camp/services/memberPricesSetting.js';
 import { toPrice } from '../../../toPrice.js';
 import type { ItemContext, ItemField } from '../types.js';
 
 // Catalog price of the item: the variant's price when the item has a variant
 // (the default variant mirrors the product price), otherwise the product's.
 // A line whose registration has a membership number pays the variant's
-// member price, when it has one (ADR-0006).
+// member price, when it has one (ADR-0006) and member prices are switched on
+// in Camp settings (#210).
 async function catalogPrice(item: ItemContext): Promise<number> {
   const variant = await item.getVariant();
   if (variant) {
-    return linePrice(variant.price, variant.member_price, item.getData('registrations'));
+    const memberPrice = (await memberPricesEnabled()) ? variant.member_price : null;
+    return linePrice(variant.price, memberPrice, item.getData('registrations'));
   }
   return parseFloat((await item.getProduct()).price);
 }

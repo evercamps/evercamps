@@ -22,6 +22,8 @@ interface Props {
   participant?: Participant;
   setting?: {
     participantCheckoutFields?: string;
+    // Member prices switched on in Camp settings (#210)
+    memberPricesEnabled?: boolean;
   };
 }
 
@@ -65,19 +67,24 @@ export default function General({ participant, setting }: Props) {
       sortOrder: 20,
       id: 'lastName'
     },
-    // Not a Camp settings field: always shown, never required (ADR-0006)
-    {
-      component: { default: Field },
-      props: {
-        id: 'membershipNumber',
-        name: 'membership_number',
-        label: 'Membership number',
-        validationRules: [],
-        type: 'text'
-      },
-      sortOrder: 25,
-      id: 'membershipNumber'
-    },
+    // Not a Camp settings field: never required (ADR-0006). Hidden while
+    // member prices are switched off (#210); not posted then, so it's kept.
+    ...(setting?.memberPricesEnabled === true
+      ? [
+          {
+            component: { default: Field },
+            props: {
+              id: 'membershipNumber',
+              name: 'membership_number',
+              label: 'Membership number',
+              validationRules: [],
+              type: 'text'
+            },
+            sortOrder: 25,
+            id: 'membershipNumber'
+          }
+        ]
+      : []),
     ...extraCheckoutFields.map((field, index) => ({
       component: { default: Field },
       props: {
@@ -123,6 +130,7 @@ export const query = `
     }
     setting {
       participantCheckoutFields
+      memberPricesEnabled
     }
   }
 `;

@@ -14,6 +14,9 @@ import { GraphQLFilter } from '../../../../../types';
 
 export const query = `
   query Query($filters: [FilterInput]) {
+  setting {
+    memberPricesEnabled
+  }
   registrations(filters: $filters) {
     total
     items {
@@ -162,12 +165,19 @@ interface RegistrationGridProps {
   products: {
     items: Product[];
   };
+  // Member prices switched on in Camp settings (#210)
+  setting?: {
+    memberPricesEnabled?: boolean;
+  };
 }
 
 export default function RegistrationGrid({
   registrations: { items: registrations, total, currentFilters = [] },
   products: { items: products },
+  setting
 }: RegistrationGridProps) {
+  // The membership number column is hidden while member prices are off (#210)
+  const showMembershipNumber = setting?.memberPricesEnabled === true;
   const page = currentFilters.find((filter) => filter.key === 'page')
     ? parseInt(currentFilters.find((filter) => filter.key === 'page')!.value, 10)
     : 1;
@@ -282,7 +292,7 @@ export default function RegistrationGrid({
             variant: 'interactive',
             name: 'Export to Excel',
             onAction: () => {
-              exportToExcel(registrations);
+              exportToExcel(registrations, showMembershipNumber);
             }
           },
           {
@@ -328,7 +338,7 @@ export default function RegistrationGrid({
               name="variantTitle"
               currentFilters={currentFilters}
             />
-            <th>Membership number</th>
+            {showMembershipNumber && <th>Membership number</th>}
           </tr>
         </thead>
         <tbody>
@@ -353,7 +363,7 @@ export default function RegistrationGrid({
               <td>{r.participant.lastName}</td>
               <td>{r.name}</td>
               <td>{r.variantTitle || '—'}</td>
-              <td>{r.participant.membershipNumber || '—'}</td>
+              {showMembershipNumber && <td>{r.participant.membershipNumber || '—'}</td>}
             </tr>
           ))}
         </tbody>
@@ -368,7 +378,7 @@ export default function RegistrationGrid({
   );
 }
 
-function exportToExcel(registrations: Registration[]) {
+function exportToExcel(registrations: Registration[], withMembershipNumber: boolean) {
   if (!registrations || registrations.length === 0) {
     alert("No registrations to export");
     return;
@@ -381,7 +391,7 @@ function exportToExcel(registrations: Registration[]) {
       "Last Name": r.participant.lastName,
       "Product": r.name,
       Variant: r.variantTitle || '',
-      "Membership number": r.participant.membershipNumber || ''
+      ...(withMembershipNumber && { "Membership number": r.participant.membershipNumber || '' })
     }))
   );
 

@@ -17,3 +17,4 @@ The membership number uses the extra participant field mechanism of date of birt
 - Two children in the same week are two cart and order lines, each with the child's name. Products without registrations still merge.
 - Editing the membership number in the cart reprices that line; nothing moves between lines.
 - A participant's membership number is only filled once by an order; a newer number from a later year has to be entered by the organiser.
+- Member prices are a feature switch in Camp settings (#210), off by default. It is not field configuration: when on, the membership number field still follows the rule above. When off, member prices and membership numbers are ignored and hidden, but stay stored, so turning it back on restores them.

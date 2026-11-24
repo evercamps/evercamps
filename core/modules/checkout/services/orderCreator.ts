@@ -18,6 +18,8 @@ import { resolveOrderStatus } from '../../oms/services/updateOrderStatus.js';
 import { Cart } from './cart/Cart.js';
 import { validateBeforeCreateOrder } from './orderValidator.js';
 import { getSetting } from '../../setting/services/setting.js';
+import { MEMBERSHIP_NUMBER_FIELD } from '../../camp/services/membership.js';
+import { memberPricesEnabled } from '../../camp/services/memberPricesSetting.js';
 
 async function disableCart(cartId: number, connection: PoolClient) {
   const cart = await update('cart')
@@ -178,6 +180,9 @@ async function saveOrderItems(
     } catch { return []; }
   })();
   const uniquenessFields = allFields.filter((f) => f.useForUniqueness);
+  // While member prices are switched off, a membership number left in the
+  // cart is not copied to the participant (#210).
+  const copyMembershipNumber = await memberPricesEnabled();
 
   const items = cart.getItems();
   const savedItems = await Promise.all(
@@ -222,7 +227,11 @@ async function saveOrderItems(
           participantId = participant.insertId;
         }
 
-        await fillEmptyParticipantFields(participantId, extraData, connection);
+        const participantData = { ...extraData };
+        if (!copyMembershipNumber) {
+          delete participantData[MEMBERSHIP_NUMBER_FIELD];
+        }
+        await fillEmptyParticipantFields(participantId, participantData, connection);
 
         const registration = await insert('registration')
           .given({
