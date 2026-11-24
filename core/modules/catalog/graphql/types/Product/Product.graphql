@@ -9,6 +9,11 @@ type Product {
   sku: String!
   weight: Weight!
   taxClass: Int
+  """
+  Member price a new variant starts with; a simple product mirrors it into its
+  default variant. Null = no member price.
+  """
+  memberPrice: Price
   description: JSON
   urlKey: String
   metaTitle: String

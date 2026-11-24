@@ -20,6 +20,7 @@ import type { ProductAttributeData, ProductData, ProductInventoryData } from '..
 import { isVariantAttribute } from '../attribute/attributeRole.js';
 import productDataSchema from './productDataSchema.json'  with { type: 'json' };
 import { ensureDefaultVariant } from './defaultVariant.js';
+import { normalizeProductMemberPrice } from './memberPrice.js';
 
 export type { ProductAttributeData, ProductData, ProductInventoryData };
 
@@ -205,10 +206,10 @@ async function createProduct(data: ProductData, context: Record<string, any>) {
   const connection = await getConnection();
   await startTransaction(connection);
   try {
-    const productData = await getValue('productDataBeforeCreate', data, {});
-
-    // Validate product data
-    validateProductDataBeforeInsert(productData);
+    // Validate product data; an empty member price means none (NULL)
+    const productData = normalizeProductMemberPrice(
+      validateProductDataBeforeInsert(await getValue('productDataBeforeCreate', data, {}))
+    );
 
     // Insert product data
     const product = await hookable(insertProductData, {
@@ -224,7 +225,7 @@ async function createProduct(data: ProductData, context: Record<string, any>) {
     );
 
     // Every product gets a default variant (+ inventory_item) mirroring its
-    // sku/price/qty. Importers that add real variants adopt or replace it.
+    // sku/price/member price/qty. Importers that add real variants adopt or replace it.
     await hookable(ensureDefaultVariant, { ...context, connection, product })(
       productData,
       product.insertId,

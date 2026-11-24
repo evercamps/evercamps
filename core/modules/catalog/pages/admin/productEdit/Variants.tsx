@@ -88,6 +88,9 @@ const VariantsQuery = `
           value
         }
       }
+      memberPrice {
+        value
+      }
       createVariantApi
       variantAttributeGroup {
         groupId
@@ -578,14 +581,18 @@ export default function Variants({ product }: VariantsProps) {
       actions={[
         {
           name: 'Add variant',
-          // New variant: price taken over from the product.
+          // New variant: price and member price taken over from the product.
           onAction: () =>
             openForm('new', {
               ...emptyDraft(),
               price:
                 data?.price?.regular?.value === undefined || data?.price?.regular?.value === null
                   ? ''
-                  : String(data.price.regular.value)
+                  : String(data.price.regular.value),
+              memberPrice:
+                data?.memberPrice?.value === undefined || data?.memberPrice?.value === null
+                  ? ''
+                  : String(data.memberPrice.value)
             })
         }
       ]}

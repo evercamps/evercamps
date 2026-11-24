@@ -40,6 +40,8 @@ interface Product {
   price?: {
     regular?: Price;
   };
+  // null = no member price
+  memberPrice?: Price | null;
   weight?: Weight;
   category?: Category;
   // 'simple' | 'configurable'; undefined on the new-product page
@@ -58,6 +60,7 @@ interface ProductTaxClasses {
 interface SKUPriceWeightProps {
   sku?: string;
   price?: Price;
+  memberPrice?: Price | null;
   weight?: Weight;
   setting: Setting;
   configurable?: boolean;
@@ -68,6 +71,7 @@ interface SKUPriceWeightProps {
 function SKUPriceWeight({
   sku,
   price,
+  memberPrice,
   weight,
   setting,
   configurable = false,
@@ -77,7 +81,7 @@ function SKUPriceWeight({
 
   return (
     <div className="mt-6">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div>
           <Field
             id="sku"
@@ -106,6 +110,18 @@ function SKUPriceWeight({
 
         <div>
           <Field
+            id="member_price"
+            name="member_price"
+            value={memberPrice?.value ?? ''}
+            placeholder="None"
+            label="Member price"
+            type="text"
+            suffix={setting.storeCurrency}
+          />
+        </div>
+
+        <div>
+          <Field
             id="weight"
             name="weight"
             value={weight?.value ?? (isNew ? 0 : undefined)}
@@ -119,8 +135,8 @@ function SKUPriceWeight({
       </div>
       {configurable && (
         <div className="text-textSubdued text-sm mt-1">
-          SKU and price are the product&apos;s base/listing values. Each variant has its own
-          SKU and price (Variants card).
+          SKU, price and member price are the product&apos;s base/listing values: a new variant
+          starts with them. Each variant has its own SKU, price and member price (Variants card).
         </div>
       )}
     </div>
@@ -343,6 +359,7 @@ export default function General({
               props: {
                 sku: product?.sku,
                 price: product?.price?.regular,
+                memberPrice: product?.memberPrice,
                 weight: product?.weight,
                 setting,
                 configurable: product?.type === 'configurable',
@@ -418,6 +435,9 @@ export const query = `
           value
           currency
         }
+      }
+      memberPrice {
+        value
       }
       weight {
         value
