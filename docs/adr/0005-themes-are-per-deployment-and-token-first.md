@@ -14,3 +14,4 @@ Each client gets its own evercamps deployment, and the storefront theme is picke
 - Core components must use tokens, never hard-coded colours or fonts, otherwise a theme has to override whole components just to change a colour.
 - A theme's `tailwind.config.js` extends the default config instead of replacing its `theme` key.
 - Client theme folders under `content/themes/` are gitignored; the deploy pipeline must clone them before `npm run build`.
+- The same goes for plugins written for one client, such as an importer from that client's old shop: they live in the client's private repository next to its theme, are copied into `content/plugins/` by the deploy pipeline, and are registered only in that deployment's config. Plugins useful to any client, such as `belgian-administration`, stay in this repo.
