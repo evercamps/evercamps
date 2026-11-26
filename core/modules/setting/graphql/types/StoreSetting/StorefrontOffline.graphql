@@ -1,0 +1,5 @@
+extend type Setting {
+  storefrontOffline: Int
+  storefrontOfflineTitle: String
+  storefrontOfflineMessage: String
+}
