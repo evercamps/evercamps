@@ -4,6 +4,16 @@ A platform where parents find camps, register their children and pay for them, a
 
 ## Language
 
+### Shop
+
+**Storefront**:
+The public part of the shop where customers browse, register and pay. The admin, where organisers manage the shop, is not part of it.
+_Avoid_: Frontend, website, front store
+
+**Offline storefront**:
+A storefront the organiser has switched off, before launch or during maintenance. Visitors see only a page saying the shop is not available yet. Organisers who are logged in to the admin still see and use the real storefront.
+_Avoid_: Shop in construction, maintenance mode, under construction
+
 ### Catalog
 
 **Product**:
@@ -32,16 +42,20 @@ _Avoid_: Member discount, club price
 ### Registration
 
 **Customer**:
-The person who books and pays, usually a parent, with or without an account. A customer manages one or more participants.
+The person who books and pays, usually a parent, with or without an account. A customer is recognised by their email address. A customer manages one or more participants.
 _Avoid_: Parent, user, member
 
 **Participant**:
-The person who attends a camp, usually a child. A participant belongs to one customer.
+The person who attends a camp, usually a child. A participant belongs to one customer, and within that customer is recognised by first and last name: registering the same name again gives the same participant. Two customers who register the same child, such as separated parents, each have their own participant.
 _Avoid_: Child, attendee, kid, surfer
 
 **Registration**:
 A participant's place on one variant, such as a specific camp week.
 _Avoid_: Booking, enrolment, inscription
+
+**Cancelled registration**:
+A registration that no longer holds a place, because the order it came from was cancelled. It is kept, together with its participant, so the order still shows who it was for. Cancelling an order cancels exactly that order's registrations and never removes the participant.
+_Avoid_: Deleted registration, removed registration
 
 **Membership**:
 A participant's membership of the organiser's club for one calendar year, shown by the membership number the customer enters when registering the participant. The organiser checks it.
