@@ -2,6 +2,7 @@ import { Card } from '@components/admin/cms/Card';
 import SettingMenu from '@components/admin/setting/SettingMenu';
 import Area from '@components/Area';
 import { Field } from '@components/form/Field';
+import { Toggle } from '@components/form/fields/Toggle';
 import { Form } from '@components/form/Form';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -213,6 +214,9 @@ interface StoreSetting {
   storeCity?: string;
   storeProvince?: string;
   storePostalCode?: string;
+  storefrontOffline?: number;
+  storefrontOfflineTitle?: string;
+  storefrontOfflineMessage?: string;
 }
 
 interface Props {
@@ -231,7 +235,10 @@ export default function StoreSetting({
     storeAddress,
     storeCity,
     storeProvince,
-    storePostalCode
+    storePostalCode,
+    storefrontOffline,
+    storefrontOfflineTitle,
+    storefrontOfflineMessage
   }
 }: Props) {
   const [selectedCountry, setSelectedCountry] = useState(() => {
@@ -355,6 +362,32 @@ export default function StoreSetting({
                   </div>
                 </div>
               </Card.Session>
+              <Card.Session title="Storefront">
+                <Toggle
+                  name="storefrontOffline"
+                  label="Storefront offline"
+                  value={storefrontOffline ?? 0}
+                  instruction="While the storefront is offline, visitors only see the offline page. Logged-in admin users still see and use the shop."
+                />
+                <div className="mt-6">
+                  <Field
+                    name="storefrontOfflineTitle"
+                    label="Offline page heading"
+                    placeholder="We are almost ready"
+                    value={storefrontOfflineTitle ?? ''}
+                    type="text"
+                  />
+                </div>
+                <div className="mt-6">
+                  <Field
+                    name="storefrontOfflineMessage"
+                    label="Offline page message"
+                    placeholder="Our shop is not available yet. Please come back soon."
+                    value={storefrontOfflineMessage ?? ''}
+                    type="textarea"
+                  />
+                </div>
+              </Card.Session>
             </Card>
           </Form>
         </div>
@@ -382,6 +415,9 @@ export const query = `
       storeCity
       storeProvince
       storePostalCode
+      storefrontOffline
+      storefrontOfflineTitle
+      storefrontOfflineMessage
     }
   }
 `;

@@ -21,6 +21,7 @@ import { getAdminSessionCookieName } from '../../modules/auth/services/getAdminS
 import { getCookieSecret } from '../../modules/auth/services/getCookieSecret.js';
 import { getFrontStoreSessionCookieName } from '../../modules/auth/services/getFrontStoreSessionCookieName.js';
 import { setContextValue } from '../../modules/graphql/services/contextHelper.js';
+import { storefrontOfflineMiddleware } from '../../modules/setting/services/storefrontOffline.js';
 import { findRoute } from './findRoute.js';
 
 export function addDefaultMiddlewareFuncs(app) {
@@ -171,6 +172,10 @@ export function addDefaultMiddlewareFuncs(app) {
       return next();
     }
   });
+
+  // Offline storefront: answer storefront pages with the standalone offline
+  // page. Must run after the route and the session are known.
+  app.use(storefrontOfflineMiddleware);
 
   app.use((request, response, next) => {
     if (!isDevelopmentMode()) {
