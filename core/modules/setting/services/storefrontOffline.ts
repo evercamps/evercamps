@@ -1,13 +1,12 @@
-import { getRoutes } from '../../../lib/router/Router.js';
+import { translate } from '../../../lib/locale/translate/translate.js';
+import { getConfig } from '../../../lib/util/getConfig.js';
 import { getAdminUserFromCookie } from '../../auth/services/getAdminUserFromCookie.js';
 import {
   isStorefrontPageRequest,
-  isSwitchedOn,
-  type RouteLike
+  isSwitchedOn
 } from './isStorefrontPageRequest.js';
+import { renderOfflinePage } from './renderOfflinePage.js';
 import { getSetting } from './setting.js';
-
-export const STOREFRONT_OFFLINE_ROUTE_ID = 'storefrontOffline';
 
 /** Seconds a client is told to wait before trying again (`Retry-After`). */
 const RETRY_AFTER_SECONDS = 3600;
@@ -19,10 +18,9 @@ export async function isStorefrontOffline(): Promise<boolean> {
 
 /**
  * App-level middleware: when the storefront is offline, a storefront page
- * request from someone who isn't a logged-in admin user is answered by the
- * offline page with HTTP 503. It swaps the current route before the
- * route's own middlewares are chosen, so none of the original page's
- * middlewares (cart, checkout, product loading, redirects) run.
+ * request from someone who isn't a logged-in admin user is answered with
+ * one standalone offline page (HTTP 503). The request ends here, so none of
+ * the storefront's own middlewares, layout or menus run.
  */
 export async function storefrontOfflineMiddleware(
   request: any,
@@ -48,18 +46,25 @@ export async function storefrontOfflineMiddleware(
       next();
       return;
     }
-    const offlineRoute = getRoutes().find(
-      (r: RouteLike) => r.id === STOREFRONT_OFFLINE_ROUTE_ID
-    );
-    if (!offlineRoute) {
-      next();
-      return;
-    }
-    request.currentRoute = offlineRoute;
+    const [storeName, title, message] = await Promise.all([
+      getSetting<string>('storeName', ''),
+      getSetting<string>('storefrontOfflineTitle', ''),
+      getSetting<string>('storefrontOfflineMessage', '')
+    ]);
+    const html = renderOfflinePage({
+      language: getConfig('shop.language', 'en'),
+      storeName: storeName || '',
+      title: title || translate('We are almost ready'),
+      message:
+        message ||
+        translate('Our shop is not available yet. Please come back soon.'),
+      logoSrc: getConfig('themeConfig.logo.src', null)
+    });
     response.status(503);
     response.set('Retry-After', String(RETRY_AFTER_SECONDS));
     response.set('X-Robots-Tag', 'noindex');
-    next();
+    response.set('Cache-Control', 'no-store');
+    response.type('html').send(html);
   } catch (e) {
     next(e);
   }

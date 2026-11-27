@@ -173,8 +173,8 @@ export function addDefaultMiddlewareFuncs(app) {
     }
   });
 
-  // Offline storefront: swap storefront pages for the offline page. Must run
-  // after the route is known and before the dev build picks its bundle.
+  // Offline storefront: answer storefront pages with the standalone offline
+  // page. Must run after the route and the session are known.
   app.use(storefrontOfflineMiddleware);
 
   app.use((request, response, next) => {
